@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Pico3dResolution">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Pico3dResolution"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <layout
+                android:defaultWidth="900.0dp"
+                android:defaultHeight="600.0dp" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="pvr.2dtovr.mode"
+                android:value="6" />
+            <meta-data
+                android:name="pico.vr.position"
+                android:value="near" />
+        </activity>
+
+        <meta-data
+            android:name="isPUI"
+            android:value="1" />
+        <meta-data
+            android:name="pvr.vrshell.mode"
+            android:value="1" />
+        <meta-data
+            android:name="com.pvr.hmd.trackingmode"
+            android:value="3dof" />
+    </application>
+
+</manifest>
