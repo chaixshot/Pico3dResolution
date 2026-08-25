@@ -22,7 +22,7 @@
     *   **1504px**: Default
     *   **2160px**: Native Resolution
     *   **2448px**: Pico Specific
-    *   **3240px**: Anti-aliasing
+    *   **2816px**: Anti-aliasing
 *   **🔍 Real-time Verification**: Automatically verifies if the database changes were successful before rebooting.
 *   **🛠️ PICO UI Style**: A native-looking interface built with Jetpack Compose and Material 3.
 *   **🌍 Multi-language Support**: Supports 27 languages including English, Chinese, Russian, Thai, and more.
@@ -48,7 +48,7 @@
 *   **Why does it need a reboot?**
     *   The Pico VR service and compositor only allocate their internal rendering buffers at startup. A reboot is necessary to force the system to read the new `sdk_eyebuffer` values from the database.
 *   **Will this impact performance?**
-    *   Yes. Higher resolutions (e.g., 2160px or 3240px) significantly increase GPU load. Some games may experience frame drops or increased heat.
+    *   Yes. Higher resolutions (e.g., 2160px or 2816px) significantly increase GPU load. Some games may experience frame drops or increased heat.
 *   **How do I verify the change?**
     *   You can use the **PICO Metrics Tool** to see the active "EBW" (Eye Buffer Width) and "EBH" (Eye Buffer Height) in real-time inside the headset.
 

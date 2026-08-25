@@ -316,7 +316,7 @@ fun ResolutionControlContent(
                             "1504" to stringResource(id = R.string.preset_default),
                             "2160" to stringResource(id = R.string.preset_native),
                             "2448" to stringResource(id = R.string.preset_pico_specific),
-                            "3240" to stringResource(id = R.string.preset_anti_aliasing)
+                            "2816" to stringResource(id = R.string.preset_anti_aliasing)
                         )
 
                         @OptIn(ExperimentalMaterial3Api::class)
