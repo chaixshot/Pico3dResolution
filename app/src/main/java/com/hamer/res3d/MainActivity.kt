@@ -275,6 +275,28 @@ fun ResolutionControlContent(
                             }
                         }
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Manual Custom Resolution Input
+                        OutlinedTextField(
+                            value = resolution,
+                            onValueChange = onResolutionChange,
+                            label = { Text("Custom Resolution", color = Color.LightGray) },
+                            placeholder = { Text("Enter value", color = Color.Gray) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedContainerColor = colorResource(id = R.color.dropdown_bg),
+                                unfocusedContainerColor = colorResource(id = R.color.dropdown_bg),
+                                focusedBorderColor = colorResource(id = R.color.primary),
+                                unfocusedBorderColor = colorResource(id = R.color.card_bg),
+                                cursorColor = colorResource(id = R.color.primary)
+                            )
+                        )
+
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
@@ -402,16 +424,34 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
         db.execSQL("UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'", arrayOf(res))
         db.close()
         
-        // 3. Write back and perform a full reboot to ensure changes take effect
-        android.util.Log.d("Res3D", "Step 3: Writing back and rebooting system...")
-        val (finalSuccess, finalError) = runRootCommand(
+        // 3. Write back and verify changes before rebooting
+        android.util.Log.d("Res3D", "Step 3: Writing back and verifying changes...")
+        val (writeSuccess, writeError) = runRootCommand(
             "cat ${tempDb.absolutePath} > $DB_PATH",
-            "sync",
-            "reboot" // Perform a full system reboot
+            "sync"
         )
         
-        tempDb.delete()
-        return@withContext finalSuccess to finalError
+        if (tempDb.exists()) tempDb.delete()
+
+        if (!writeSuccess) {
+            return@withContext false to "Write back failed: $writeError"
+        }
+
+        // Call fetchCurrentValues to verify the actual state of the system DB
+        val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
+        
+        val isVerified = verifiedValues.configValue == res && 
+                         verifiedValues.linkageValue == res
+
+        if (isVerified) {
+            android.util.Log.d("Res3D", "Verification success. Rebooting...")
+            runRootCommand("reboot")
+            return@withContext true to "Success. Rebooting..."
+        } else {
+            val details = "Got C:${verifiedValues.configValue}, L:${verifiedValues.linkageValue}"
+            android.util.Log.e("Res3D", "Verification failed. Expected $res but $details. Error: $fetchError")
+            return@withContext false to "Verification failed. DB values did not change."
+        }
     } catch (e: Exception) {
         if (tempDb.exists()) tempDb.delete()
         return@withContext false to (e.message ?: "Unknown exception")
