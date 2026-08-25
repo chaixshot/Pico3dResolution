@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -42,8 +43,8 @@ fun Modifier.drawPicoScrollbar(state: ScrollState): Modifier = drawWithContent {
     drawContent()
     if (state.maxValue > 0) {
         // Inset the scrollbar vertically to stay within the 12.dp rounded corners
-        val verticalInset = 12.dp.toPx()
-        val horizontalOffset = 10.dp.toPx()
+        val verticalInset = 16.dp.toPx()
+        val horizontalOffset = 14.dp.toPx()
         
         val viewHeight = size.height
         val drawableHeight = viewHeight - (verticalInset * 2)
@@ -214,17 +215,17 @@ fun ResolutionControlContent(
                             Text(
                                 "CONFIG_VALUE: ${currentValues.configValue} Pixel",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White
+                                color = Color.LightGray
                             )
                             Text(
                                 "DEFAULT_VALUE: ${currentValues.defaultValue} Pixel",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White
+                                color = Color.LightGray
                             )
                             Text(
                                 "LINKAGE_VALUE: ${currentValues.linkageValue} Pixel",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White
+                                color = Color.LightGray
                             )
                         }
                     }
@@ -302,6 +303,7 @@ fun ResolutionControlContent(
                                     modifier = Modifier
                                         .heightIn(max = 280.dp)
                                         .verticalScroll(scrollState)
+                                        .padding(horizontal = 6.dp, vertical = 6.dp)
                                 ) {
                                     options.forEach { option ->
                                         DropdownMenuItem(
@@ -315,7 +317,9 @@ fun ResolutionControlContent(
                                                 onResolutionChange(option.first)
                                                 expanded = false
                                             },
-                                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
                                         )
                                     }
                                 }
