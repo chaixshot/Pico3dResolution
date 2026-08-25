@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hamer.res3d.ui.theme.*
@@ -34,6 +36,31 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStreamReader
+
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.content.ContextCompat
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+
+@Composable
+fun rememberLauncherIcon(): ImageBitmap? {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return remember {
+        val drawable = ContextCompat.getDrawable(context, R.mipmap.ic_launcher_round)
+        drawable?.let {
+            val bitmap = Bitmap.createBitmap(
+                it.intrinsicWidth.coerceAtLeast(1),
+                it.intrinsicHeight.coerceAtLeast(1),
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            it.setBounds(0, 0, canvas.width, canvas.height)
+            it.draw(canvas)
+            bitmap.asImageBitmap()
+        }
+    }
+}
 
 const val DB_PATH = "/data/user_de/0/com.pvr.configuration/databases/config.db"
 const val TEMP_READ_DB = "config_temp.db"
@@ -52,7 +79,7 @@ fun Modifier.drawPicoScrollbar(state: ScrollState): Modifier = drawWithContent {
         // Ensure knobHeight doesn't exceed the drawable area
         val knobHeight = minOf(40.dp.toPx(), drawableHeight)
         
-        val scrollProgress = state.value.toFloat() / state.maxValue
+        val scrollProgress = if (state.maxValue > 0) state.value.toFloat() / state.maxValue else 0f
         val topOffset = verticalInset + (scrollProgress * (drawableHeight - knobHeight))
 
         drawRoundRect(
@@ -152,6 +179,7 @@ fun ResolutionControlContent(
     modifier: Modifier = Modifier
 ) {
     Surface(
+        modifier = modifier,
         color = colorResource(id = R.color.main_bg),
         shape = RoundedCornerShape(32.dp),
     ) {
@@ -161,11 +189,47 @@ fun ResolutionControlContent(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Pico 3D Resolution",
-                style = MaterialTheme.typography.headlineMedium,
-                color = colorResource(id = R.color.white)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(bottom = 32.dp)
+            ) {
+                val launcherIcon = rememberLauncherIcon()
+                
+                if (launcherIcon != null) {
+                    Image(
+                        bitmap = launcherIcon,
+                        contentDescription = "App Icon",
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                } else {
+                    // Fallback to blue R if loading failed
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                color = colorResource(id = R.color.primary),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "R",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "Pico 3D Resolution",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = colorResource(id = R.color.white)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
