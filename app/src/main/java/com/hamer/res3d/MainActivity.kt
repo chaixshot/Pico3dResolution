@@ -9,12 +9,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.Color
@@ -206,7 +204,7 @@ fun ResolutionControlContent(
                     ) {
                         var expanded by remember { mutableStateOf(false) }
                         val options = listOf(
-                            "376" to "Ultra Performance",
+                            "384" to "Ultra Performance",
                             "752" to "Performance",
                             "1504" to "Default",
                             "2160" to "Native Resolution",
@@ -274,28 +272,6 @@ fun ResolutionControlContent(
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Manual Custom Resolution Input
-                        OutlinedTextField(
-                            value = resolution,
-                            onValueChange = onResolutionChange,
-                            label = { Text("Custom Resolution", color = Color.LightGray) },
-                            placeholder = { Text("Enter value", color = Color.Gray) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
-                                focusedContainerColor = colorResource(id = R.color.dropdown_bg),
-                                unfocusedContainerColor = colorResource(id = R.color.dropdown_bg),
-                                focusedBorderColor = colorResource(id = R.color.primary),
-                                unfocusedBorderColor = colorResource(id = R.color.card_bg),
-                                cursorColor = colorResource(id = R.color.primary)
-                            )
-                        )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
