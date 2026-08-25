@@ -180,17 +180,17 @@ fun ResolutionControlContent(
                                 color = colorResource(id = R.color.card_bg)
                             )
                             Text(
-                                "CONFIG_VALUE: ${currentValues.configValue}",
+                                "CONFIG_VALUE: ${currentValues.configValue} Pixel",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White
                             )
                             Text(
-                                "DEFAULT_VALUE: ${currentValues.defaultValue}",
+                                "DEFAULT_VALUE: ${currentValues.defaultValue} Pixel",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White
                             )
                             Text(
-                                "LINKAGE_VALUE: ${currentValues.linkageValue}",
+                                "LINKAGE_VALUE: ${currentValues.linkageValue} Pixel",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White
                             )
@@ -226,7 +226,8 @@ fun ResolutionControlContent(
                                     modifier = Modifier.padding(bottom = 6.dp, start = 2.dp)
                                 )
                                 OutlinedTextField(
-                                    value = options.find { it.first == resolution }?.let { "${it.first} - ${it.second}" } ?: resolution,
+                                    value = options.find { it.first == resolution }
+                                        ?.let { "${it.first} Pixel - ${it.second}" } ?: "$resolution Pixel",
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -259,7 +260,7 @@ fun ResolutionControlContent(
                                     DropdownMenuItem(
                                         text = {
                                             Text(
-                                                text = "${option.first} - ${option.second}",
+                                                text = "${option.first} Pixel - ${option.second}",
                                                 color = Color.White
                                             )
                                         },
