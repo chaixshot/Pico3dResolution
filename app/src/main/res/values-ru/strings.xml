@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D Разрешение</string>
+    <string name="app_description">Глобально настройте разрешение рендеринга для всех 3D VR приложений на вашей гарнитуре Pico. Более высокие значения улучшают четкость, но могут повлиять на производительность.\n\nЭто приложение работает, используя root-доступ для изменения системной базы данных конфигурации PVR (config.db), специально нацеливаясь на параметры \'sdk_eyebuffer\' для принудительного установления пользовательского разрешения. Для применения изменений требуется перезагрузка.</string>
+    <string name="current_system_config">Текущая конфигурация системы</string>
+    <string name="target_resolution">Целевое разрешение</string>
+    <string name="apply_reboot">Применить и перезагрузить</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Пиксель</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Применение...</string>
+    <string name="status_applied_success">Успешно применено!</string>
+    <string name="status_rebooting">Успех. Перезагрузка...</string>
+    <string name="status_error_prefix">Ошибка: %1$s</string>
+    <string name="status_read_error_prefix">Ошибка чтения: %1$s</string>
+    <string name="status_verify_failed">Ошибка проверки. Значения в БД не изменились.</string>
+    <string name="preset_ultra_performance">Ультра производительность</string>
+    <string name="preset_performance">Производительность</string>
+    <string name="preset_default">По умолчанию</string>
+    <string name="preset_native">Родное разрешение</string>
+    <string name="preset_pico_specific">Специально для Pico</string>
+    <string name="preset_anti_aliasing">Сглаживание</string>
+</resources>

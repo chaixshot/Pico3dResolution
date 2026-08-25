@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Rozdzielczość Pico 3D</string>
+    <string name="app_description">Globalnie dostosuj rozdzielczość renderowania dla wszystkich aplikacji 3D VR na goglach Pico. Wyższe wartości poprawiają ostrość, ale mogą wpływać na wydajność.\n\nTa aplikacja działa poprzez wykorzystanie dostępu root do modyfikacji systemowej bazy danych konfiguracji PVR (config.db), w szczególności celując w parametry \'sdk_eyebuffer\', aby wymusić niestandardową rozdzielczość. Aby zastosować zmiany, wymagany jest restart.</string>
+    <string name="current_system_config">Aktualna konfiguracja systemu</string>
+    <string name="target_resolution">Docelowa rozdzielczość</string>
+    <string name="apply_reboot">Zastosuj i uruchom ponownie</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Piksel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Stosowanie...</string>
+    <string name="status_applied_success">Zastosowano pomyślnie!</string>
+    <string name="status_rebooting">Sukces. Ponowne uruchamianie...</string>
+    <string name="status_error_prefix">Błąd: %1$s</string>
+    <string name="status_read_error_prefix">Błąd odczytu: %1$s</string>
+    <string name="status_verify_failed">Weryfikacja nie powiodła się. Wartości w bazie danych nie zmieniły się.</string>
+    <string name="preset_ultra_performance">Ultra wydajność</string>
+    <string name="preset_performance">Wydajność</string>
+    <string name="preset_default">Domyślne</string>
+    <string name="preset_native">Natywna rozdzielczość</string>
+    <string name="preset_pico_specific">Specyficzne dla Pico</string>
+    <string name="preset_anti_aliasing">Wygładzanie krawędzi</string>
+</resources>

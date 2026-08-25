@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D Opløsning</string>
+    <string name="app_description">Juster den globale renderingsopløsning for alle 3D VR-applikationer på dit Pico-headset. Højere værdier forbedrer klarheden, men kan påvirke ydeevnen.\n\nDenne app fungerer ved at bruge root-adgang til at ændre systemets PVR-konfigurationsdatabase (config.db), specifikt rettet mod \'sdk_eyebuffer\'-parametrene for at gennemtvinge en brugerdefineret opløsning. En genstart er påkrævet for at anvende ændringerne.</string>
+    <string name="current_system_config">Nuværende systemkonfiguration</string>
+    <string name="target_resolution">Målopløsning</string>
+    <string name="apply_reboot">Anvend og genstart</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Anvender...</string>
+    <string name="status_applied_success">Anvendt med succes!</string>
+    <string name="status_rebooting">Succes. Genstarter...</string>
+    <string name="status_error_prefix">Fejl: %1$s</string>
+    <string name="status_read_error_prefix">Læsefejl: %1$s</string>
+    <string name="status_verify_failed">Bekræftelse mislykkedes. DB-værdier ændrede sig ikke.</string>
+    <string name="preset_ultra_performance">Ultra ydeevne</string>
+    <string name="preset_performance">Ydeevne</string>
+    <string name="preset_default">Standard</string>
+    <string name="preset_native">Nativ opløsning</string>
+    <string name="preset_pico_specific">Pico specifikt</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>

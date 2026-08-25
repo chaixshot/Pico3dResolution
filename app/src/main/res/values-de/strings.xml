@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D Auflösung</string>
+    <string name="app_description">Passen Sie die Rendering-Auflösung für alle 3D-VR-Anwendungen auf Ihrem Pico-Headset global an. Höhere Werte verbessern die Klarheit, können jedoch die Leistung beeinträchtigen.\n\nDiese App nutzt Root-Zugriff, um die PVR-Konfigurationsdatenbank des Systems (config.db) zu ändern, wobei speziell die Parameter \'sdk_eyebuffer\' angesprochen werden, um eine benutzerdefinierte Auflösung zu erzwingen. Ein Neustart ist erforderlich, um die Änderungen zu übernehmen.</string>
+    <string name="current_system_config">Aktuelle Systemkonfiguration</string>
+    <string name="target_resolution">Zielauflösung</string>
+    <string name="apply_reboot">Anwenden &amp; Neustart</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Wird angewendet...</string>
+    <string name="status_applied_success">Erfolgreich angewendet!</string>
+    <string name="status_rebooting">Erfolg. Neustart...</string>
+    <string name="status_error_prefix">Fehler: %1$s</string>
+    <string name="status_read_error_prefix">Lesefehler: %1$s</string>
+    <string name="status_verify_failed">Verifizierung fehlgeschlagen. DB-Werte haben sich nicht geändert.</string>
+    <string name="preset_ultra_performance">Ultra-Leistung</string>
+    <string name="preset_performance">Leistung</string>
+    <string name="preset_default">Standard</string>
+    <string name="preset_native">Native Auflösung</string>
+    <string name="preset_pico_specific">Speziell für Pico</string>
+    <string name="preset_anti_aliasing">Anti-Aliasing</string>
+</resources>

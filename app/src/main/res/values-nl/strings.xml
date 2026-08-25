@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D Resolutie</string>
+    <string name="app_description">Pas de weergaveresolutie wereldwijd aan voor alle 3D VR-toepassingen op uw Pico-headset. Hogere waarden verbeteren de helderheid, maar kunnen de prestaties beïnvloeden.\n\nDeze app werkt door root-toegang te gebruiken om de PVR-configuratiedatabase (config.db) van het systeem te wijzigen, specifiek gericht op de \'sdk_eyebuffer\'-parameters om een aangepaste resolutie te forceren. Een herstart is vereist om de wijzigingen toe te passen.</string>
+    <string name="current_system_config">Huidige systeemconfiguratie</string>
+    <string name="target_resolution">Doelresolutie</string>
+    <string name="apply_reboot">Toepassen en herstarten</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Toepassen...</string>
+    <string name="status_applied_success">Succesvol toegepast!</string>
+    <string name="status_rebooting">Succes. Herstarten...</string>
+    <string name="status_error_prefix">Fout: %1$s</string>
+    <string name="status_read_error_prefix">Leesfout: %1$s</string>
+    <string name="status_verify_failed">Verificatie mislukt. DB-waarden zijn niet veranderd.</string>
+    <string name="preset_ultra_performance">Ultra prestaties</string>
+    <string name="preset_performance">Prestaties</string>
+    <string name="preset_default">Standaard</string>
+    <string name="preset_native">Native resolutie</string>
+    <string name="preset_pico_specific">Specifiek voor Pico</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>

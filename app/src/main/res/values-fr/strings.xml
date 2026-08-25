@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Résolution Pico 3D</string>
+    <string name="app_description">Ajustez globalement la résolution de rendu pour toutes les applications VR 3D sur votre casque Pico. Des valeurs plus élevées améliorent la clarté mais peuvent avoir un impact sur les performances.\n\nCette application fonctionne en utilisant l\'accès root pour modifier la base de données de configuration PVR du système (config.db), en ciblant spécifiquement les paramètres \'sdk_eyebuffer\' pour forcer une résolution personnalisée. Un redémarrage est nécessaire pour appliquer les changements.</string>
+    <string name="current_system_config">Configuration système actuelle</string>
+    <string name="target_resolution">Résolution cible</string>
+    <string name="apply_reboot">Appliquer et redémarrer</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Application...</string>
+    <string name="status_applied_success">Appliqué avec succès !</string>
+    <string name="status_rebooting">Succès. Redémarrage...</string>
+    <string name="status_error_prefix">Erreur : %1$s</string>
+    <string name="status_read_error_prefix">Erreur de lecture : %1$s</string>
+    <string name="status_verify_failed">La vérification a échoué. Les valeurs de la base de données n\'ont pas changé.</string>
+    <string name="preset_ultra_performance">Performance ultra</string>
+    <string name="preset_performance">Performance</string>
+    <string name="preset_default">Par défaut</string>
+    <string name="preset_native">Résolution native</string>
+    <string name="preset_pico_specific">Spécifique à Pico</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>

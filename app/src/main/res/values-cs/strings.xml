@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D Rozlišení</string>
+    <string name="app_description">Globálně upravte rozlišení vykreslování pro všechny 3D VR aplikace na vašem headsetu Pico. Vyšší hodnoty zlepšují čistotu, ale mohou ovlivnit výkon.\n\nTato aplikace funguje tak, že pomocí přístupu root upravuje systémovou konfigurační databázi PVR (config.db), konkrétně se zaměřuje na parametry \'sdk_eyebuffer\' pro vynucení vlastního rozlišení. Pro uplatnění změn je vyžadován restart.</string>
+    <string name="current_system_config">Aktuální systémová konfigurace</string>
+    <string name="target_resolution">Cílové rozlišení</string>
+    <string name="apply_reboot">Použít a restartovat</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Používání...</string>
+    <string name="status_applied_success">Úspěšně použito!</string>
+    <string name="status_rebooting">Úspěch. Restartování...</string>
+    <string name="status_error_prefix">Chyba: %1$s</string>
+    <string name="status_read_error_prefix">Chyba čtení: %1$s</string>
+    <string name="status_verify_failed">Ověření selhalo. Hodnoty DB se nezměnily.</string>
+    <string name="preset_ultra_performance">Ultra výkon</string>
+    <string name="preset_performance">Výkon</string>
+    <string name="preset_default">Výchozí</string>
+    <string name="preset_native">Nativní rozlišení</string>
+    <string name="preset_pico_specific">Specifické pro Pico</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>

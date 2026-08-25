@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -26,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hamer.res3d.ui.theme.*
@@ -125,8 +125,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
-
-    // Get current app UID for chown
+    val resources = androidx.compose.ui.platform.LocalContext.current.resources
     val appUid = android.os.Process.myUid()
 
     fun refreshValues() {
@@ -137,7 +136,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                 resolution = values.configValue
             }
             if (error.isNotBlank() && status.isBlank()) {
-                status = "Read Error: $error"
+                status = resources.getString(R.string.status_read_error_prefix, error)
             }
         }
     }
@@ -154,13 +153,21 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         onApplyClick = {
             if (resolution.isNotBlank()) {
                 scope.launch {
-                    status = "Applying..."
+                    status = resources.getString(R.string.status_applying)
                     val (success, error) = applyResolution(resolution, cacheDir, appUid)
                     if (success) {
-                        status = "Applied successfully!"
+                        status = if (error == "Success. Rebooting...") {
+                            resources.getString(R.string.status_rebooting)
+                        } else {
+                            resources.getString(R.string.status_applied_success)
+                        }
                         refreshValues()
                     } else {
-                        status = "Error: $error"
+                        status = if (error == "Verification failed. DB values did not change.") {
+                            resources.getString(R.string.status_verify_failed)
+                        } else {
+                            resources.getString(R.string.status_error_prefix, error)
+                        }
                     }
                 }
             }
@@ -199,7 +206,7 @@ fun ResolutionControlContent(
                 if (launcherIcon != null) {
                     Image(
                         bitmap = launcherIcon,
-                        contentDescription = "App Icon",
+                        contentDescription = stringResource(id = R.string.app_name),
                         modifier = Modifier
                             .size(48.dp)
                             .clip(RoundedCornerShape(12.dp))
@@ -225,7 +232,7 @@ fun ResolutionControlContent(
                 
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = "Pico 3D Resolution",
+                    text = stringResource(id = R.string.app_title),
                     style = MaterialTheme.typography.headlineMedium,
                     color = colorResource(id = R.color.white)
                 )
@@ -240,7 +247,7 @@ fun ResolutionControlContent(
                 shape = MaterialTheme.shapes.medium
             ) {
                 Text(
-                    text = "Globally adjust the rendering resolution for all 3D VR applications on your Pico headset. Higher values improve clarity but may impact performance.\n\nThis app works by using root access to modify the system's PVR configuration database (config.db), specifically targeting the 'sdk_eyebuffer' parameters to force a custom resolution. A reboot is required to apply the changes.",
+                    text = stringResource(id = R.string.app_description),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.LightGray,
                     modifier = Modifier.padding(16.dp)
@@ -267,7 +274,7 @@ fun ResolutionControlContent(
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text(
-                                "Current System Config",
+                                text = stringResource(id = R.string.current_system_config),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = colorResource(id = R.color.white)
                             )
@@ -276,18 +283,19 @@ fun ResolutionControlContent(
                                 thickness = 1.dp,
                                 color = colorResource(id = R.color.card_bg)
                             )
+                            val pixelSuffix = stringResource(id = R.string.pixel)
                             Text(
-                                "CONFIG_VALUE: ${currentValues.configValue} Pixel",
+                                text = stringResource(id = R.string.config_value_label, currentValues.configValue, pixelSuffix),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.LightGray
                             )
                             Text(
-                                "DEFAULT_VALUE: ${currentValues.defaultValue} Pixel",
+                                text = stringResource(id = R.string.default_value_label, currentValues.defaultValue, pixelSuffix),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.LightGray
                             )
                             Text(
-                                "LINKAGE_VALUE: ${currentValues.linkageValue} Pixel",
+                                text = stringResource(id = R.string.linkage_value_label, currentValues.linkageValue, pixelSuffix),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.LightGray
                             )
@@ -303,12 +311,12 @@ fun ResolutionControlContent(
                     ) {
                         var expanded by remember { mutableStateOf(false) }
                         val options = listOf(
-                            "384" to "Ultra Performance",
-                            "752" to "Performance",
-                            "1504" to "Default",
-                            "2160" to "Native Resolution",
-                            "2448" to "Pico Specifically",
-                            "3240" to "Anti-aliasing"
+                            "384" to stringResource(id = R.string.preset_ultra_performance),
+                            "752" to stringResource(id = R.string.preset_performance),
+                            "1504" to stringResource(id = R.string.preset_default),
+                            "2160" to stringResource(id = R.string.preset_native),
+                            "2448" to stringResource(id = R.string.preset_pico_specific),
+                            "3240" to stringResource(id = R.string.preset_anti_aliasing)
                         )
 
                         @OptIn(ExperimentalMaterial3Api::class)
@@ -319,15 +327,16 @@ fun ResolutionControlContent(
                         ) {
                             Column {
                                 Text(
-                                    text = "Target Resolution",
+                                    text = stringResource(id = R.string.target_resolution),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = colorResource(id = R.color.white),
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
+                                val pixelSuffix = stringResource(id = R.string.pixel)
                                 OutlinedTextField(
                                     value = options.find { it.first == resolution }
-                                        ?.let { "${it.first} Pixel - ${it.second}" }
-                                        ?: "$resolution Pixel",
+                                        ?.let { stringResource(id = R.string.dropdown_value_format, it.first, pixelSuffix, it.second) }
+                                        ?: "$resolution $pixelSuffix",
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = {
@@ -369,11 +378,12 @@ fun ResolutionControlContent(
                                         .verticalScroll(scrollState)
                                         .padding(horizontal = 6.dp, vertical = 6.dp)
                                 ) {
+                                    val pixelSuffix = stringResource(id = R.string.pixel)
                                     options.forEach { option ->
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
-                                                    text = "${option.first} Pixel - ${option.second}",
+                                                    text = stringResource(id = R.string.dropdown_value_format, option.first, pixelSuffix, option.second),
                                                     color = Color.White
                                                 )
                                             },
@@ -403,7 +413,7 @@ fun ResolutionControlContent(
                             )
                         ) {
                             Text(
-                                "Apply & Reboot",
+                                text = stringResource(id = R.string.apply_reboot),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = Color.White
                             )
@@ -442,7 +452,7 @@ fun ResolutionControlContent(
                 shape = MaterialTheme.shapes.small
             ) {
                 Text(
-                    text = "GitHub: chaixshot/Pico3dResolution",
+                    text = stringResource(id = R.string.github_link),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray.copy(alpha = 0.7f),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)

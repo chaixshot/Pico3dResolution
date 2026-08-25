@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D Çözünürlük</string>
+    <string name="app_description">Pico başlığınızdaki tüm 3D VR uygulamaları için oluşturma çözünürlüğünü küresel olarak ayarlayın. Daha yüksek değerler netliği artırır ancak performansı etkileyebilir.\n\nBu uygulama, sistemin PVR yapılandırma veritabanını (config.db) değiştirmek için root erişimini kullanarak, özellikle özel bir çözünürlüğü zorlamak için \'sdk_eyebuffer\' parametrelerini hedefler. Değişiklikleri uygulamak için yeniden başlatma gereklidir.</string>
+    <string name="current_system_config">Mevcut Sistem Yapılandırması</string>
+    <string name="target_resolution">Hedef Çözünürlük</string>
+    <string name="apply_reboot">Uygula ve Yeniden Başlat</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Piksel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Uygulanıyor...</string>
+    <string name="status_applied_success">Başarıyla uygulandı!</string>
+    <string name="status_rebooting">Başarılı. Yeniden başlatılıyor...</string>
+    <string name="status_error_prefix">Hata: %1$s</string>
+    <string name="status_read_error_prefix">Okuma Hatası: %1$s</string>
+    <string name="status_verify_failed">Doğrulama başarısız oldu. DB değerleri değişmedi.</string>
+    <string name="preset_ultra_performance">Ultra Performans</string>
+    <string name="preset_performance">Performans</string>
+    <string name="preset_default">Varsayılan</string>
+    <string name="preset_native">Yerel Çözünürlük</string>
+    <string name="preset_pico_specific">Pico\'ya Özel</string>
+    <string name="preset_anti_aliasing">Kenar Yumuşatma</string>
+</resources>

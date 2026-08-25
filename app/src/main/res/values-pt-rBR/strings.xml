@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Resolução Pico 3D</string>
+    <string name="app_description">Ajuste globalmente a resolução de renderização para todos os aplicativos VR 3D no seu headset Pico. Valores mais altos melhoram a clareza, mas podem afetar o desempenho.\n\nEste aplicativo funciona usando acesso root para modificar o banco de dados de configuração PVR do sistema (config.db), visando especificamente os parâmetros \'sdk_eyebuffer\' para forçar uma resolução personalizada. É necessário reiniciar para aplicar as alterações.</string>
+    <string name="current_system_config">Configuração Atual do Sistema</string>
+    <string name="target_resolution">Resolução Alvo</string>
+    <string name="apply_reboot">Aplicar e Reiniciar</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Aplicando...</string>
+    <string name="status_applied_success">Aplicado com sucesso!</string>
+    <string name="status_rebooting">Sucesso. Reiniciando...</string>
+    <string name="status_error_prefix">Erro: %1$s</string>
+    <string name="status_read_error_prefix">Erro de Leitura: %1$s</string>
+    <string name="status_verify_failed">A verificação falhou. Os valores do BD não foram alterados.</string>
+    <string name="preset_ultra_performance">Ultra Desempenho</string>
+    <string name="preset_performance">Desempenho</string>
+    <string name="preset_default">Padrão</string>
+    <string name="preset_native">Resolução Nativa</string>
+    <string name="preset_pico_specific">Específico para Pico</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>

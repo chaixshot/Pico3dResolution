@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D 해상도</string>
+    <string name="app_description">Pico 헤드셋의 모든 3D VR 애플리케이션에 대한 렌더링 해상도를 전역적으로 조정합니다. 값이 높을수록 선명도가 향상되지만 성능에 영향을 줄 수 있습니다.\n\n이 앱은 root 권한을 사용하여 시스템의 PVR 구성 데이터베이스(config.db)를 수정하며, 특히 \'sdk_eyebuffer\' 매개변수를 대상으로 하여 사용자 지정 해상도를 강제 적용합니다. 변경 사항을 적용하려면 재부팅이 필요합니다.</string>
+    <string name="current_system_config">현재 시스템 구성</string>
+    <string name="target_resolution">대상 해상도</string>
+    <string name="apply_reboot">적용 및 재부팅</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">픽셀</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">적용 중...</string>
+    <string name="status_applied_success">성공적으로 적용되었습니다!</string>
+    <string name="status_rebooting">성공. 재부팅 중...</string>
+    <string name="status_error_prefix">오류: %1$s</string>
+    <string name="status_read_error_prefix">읽기 오류: %1$s</string>
+    <string name="status_verify_failed">확인 실패. DB 값이 변경되지 않았습니다.</string>
+    <string name="preset_ultra_performance">울트라 성능</string>
+    <string name="preset_performance">성능</string>
+    <string name="preset_default">기본값</string>
+    <string name="preset_native">기본 해상도</string>
+    <string name="preset_pico_specific">Pico 전용</string>
+    <string name="preset_anti_aliasing">안티앨리어싱</string>
+</resources>

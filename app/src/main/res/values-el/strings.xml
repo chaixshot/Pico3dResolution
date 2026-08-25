@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Ανάλυση Pico 3D</string>
+    <string name="app_description">Προσαρμόστε καθολικά την ανάλυση απόδοσης για όλες τις εφαρμογές 3D VR στο σετ κεφαλής Pico. Οι υψηλότερες τιμές βελτιώνουν την καθαρότητα, αλλά ενδέχεται να επηρεάσουν την απόδοση.\n\nΑυτή η εφαρμογή λειτουργεί χρησιμοποιώντας πρόσβαση root για την τροποποίηση της βάσης δεδομένων διαμόρφωσης PVR του συστήματος (config.db), στοχεύοντας ειδικά στις παραμέτρους \'sdk_eyebuffer\' για την επιβολή προσαρμοσμένης ανάλυσης. Απαιτείται επανεκκίνηση για την εφαρμογή των αλλαγών.</string>
+    <string name="current_system_config">Τρέχουσα διαμόρφωση συστήματος</string>
+    <string name="target_resolution">Ανάλυση στόχου</string>
+    <string name="apply_reboot">Εφαρμογή &amp; Επανεκκίνηση</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Εφαρμογή...</string>
+    <string name="status_applied_success">Εφαρμόστηκε με επιτυχία!</string>
+    <string name="status_rebooting">Επιτυχία. Επανεκκίνηση...</string>
+    <string name="status_error_prefix">Σφάλμα: %1$s</string>
+    <string name="status_read_error_prefix">Σφάλμα ανάγνωσης: %1$s</string>
+    <string name="status_verify_failed">Η επαλήθευση απέτυχε. Οι τιμές της βάσης δεδομένων δεν άλλαξαν.</string>
+    <string name="preset_ultra_performance">Εξαιρετική απόδοση</string>
+    <string name="preset_performance">Απόδοση</string>
+    <string name="preset_default">Προεπιλογή</string>
+    <string name="preset_native">Εγγενής ανάλυση</string>
+    <string name="preset_pico_specific">Ειδικά για το Pico</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>

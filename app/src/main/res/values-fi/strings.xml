@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Pico 3D -resoluutio</string>
+    <string name="app_description">Säädä renderöintiresoluutiota maailmanlaajuisesti kaikille Pico-lasiesi 3D VR-sovelluksille. Suuremmat arvot parantavat selkeyttä, mutta voivat vaikuttaa suorituskykyyn.\n\nTämä sovellus toimii käyttämällä root-oikeuksia järjestelmän PVR-kokoonpanotietokannan (config.db) muokkaamiseen, erityisesti kohdentamalla \'sdk_eyebuffer\'-parametrit mukautetun resoluution pakottamiseksi. Muutosten käyttöönottamiseksi tarvitaan uudelleenkäynnistys.</string>
+    <string name="current_system_config">Nykyinen järjestelmäkokoonpano</string>
+    <string name="target_resolution">Tavoiteresoluutio</string>
+    <string name="apply_reboot">Käytä ja käynnistä uudelleen</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pikseli</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Käytetään...</string>
+    <string name="status_applied_success">Käytetty onnistuneesti!</string>
+    <string name="status_rebooting">Onnistui. Käynnistetään uudelleen...</string>
+    <string name="status_error_prefix">Virhe: %1$s</string>
+    <string name="status_read_error_prefix">Lukuvirhe: %1$s</string>
+    <string name="status_verify_failed">Varmistus epäonnistui. Tietokannan arvot eivät muuttuneet.</string>
+    <string name="preset_ultra_performance">Erittäin hyvä suorituskyky</string>
+    <string name="preset_performance">Suorituskyky</string>
+    <string name="preset_default">Oletus</string>
+    <string name="preset_native">Alkuperäinen resoluutio</string>
+    <string name="preset_pico_specific">Pico-kohtainen</string>
+    <string name="preset_anti_aliasing">Reunanpehmennys</string>
+</resources>

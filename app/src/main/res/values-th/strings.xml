@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">ความละเอียด Pico 3D</string>
+    <string name="app_description">ปรับความละเอียดการเรนเดอร์ทั่วโลกสำหรับแอปพลิเคชัน 3D VR ทั้งหมดบนชุดหูฟัง Pico ของคุณ ค่าที่สูงขึ้นจะช่วยเพิ่มความชัดเจน แต่อาจส่งผลกระทบต่อประสิทธิภาพการทำงาน\n\nแอปนี้ทำงานโดยใช้การเข้าถึงรูทเพื่อแก้ไขฐานข้อมูลการกำหนดค่า PVR ของระบบ (config.db) โดยเน้นไปที่พารามิเตอร์ \'sdk_eyebuffer\' โดยเฉพาะเพื่อบังคับใช้ความละเอียดที่กำหนดเอง ต้องรีบูตเพื่อใช้การเปลี่ยนแปลง</string>
+    <string name="current_system_config">การกำหนดค่าระบบปัจจุบัน</string>
+    <string name="target_resolution">ความละเอียดเป้าหมาย</string>
+    <string name="apply_reboot">นำไปใช้และรีบูต</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">พิกเซล</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">กำลังนำไปใช้...</string>
+    <string name="status_applied_success">นำไปใช้สำเร็จแล้ว!</string>
+    <string name="status_rebooting">สำเร็จ กำลังรีบูต...</string>
+    <string name="status_error_prefix">ข้อผิดพลาด: %1$s</string>
+    <string name="status_read_error_prefix">ข้อผิดพลาดในการอ่าน: %1$s</string>
+    <string name="status_verify_failed">การยืนยันล้มเหลว ค่า DB ไม่เปลี่ยนแปลง</string>
+    <string name="preset_ultra_performance">ประสิทธิภาพสูงสุด</string>
+    <string name="preset_performance">ประสิทธิภาพ</string>
+    <string name="preset_default">ค่าเริ่มต้น</string>
+    <string name="preset_native">ความละเอียดเนทีฟ</string>
+    <string name="preset_pico_specific">เฉพาะสำหรับ Pico</string>
+    <string name="preset_anti_aliasing">การลบรอยหยัก</string>
+</resources>

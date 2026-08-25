@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Pico3dResolution</string>
+    <string name="app_title">Risoluzione Pico 3D</string>
+    <string name="app_description">Regola a livello globale la risoluzione di rendering per tutte le applicazioni VR 3D sul tuo visore Pico. Valori più elevati migliorano la nitidezza ma possono influire sulle prestazioni.\n\nQuesta app funziona utilizzando l\'accesso root pour modificare il database di configurazione PVR del sistema (config.db), prendendo di mira specificamente i parametri \'sdk_eyebuffer\' per forzare una risoluzione personalizzata. È necessario un riavvio per applicare le modifiche.</string>
+    <string name="current_system_config">Configurazione di sistema attuale</string>
+    <string name="target_resolution">Risoluzione di destinazione</string>
+    <string name="apply_reboot">Applica e riavvia</string>
+    <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
+    <string name="pixel">Pixel</string>
+    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
+    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
+    <string name="status_applying">Applicazione in corso...</string>
+    <string name="status_applied_success">Applicato con successo!</string>
+    <string name="status_rebooting">Successo. Riavvio in corso...</string>
+    <string name="status_error_prefix">Errore: %1$s</string>
+    <string name="status_read_error_prefix">Errore di lettura: %1$s</string>
+    <string name="status_verify_failed">Verifica non riuscita. I valori del database non sono cambiati.</string>
+    <string name="preset_ultra_performance">Prestazioni ultra</string>
+    <string name="preset_performance">Prestazioni</string>
+    <string name="preset_default">Predefinito</string>
+    <string name="preset_native">Risoluzione nativa</string>
+    <string name="preset_pico_specific">Specifico per Pico</string>
+    <string name="preset_anti_aliasing">Anti-aliasing</string>
+</resources>
