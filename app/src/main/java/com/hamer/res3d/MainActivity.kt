@@ -6,18 +6,25 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.hamer.res3d.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,6 +37,31 @@ import java.io.InputStreamReader
 const val DB_PATH = "/data/user_de/0/com.pvr.configuration/databases/config.db"
 const val TEMP_READ_DB = "config_temp.db"
 const val TEMP_APPLY_DB = "config_apply.db"
+
+fun Modifier.drawPicoScrollbar(state: ScrollState): Modifier = drawWithContent {
+    drawContent()
+    if (state.maxValue > 0) {
+        // Inset the scrollbar vertically to stay within the 12.dp rounded corners
+        val verticalInset = 12.dp.toPx()
+        val horizontalOffset = 10.dp.toPx()
+        
+        val viewHeight = size.height
+        val drawableHeight = viewHeight - (verticalInset * 2)
+        
+        // Ensure knobHeight doesn't exceed the drawable area
+        val knobHeight = minOf(40.dp.toPx(), drawableHeight)
+        
+        val scrollProgress = state.value.toFloat() / state.maxValue
+        val topOffset = verticalInset + (scrollProgress * (drawableHeight - knobHeight))
+
+        drawRoundRect(
+            color = Color.Gray.copy(alpha = 0.5f),
+            topLeft = Offset(size.width - horizontalOffset, topOffset),
+            size = Size(4.dp.toPx(), knobHeight),
+            cornerRadius = CornerRadius(2.dp.toPx(), 2.dp.toPx())
+        )
+    }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,7 +163,7 @@ fun ResolutionControlContent(
             Text(
                 text = "Pico 3D Resolution",
                 style = MaterialTheme.typography.headlineMedium,
-                color = colorResource(id = R.color.primary)
+                color = colorResource(id = R.color.white)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -172,7 +204,7 @@ fun ResolutionControlContent(
                             Text(
                                 "Current System Config",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = colorResource(id = R.color.primary)
+                                color = colorResource(id = R.color.white)
                             )
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 12.dp),
@@ -199,7 +231,9 @@ fun ResolutionControlContent(
 
                     // Right Side: Dropdown and Action
                     Column(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         var expanded by remember { mutableStateOf(false) }
@@ -222,23 +256,28 @@ fun ResolutionControlContent(
                                 Text(
                                     text = "Target Resolution",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color.LightGray,
-                                    modifier = Modifier.padding(bottom = 6.dp, start = 2.dp)
+                                    color = colorResource(id = R.color.white),
+                                    modifier = Modifier.padding(bottom = 8.dp)
                                 )
                                 OutlinedTextField(
                                     value = options.find { it.first == resolution }
-                                        ?.let { "${it.first} Pixel - ${it.second}" } ?: "$resolution Pixel",
+                                        ?.let { "${it.first} Pixel - ${it.second}" }
+                                        ?: "$resolution Pixel",
                                     onValueChange = {},
                                     readOnly = true,
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = expanded
+                                        )
+                                    },
                                     modifier = Modifier
                                         .menuAnchor()
                                         .fillMaxWidth(),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedTextColor = Color.White,
                                         unfocusedTextColor = Color.White,
-                                        focusedContainerColor = colorResource(id = R.color.content_bg),
-                                        unfocusedContainerColor = colorResource(id = R.color.content_bg),
+                                        focusedContainerColor = colorResource(id = R.color.card_bg),
+                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
                                         focusedBorderColor = Color.Transparent,
                                         unfocusedBorderColor = Color.Transparent
                                     ),
@@ -246,6 +285,8 @@ fun ResolutionControlContent(
                                     textStyle = MaterialTheme.typography.bodyMedium
                                 )
                             }
+
+                            val scrollState = rememberScrollState()
 
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -255,21 +296,28 @@ fun ResolutionControlContent(
                                         color = colorResource(id = R.color.dropdown_bg),
                                         shape = RoundedCornerShape(12.dp)
                                     )
+                                    .drawPicoScrollbar(scrollState)
                             ) {
-                                options.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = "${option.first} Pixel - ${option.second}",
-                                                color = Color.White
-                                            )
-                                        },
-                                        onClick = {
-                                            onResolutionChange(option.first)
-                                            expanded = false
-                                        },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                                    )
+                                Column(
+                                    modifier = Modifier
+                                        .heightIn(max = 280.dp)
+                                        .verticalScroll(scrollState)
+                                ) {
+                                    options.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = "${option.first} Pixel - ${option.second}",
+                                                    color = Color.White
+                                                )
+                                            },
+                                            onClick = {
+                                                onResolutionChange(option.first)
+                                                expanded = false
+                                            },
+                                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -336,104 +384,130 @@ fun ResolutionControlContent(
     }
 }
 
-suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, String> = withContext(Dispatchers.IO) {
-    val tempDb = File(cacheDir, TEMP_READ_DB)
+suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, String> =
+    withContext(Dispatchers.IO) {
+        val tempDb = File(cacheDir, TEMP_READ_DB)
 
-    var configVal = "N/A"
-    var defaultVal = "N/A"
-    var linkageVal = "N/A"
-    var errorMsg = ""
+        var configVal = "N/A"
+        var defaultVal = "N/A"
+        var linkageVal = "N/A"
+        var errorMsg = ""
 
-    try {
-        val (success, error) = runRootCommand(
-            "setenforce 0 || true",
-            "cp $DB_PATH ${tempDb.absolutePath}",
-            "chown $uid:$uid ${tempDb.absolutePath}",
-            "chmod 666 ${tempDb.absolutePath}"
-        )
+        try {
+            val (success, error) = runRootCommand(
+                "setenforce 0 || true",
+                "cp $DB_PATH ${tempDb.absolutePath}",
+                "chown $uid:$uid ${tempDb.absolutePath}",
+                "chmod 666 ${tempDb.absolutePath}"
+            )
 
-        if (success) {
-            if (tempDb.exists()) {
-                val db = SQLiteDatabase.openDatabase(tempDb.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-                db.rawQuery("SELECT CONFIG_VALUE, DEFAULT_CONFIG_VALUE FROM ConfigBean WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%' LIMIT 1", null).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        configVal = cursor.getString(0) ?: "null"
-                        defaultVal = cursor.getString(1) ?: "null"
+            if (success) {
+                if (tempDb.exists()) {
+                    val db = SQLiteDatabase.openDatabase(
+                        tempDb.absolutePath,
+                        null,
+                        SQLiteDatabase.OPEN_READONLY
+                    )
+                    db.rawQuery(
+                        "SELECT CONFIG_VALUE, DEFAULT_CONFIG_VALUE FROM ConfigBean WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%' LIMIT 1",
+                        null
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            configVal = cursor.getString(0) ?: "null"
+                            defaultVal = cursor.getString(1) ?: "null"
+                        }
                     }
-                }
-                db.rawQuery("SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%' LIMIT 1", null).use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        linkageVal = cursor.getString(0) ?: "null"
+                    db.rawQuery(
+                        "SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%' LIMIT 1",
+                        null
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            linkageVal = cursor.getString(0) ?: "null"
+                        }
                     }
+                    db.close()
+                    tempDb.delete()
+                } else {
+                    errorMsg = "Temp file not created"
                 }
-                db.close()
-                tempDb.delete()
             } else {
-                errorMsg = "Temp file not created"
+                errorMsg = error
             }
-        } else {
-            errorMsg = error
+        } catch (e: Exception) {
+            errorMsg = e.message ?: "Unknown error"
         }
-    } catch (e: Exception) {
-        errorMsg = e.message ?: "Unknown error"
+
+        ConfigValues(configVal, defaultVal, linkageVal) to errorMsg
     }
 
-    ConfigValues(configVal, defaultVal, linkageVal) to errorMsg
-}
+suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean, String> =
+    withContext(Dispatchers.IO) {
+        val tempDb = File(cacheDir, TEMP_APPLY_DB)
 
-suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean, String> = withContext(Dispatchers.IO) {
-    val tempDb = File(cacheDir, TEMP_APPLY_DB)
+        try {
+            runRootCommand("setenforce 0 || true")
 
-    try {
-        runRootCommand("setenforce 0 || true")
+            val (cpSuccess, cpError) = runRootCommand(
+                "cp $DB_PATH ${tempDb.absolutePath}",
+                "chown $uid:$uid ${tempDb.absolutePath}",
+                "chmod 666 ${tempDb.absolutePath}"
+            )
+            if (!cpSuccess) return@withContext false to "Copy failed: $cpError"
 
-        val (cpSuccess, cpError) = runRootCommand(
-            "cp $DB_PATH ${tempDb.absolutePath}",
-            "chown $uid:$uid ${tempDb.absolutePath}",
-            "chmod 666 ${tempDb.absolutePath}"
-        )
-        if (!cpSuccess) return@withContext false to "Copy failed: $cpError"
+            if (!tempDb.exists()) return@withContext false to "Temp file missing"
 
-        if (!tempDb.exists()) return@withContext false to "Temp file missing"
+            val db = SQLiteDatabase.openDatabase(
+                tempDb.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READWRITE
+            )
+            db.execSQL(
+                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
+                arrayOf(res, res)
+            )
+            db.execSQL(
+                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
+                arrayOf(res)
+            )
+            db.close()
 
-        val db = SQLiteDatabase.openDatabase(tempDb.absolutePath, null, SQLiteDatabase.OPEN_READWRITE)
-        db.execSQL("UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'", arrayOf(res, res))
-        db.execSQL("UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'", arrayOf(res))
-        db.close()
+            // 3. Write back and verify changes before rebooting
+            android.util.Log.d("Res3D", "Step 3: Writing back and verifying changes...")
+            val (writeSuccess, writeError) = runRootCommand(
+                "cat ${tempDb.absolutePath} > $DB_PATH",
+                "sync"
+            )
 
-        // 3. Write back and verify changes before rebooting
-        android.util.Log.d("Res3D", "Step 3: Writing back and verifying changes...")
-        val (writeSuccess, writeError) = runRootCommand(
-            "cat ${tempDb.absolutePath} > $DB_PATH",
-            "sync"
-        )
+            if (tempDb.exists()) tempDb.delete()
 
-        if (tempDb.exists()) tempDb.delete()
+            if (!writeSuccess) {
+                return@withContext false to "Write back failed: $writeError"
+            }
 
-        if (!writeSuccess) {
-            return@withContext false to "Write back failed: $writeError"
+            // Call fetchCurrentValues to verify the actual state of the system DB
+            val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
+
+            val isVerified = verifiedValues.configValue == res &&
+                    verifiedValues.linkageValue == res
+
+            if (isVerified) {
+                android.util.Log.d("Res3D", "Verification success. Rebooting...")
+                runRootCommand("reboot")
+                return@withContext true to "Success. Rebooting..."
+            } else {
+                val details =
+                    "Got C:${verifiedValues.configValue}, L:${verifiedValues.linkageValue}"
+                android.util.Log.e(
+                    "Res3D",
+                    "Verification failed. Expected $res but $details. Error: $fetchError"
+                )
+                return@withContext false to "Verification failed. DB values did not change."
+            }
+        } catch (e: Exception) {
+            if (tempDb.exists()) tempDb.delete()
+            return@withContext false to (e.message ?: "Unknown exception")
         }
-
-        // Call fetchCurrentValues to verify the actual state of the system DB
-        val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
-
-        val isVerified = verifiedValues.configValue == res &&
-                         verifiedValues.linkageValue == res
-
-        if (isVerified) {
-            android.util.Log.d("Res3D", "Verification success. Rebooting...")
-            runRootCommand("reboot")
-            return@withContext true to "Success. Rebooting..."
-        } else {
-            val details = "Got C:${verifiedValues.configValue}, L:${verifiedValues.linkageValue}"
-            android.util.Log.e("Res3D", "Verification failed. Expected $res but $details. Error: $fetchError")
-            return@withContext false to "Verification failed. DB values did not change."
-        }
-    } catch (e: Exception) {
-        if (tempDb.exists()) tempDb.delete()
-        return@withContext false to (e.message ?: "Unknown exception")
     }
-}
 
 private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
     var process: Process? = null
@@ -463,8 +537,14 @@ private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
     } catch (e: Exception) {
         return false to (e.message ?: "su execution failed")
     } finally {
-        try { os?.close() } catch (ignore: Exception) {}
-        try { errorReader?.close() } catch (ignore: Exception) {}
+        try {
+            os?.close()
+        } catch (ignore: Exception) {
+        }
+        try {
+            errorReader?.close()
+        } catch (ignore: Exception) {
+        }
         process?.destroy()
     }
 }
