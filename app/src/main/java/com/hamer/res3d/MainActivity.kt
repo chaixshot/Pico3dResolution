@@ -65,7 +65,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
-    
+
     // Get current app UID for chown
     val appUid = android.os.Process.myUid()
 
@@ -282,7 +282,7 @@ fun ResolutionControlContent(
                                 .height(56.dp),
                             shape = MaterialTheme.shapes.medium,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(id = R.color.toggle_button)
+                                containerColor = colorResource(id = R.color.dropdown_bg)
                             )
                         ) {
                             Text(
@@ -337,7 +337,7 @@ fun ResolutionControlContent(
 
 suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, String> = withContext(Dispatchers.IO) {
     val tempDb = File(cacheDir, TEMP_READ_DB)
-    
+
     var configVal = "N/A"
     var defaultVal = "N/A"
     var linkageVal = "N/A"
@@ -345,12 +345,12 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
 
     try {
         val (success, error) = runRootCommand(
-            "setenforce 0 || true", 
-            "cp $DB_PATH ${tempDb.absolutePath}", 
+            "setenforce 0 || true",
+            "cp $DB_PATH ${tempDb.absolutePath}",
             "chown $uid:$uid ${tempDb.absolutePath}",
             "chmod 666 ${tempDb.absolutePath}"
         )
-        
+
         if (success) {
             if (tempDb.exists()) {
                 val db = SQLiteDatabase.openDatabase(tempDb.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
@@ -376,7 +376,7 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
     } catch (e: Exception) {
         errorMsg = e.message ?: "Unknown error"
     }
-    
+
     ConfigValues(configVal, defaultVal, linkageVal) to errorMsg
 }
 
@@ -399,14 +399,14 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
         db.execSQL("UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'", arrayOf(res, res))
         db.execSQL("UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'", arrayOf(res))
         db.close()
-        
+
         // 3. Write back and verify changes before rebooting
         android.util.Log.d("Res3D", "Step 3: Writing back and verifying changes...")
         val (writeSuccess, writeError) = runRootCommand(
             "cat ${tempDb.absolutePath} > $DB_PATH",
             "sync"
         )
-        
+
         if (tempDb.exists()) tempDb.delete()
 
         if (!writeSuccess) {
@@ -415,8 +415,8 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
 
         // Call fetchCurrentValues to verify the actual state of the system DB
         val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
-        
-        val isVerified = verifiedValues.configValue == res && 
+
+        val isVerified = verifiedValues.configValue == res &&
                          verifiedValues.linkageValue == res
 
         if (isVerified) {
@@ -441,7 +441,7 @@ private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
     try {
         process = Runtime.getRuntime().exec("su")
         os = DataOutputStream(process.outputStream)
-        
+
         for (cmd in commands) {
             os.writeBytes("$cmd\n")
         }
@@ -457,7 +457,7 @@ private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
 
         val exitValue = process.waitFor()
         val errorMsg = errors.toString().trim()
-        
+
         return (exitValue == 0) to errorMsg
     } catch (e: Exception) {
         return false to (e.message ?: "su execution failed")
