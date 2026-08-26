@@ -7,9 +7,9 @@
     <string name="apply_reboot">นำไปใช้และรีบูต</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">พิกเซล</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">ค่าการกำหนดค่า: %1$s %2$s</string>
+    <string name="default_value_label">ค่าเริ่มต้น: %1$s %2$s</string>
+    <string name="linkage_value_label">ค่าการเชื่อมโยง: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">กำลังนำไปใช้...</string>
     <string name="status_applied_success">นำไปใช้สำเร็จแล้ว!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">ความละเอียดเนทีฟ</string>
     <string name="preset_pico_specific">เฉพาะสำหรับ Pico</string>
     <string name="preset_anti_aliasing">การลบรอยหยัก</string>
+    <string name="stencil_mesh">สเตนซิลเมช</string>
+    <string name="foveated_rendering">การเรนเดอร์แบบโฟวีเทต</string>
+    <string name="enabled">เปิดใช้งาน</string>
+    <string name="disabled">ปิดใช้งาน</string>
+    <string name="texture_fov">FOV ของพื้นผิว</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">ปรับขนาด EyeBuffer ของการเรนเดอร์ส่วนกลาง ค่าที่สูงขึ้นจะช่วยเพิ่มความคมชัด แต่จะเพิ่มเวลาแฝงและลดประสิทธิภาพลง มาตราส่วนที่แนะนำคือระหว่าง 0.5 ถึง 2.0</string>
+    <string name="help_stencil_mesh_desc">การเพิ่มประสิทธิภาพที่ป้องกันการเรนเดอร์พิกเซลที่ถูกซ่อนโดยขอบเลนส์ของชุดหูฟัง (มุม) ซึ่งช่วยประหยัดทรัพยากร GPU</string>
+    <string name="help_ffr_desc">ปรับการเรนเดอร์ให้เหมาะสมโดยให้ความละเอียดเต็มที่สำหรับพื้นที่โฟกัสตรงกลาง ในขณะที่ลดความละเอียดลงในพื้นที่รอบข้างที่มองเห็นรายละเอียดได้น้อยกว่า</string>
+    <string name="help_texture_fov_desc">ปรับมุมมอง (Field of View) ของพื้นผิวตาที่เรนเดอร์ การลดค่านี้สามารถปรับปรุงประสิทธิภาพได้โดยการเรนเดอร์พื้นที่น้อยลง แต่จะทำให้มุมมองของคุณแคบลง</string>
+    <string name="close">ปิด</string>
 </resources>

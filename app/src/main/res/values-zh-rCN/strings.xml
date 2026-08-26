@@ -23,4 +23,15 @@
     <string name="preset_native">原生分辨率</string>
     <string name="preset_pico_specific">Pico 专用</string>
     <string name="preset_anti_aliasing">抗锯齿</string>
+    <string name="stencil_mesh">遮罩网格</string>
+    <string name="foveated_rendering">注视点渲染</string>
+    <string name="enabled">已启用</string>
+    <string name="disabled">已禁用</string>
+    <string name="texture_fov">纹理视场角</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">调整全局渲染 EyeBuffer 大小。较高的值可提高清晰度，但会增加延迟并降低性能。建议比例在 0.5 到 2.0 之间。</string>
+    <string name="help_stencil_mesh_desc">一种优化技术，可防止渲染被头显镜片边缘（角）物理遮挡的像素，从而节省 GPU 资源。</string>
+    <string name="help_ffr_desc">通过为中央焦点区域提供全分辨率，同时降低细节不太明显的周边区域的分辨率来优化渲染。</string>
+    <string name="help_texture_fov_desc">调整渲染眼图的视场角。降低此值可以通过渲染更少的区域来提高性能，但会缩小您的视野。</string>
+    <string name="close">关闭</string>
 </resources>

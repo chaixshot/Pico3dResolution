@@ -7,9 +7,9 @@
     <string name="apply_reboot">Εφαρμογή &amp; Επανεκκίνηση</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">ΤΙΜΗ_ΔΙΑΜΟΡΦΩΣΗΣ: %1$s %2$s</string>
+    <string name="default_value_label">ΠΡΟΕΠΙΛΕΓΜΕΝΗ_ΤΙΜΗ: %1$s %2$s</string>
+    <string name="linkage_value_label">ΤΙΜΗ_ΣΥΝΔΕΣΗΣ: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Εφαρμογή...</string>
     <string name="status_applied_success">Εφαρμόστηκε με επιτυχία!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Εγγενής ανάλυση</string>
     <string name="preset_pico_specific">Ειδικά για το Pico</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Πλέγμα Στένσιλ</string>
+    <string name="foveated_rendering">Εστιασμένη Απόδοση</string>
+    <string name="enabled">Ενεργοποιημένο</string>
+    <string name="disabled">Απενεργοποιημένο</string>
+    <string name="texture_fov">FOV Υφής</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Προσαρμόζει το καθολικό μέγεθος EyeBuffer της απόδοσης. Οι υψηλότερες τιμές βελτιώνουν την καθαρότητα αλλά αυξάνουν την καθυστέρηση και μειώνουν την απόδοση. Η συνιστώμενη κλίμακα είναι μεταξύ 0,5 και 2,0.</string>
+    <string name="help_stencil_mesh_desc">Μια βελτιστοποίηση που εμποδίζει την απόδοση pixel που κρύβονται φυσικά από τα όρια των φακών του σετ κεφαλής (γωνίες), εξοικονομώντας πόρους GPU.</string>
+    <string name="help_ffr_desc">Βελτιστοποιεί την απόδοση παρέχοντας πλήρη ανάλυση για την κεντρική περιοχή εστίασης ενώ μειώνει την ανάλυση σε περιφερειακές περιοχές όπου η λεπτομέρεια είναι λιγότερο αισθητή.</string>
+    <string name="help_texture_fov_desc">Προσαρμόζει το οπτικό πεδίο των υφών των ματιών που αποδίδονται. Η μείωση αυτού μπορεί να βελτιώσει την απόδοση αποδίδοντας λιγότερη περιοχή, αλλά θα στενέψει την προβολή σας.</string>
+    <string name="close">Κλείσιμο</string>
 </resources>

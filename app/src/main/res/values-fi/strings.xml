@@ -7,9 +7,9 @@
     <string name="apply_reboot">Käytä ja käynnistä uudelleen</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pikseli</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">ASETUSARVO: %1$s %2$s</string>
+    <string name="default_value_label">OLETUSARVO: %1$s %2$s</string>
+    <string name="linkage_value_label">LINKITYSARVO: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Käytetään...</string>
     <string name="status_applied_success">Käytetty onnistuneesti!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Alkuperäinen resoluutio</string>
     <string name="preset_pico_specific">Pico-kohtainen</string>
     <string name="preset_anti_aliasing">Reunanpehmennys</string>
+    <string name="stencil_mesh">Sabluunaverkko</string>
+    <string name="foveated_rendering">Foveoitu renderöinti</string>
+    <string name="enabled">Käytössä</string>
+    <string name="disabled">Ei käytössä</string>
+    <string name="texture_fov">Tekstuurin näkökenttä</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Säätää maailmanlaajuista EyeBuffer-kokoa. Suuremmat arvot parantavat selkeyttä, mutta lisäävät viivettä ja heikentävät suorituskykyä. Suositeltu asteikko on 0,5–2,0.</string>
+    <string name="help_stencil_mesh_desc">Optimointi, joka estää sellaisten pikselien renderöinnin, jotka jäävät fyysisesti lasien linssien reunojen (kulmien) taakse, säästäen näin näytönohjaimen resursseja.</string>
+    <string name="help_ffr_desc">Optimoi renderöinnin tarjoamalla täyden resoluution keskeiselle tarkennetulle alueelle ja laskemalla resoluutiota reuna-alueilla, joilla yksityiskohdat ovat vähemmän huomattavia.</string>
+    <string name="help_texture_fov_desc">Säätää renderöityjen silmätekstuurien näkökenttää. Tämän laskeminen voi parantaa suorituskykyä renderöimällä pienemmän alueen, mutta se kaventaa näkymääsi.</string>
+    <string name="close">Sulje</string>
 </resources>

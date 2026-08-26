@@ -7,9 +7,9 @@
     <string name="apply_reboot">Aplicar y reiniciar</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Píxel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">VALOR_CONFIG: %1$s %2$s</string>
+    <string name="default_value_label">VALOR_PREDET: %1$s %2$s</string>
+    <string name="linkage_value_label">VALOR_VINC: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Aplicando...</string>
     <string name="status_applied_success">¡Aplicado con éxito!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Resolución nativa</string>
     <string name="preset_pico_specific">Específico de Pico</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Malla de estarcido (Stencil Mesh)</string>
+    <string name="foveated_rendering">Renderizado foveado (Foveated Rendering)</string>
+    <string name="enabled">Activado</string>
+    <string name="disabled">Desactivado</string>
+    <string name="texture_fov">FOV de textura</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Ajusta el tamaño del EyeBuffer de renderizado global. Los valores más altos mejoran la claridad pero aumentan la latencia y reducen el rendimiento. La escala recomendada está entre 0.5 y 2.0.</string>
+    <string name="help_stencil_mesh_desc">Una optimización que evita renderizar píxeles que están físicamente ocultos por los bordes de las lentes del visor (esquinas), ahorrando recursos de la GPU.</string>
+    <string name="help_ffr_desc">Optimiza el renderizado proporcionando resolución completa para el área de enfoque central mientras reduce la resolución en las áreas periféricas donde el detalle es menos notable.</string>
+    <string name="help_texture_fov_desc">Ajusta el campo de visión de las texturas de ojos renderizadas. Bajar esto puede mejorar el rendimiento al renderizar menos área, pero estrechará su vista.</string>
+    <string name="close">Cerrar</string>
 </resources>

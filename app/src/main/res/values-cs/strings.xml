@@ -7,9 +7,9 @@
     <string name="apply_reboot">Použít a restartovat</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">HODNOTA_KONFIG: %1$s %2$s</string>
+    <string name="default_value_label">VÝCHOZÍ_HODNOTA: %1$s %2$s</string>
+    <string name="linkage_value_label">HODNOTA_VAZBY: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Používání...</string>
     <string name="status_applied_success">Úspěšně použito!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Nativní rozlišení</string>
     <string name="preset_pico_specific">Specifické pro Pico</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Stencil maska</string>
+    <string name="foveated_rendering">Foveální vykreslování</string>
+    <string name="enabled">Povoleno</string>
+    <string name="disabled">Zakázáno</string>
+    <string name="texture_fov">FOV textury</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Upravuje globální velikost EyeBufferu. Vyšší hodnoty zlepšují čistotu, ale zvyšují latenci a snižují výkon. Doporučené měřítko je mezi 0,5 a 2,0.</string>
+    <string name="help_stencil_mesh_desc">Optimalizace, která zabraňuje vykreslování pixelů, které jsou fyzicky skryty okraji čoček náhlavní soupravy (rohy), čímž šetří zdroje GPU.</string>
+    <string name="help_ffr_desc">Optimalizuje vykreslování poskytováním plného rozlišení pro centrální oblast zaostření a zároveň snižuje rozliшение v okrajových oblastech, kde jsou detaily méně patrné.</string>
+    <string name="help_texture_fov_desc">Upravuje zorné pole vykreslovaných textur očí. Snížení této hodnoty může zlepšit výkon vykreslováním menší plochy, ale zúží váš výhled.</string>
+    <string name="close">Zavřít</string>
 </resources>

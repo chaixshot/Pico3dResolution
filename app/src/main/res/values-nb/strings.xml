@@ -7,9 +7,9 @@
     <string name="apply_reboot">Bruk og start på nytt</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Piksel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">KONFIGURASJONSVERDI: %1$s %2$s</string>
+    <string name="default_value_label">STANDARDVERDI: %1$s %2$s</string>
+    <string name="linkage_value_label">KOBLINGSVERDI: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Bruker...</string>
     <string name="status_applied_success">Vellykket tatt i bruk!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Nativ oppløsning</string>
     <string name="preset_pico_specific">Spesifikt for Pico</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Stencil-maske</string>
+    <string name="foveated_rendering">Foveated rendering</string>
+    <string name="enabled">Aktivert</string>
+    <string name="disabled">Deaktivert</string>
+    <string name="texture_fov">Tekstur-synsfelt</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Justerer den globale EyeBuffer-størrelsen for rendering. Høyere verdier gir bedre klarhet, men øker forsinkelsen og reduserer ytelsen. Anbefalt skala er mellom 0,5 og 2,0.</string>
+    <string name="help_stencil_mesh_desc">En optimalisering som forhindrer rendering av piksler som er fysisk skjult av hodesettets linsekanter (hjørner), noe som sparer GPU-ressurser.</string>
+    <string name="help_ffr_desc">Optimaliserer rendering ved å gi full oppløsning for det sentrale fokusområdet, mens oppløsningen senkes i perifere områder der detaljer er mindre merkbare.</string>
+    <string name="help_texture_fov_desc">Justerer synsfeltet for de rendrede øyeteksturene. Å senke dette kan forbedre ytelsen ved å rendre et mindre område, men vil gjøre synsfeltet smalere.</string>
+    <string name="close">Lukk</string>
 </resources>

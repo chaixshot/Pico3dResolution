@@ -7,9 +7,9 @@
     <string name="apply_reboot">Aplică și repornește</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">VALOARE_CONFIGURARE: %1$s %2$s</string>
+    <string name="default_value_label">VALOARE_IMPLICITĂ: %1$s %2$s</string>
+    <string name="linkage_value_label">VALOARE_LEGARE: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Se aplică...</string>
     <string name="status_applied_success">Aplicat cu succes!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Rezoluție nativă</string>
     <string name="preset_pico_specific">Specific Pico</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Mască Stencil</string>
+    <string name="foveated_rendering">Randare Foveală</string>
+    <string name="enabled">Activat</string>
+    <string name="disabled">Dezactivat</string>
+    <string name="texture_fov">FOV Textură</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Ajustează dimensiunea globală a EyeBuffer de redare. Valorile mai mari îmbunătățesc claritatea, dar cresc latența și reduc performanța. Scara recomandată este între 0,5 și 2,0.</string>
+    <string name="help_stencil_mesh_desc">O optimizare care previne randarea pixelilor care sunt ascunși fizic de marginile lentilelor căștii (colțuri), economisind resursele GPU.</string>
+    <string name="help_ffr_desc">Optimizează randarea prin furnizarea rezoluției complete pentru zona centrală de focalizare, scăzând în același timp rezoluția în zonele periferice unde detaliile sunt mai puțin vizibile.</string>
+    <string name="help_texture_fov_desc">Ajustează câmpul vizual al texturilor ochilor redate. Reducerea acestuia poate îmbunătăți performanța prin randarea unei zone mai mici, dar vă va îngusta vederea.</string>
+    <string name="close">Închide</string>
 </resources>

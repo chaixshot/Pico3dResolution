@@ -7,9 +7,9 @@
     <string name="apply_reboot">Guna &amp; But Semula</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Piksel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">NILAI_KONFIGURASI: %1$s %2$s</string>
+    <string name="default_value_label">NILAI_LALAI: %1$s %2$s</string>
+    <string name="linkage_value_label">NILAI_PAUTAN: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Menggunakan...</string>
     <string name="status_applied_success">Berjaya digunakan!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Resolusi Asal</string>
     <string name="preset_pico_specific">Khusus Pico</string>
     <string name="preset_anti_aliasing">Anti-alias</string>
+    <string name="stencil_mesh">Mesh Stensil</string>
+    <string name="foveated_rendering">Paparan Foveated</string>
+    <string name="enabled">Didayakan</string>
+    <string name="disabled">Dilumpuhkan</string>
+    <string name="texture_fov">FOV Tekstur</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Melaraskan saiz EyeBuffer rendering global. Nilai yang lebih tinggi meningkatkan kejelasan tetapi meningkatkan kependaman dan mengurangkan prestasi. Skala yang disyorkan adalah antara 0.5 dan 2.0.</string>
+    <string name="help_stencil_mesh_desc">Pengoptimuman yang menghalang pemaparan piksel yang tersembunyi secara fizikal oleh sempadan kanta set kepala (penjuru), menjimatkan sumber GPU.</string>
+    <string name="help_ffr_desc">Mengoptimumkan pemaparan dengan memberikan resolusi penuh untuk kawasan fokus pusat sambil merendahkan resolusi di kawasan persisian di mana butiran kurang ketara.</string>
+    <string name="help_texture_fov_desc">Melaraskan medan pandangan tekstur mata yang dipaparkan. Menurunkan ini boleh meningkatkan prestasi dengan memaparkan kawasan yang kurang, tetapi akan mengecilkan pandangan anda.</string>
+    <string name="close">Tutup</string>
 </resources>

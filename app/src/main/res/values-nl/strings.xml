@@ -7,9 +7,9 @@
     <string name="apply_reboot">Toepassen en herstarten</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">CONFIG_WAARDE: %1$s %2$s</string>
+    <string name="default_value_label">STANDAARD_WAARDE: %1$s %2$s</string>
+    <string name="linkage_value_label">KOPPELING_WAARDE: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Toepassen...</string>
     <string name="status_applied_success">Succesvol toegepast!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Native resolutie</string>
     <string name="preset_pico_specific">Specifiek voor Pico</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Stencil-masker</string>
+    <string name="foveated_rendering">Foveated rendering</string>
+    <string name="enabled">Ingeschakeld</string>
+    <string name="disabled">Uitgeschakeld</string>
+    <string name="texture_fov">Textuur FOV</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Past de globale EyeBuffer-grootte aan. Hogere waarden verbeteren de helderheid maar verhogen de latentie en verlagen de prestaties. De aanbevolen schaal ligt tussen 0,5 en 2,0.</string>
+    <string name="help_stencil_mesh_desc">Een optimalisatie die voorkomt dat pixels worden gerenderd die fysiek verborgen zijn door de lensranden van de headset (hoeken), waardoor GPU-bronnen worden bespaard.</string>
+    <string name="help_ffr_desc">Optimaliseert het renderen door volledige resolutie te bieden voor het centrale focusgebied, terwijl de resolutie in perifere gebieden waar details minder opvallen wordt verlaagd.</string>
+    <string name="help_texture_fov_desc">Past het gezichtsveld van de gerenderde oogtexturen aan. Het verlagen hiervan kan de prestaties verbeteren door minder gebied te renderen, maar zal uw zicht vernauwen.</string>
+    <string name="close">Sluiten</string>
 </resources>

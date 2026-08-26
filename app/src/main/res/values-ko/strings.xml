@@ -7,9 +7,9 @@
     <string name="apply_reboot">적용 및 재부팅</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">픽셀</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">구성 값: %1$s %2$s</string>
+    <string name="default_value_label">기본값: %1$s %2$s</string>
+    <string name="linkage_value_label">연동 값: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">적용 중...</string>
     <string name="status_applied_success">성공적으로 적용되었습니다!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">기본 해상도</string>
     <string name="preset_pico_specific">Pico 전용</string>
     <string name="preset_anti_aliasing">안티앨리어싱</string>
+    <string name="stencil_mesh">스텐실 메쉬</string>
+    <string name="foveated_rendering">포비에이티드 렌더링</string>
+    <string name="enabled">활성화</string>
+    <string name="disabled">비활성화</string>
+    <string name="texture_fov">텍스처 시야각 (FOV)</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">전역 렌더링 EyeBuffer 크기를 조정합니다. 값이 높을수록 선명도는 향상되지만 지연 시간이 늘어나고 성능이 저하됩니다. 권장 배율은 0.5에서 2.0 사이입니다.</string>
+    <string name="help_stencil_mesh_desc">헤드셋 렌즈 경계(모서리)에 의해 물리적으로 가려진 픽셀의 렌더링을 방지하여 GPU 리소스를 절약하는 최적화입니다.</string>
+    <string name="help_ffr_desc">중앙 초점 영역에는 전체 해상도를 제공하고, 세부 사항이 덜 눈에 띄는 주변 영역의 해상도를 낮추어 렌더링을 최적화합니다.</string>
+    <string name="help_texture_fov_desc">렌더링된 눈 텍스처의 시야각을 조정합니다. 이 값을 낮추면 렌더링 영역이 줄어들어 성능이 향상될 수 있지만 시야가 좁아집니다.</string>
+    <string name="close">닫기</string>
 </resources>

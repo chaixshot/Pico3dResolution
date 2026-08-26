@@ -7,9 +7,9 @@
     <string name="apply_reboot">Anvend og genstart</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
-    <string name="config_value_label">CONFIG_VALUE: %1$s %2$s</string>
-    <string name="default_value_label">DEFAULT_VALUE: %1$s %2$s</string>
-    <string name="linkage_value_label">LINKAGE_VALUE: %1$s %2$s</string>
+    <string name="config_value_label">KONFIG_VÆRDI: %1$s %2$s</string>
+    <string name="default_value_label">STANDARD_VÆRDI: %1$s %2$s</string>
+    <string name="linkage_value_label">KOBLINGS_VÆRDI: %1$s %2$s</string>
     <string name="dropdown_value_format">%1$s %2$s - %3$s</string>
     <string name="status_applying">Anvender...</string>
     <string name="status_applied_success">Anvendt med succes!</string>
@@ -23,4 +23,15 @@
     <string name="preset_native">Nativ opløsning</string>
     <string name="preset_pico_specific">Pico specifikt</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Stencil-maske</string>
+    <string name="foveated_rendering">Foveated rendering</string>
+    <string name="enabled">Aktiveret</string>
+    <string name="disabled">Deaktiveret</string>
+    <string name="texture_fov">Tekstur-FOV</string>
+    <string name="degree">°</string>
+    <string name="help_resolution_desc">Justerer den globale rendering EyeBuffer-størrelse. Højere værdier forbedrer klarheden, men øger latenstiden og reducerer ydeevnen. Anbefalet skala er mellem 0,5 og 2,0.</string>
+    <string name="help_stencil_mesh_desc">En optimering, der forhindrer rendering af pixels, der er fysisk skjult af headsetets linsekanter (hjørner), hvilket sparer GPU-ressourcer.</string>
+    <string name="help_ffr_desc">Optimerer rendering ved at give fuld opløsning til det centrale fokusområde, mens opløsningen sænkes i perifere områder, hvor detaljer er mindre mærkbare.</string>
+    <string name="help_texture_fov_desc">Justerer synsfeltet for de renderede øjenteksturer. Sænkning af dette kan forbedre ydeevnen ved at rendere mindre område, men vil indsnævre dit udsyn.</string>
+    <string name="close">Luk</string>
 </resources>
