@@ -29,4 +29,9 @@
     <string name="disabled">Disabled</string>
     <string name="texture_fov">Texture Fov</string>
     <string name="degree">°</string>
+    <string name="help_resolution_desc">Adjusts the global rendering EyeBuffer size. Higher values improve clarity but increase latency and reduce performance. Recommended scale is between 0.5 and 2.0.</string>
+    <string name="help_stencil_mesh_desc">An optimization that prevents rendering pixels that are physically hidden by the headset\'s lens borders (corners), saving GPU resources.</string>
+    <string name="help_ffr_desc">Optimizes rendering by providing full resolution for the central focus area while lowering resolution in peripheral areas where detail is less noticeable.</string>
+    <string name="help_texture_fov_desc">Adjusts the field of view of the rendered eye textures. Lowering this can improve performance by rendering less area, but will narrow your view.</string>
+    <string name="close">Close</string>
 </resources>

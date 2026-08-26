@@ -15,6 +15,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +46,38 @@ import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
+
+@Composable
+fun HelpButton(title: String, message: String) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    IconButton(
+        onClick = { showDialog = true },
+        modifier = Modifier.size(18.dp)
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
+            contentDescription = "Help",
+            tint = Color.LightGray.copy(alpha = 0.5f)
+        )
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
+            text = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(id = R.string.close), color = colorResource(id = R.color.toggle_button))
+                }
+            },
+            containerColor = colorResource(id = R.color.card_bg),
+            titleContentColor = Color.White,
+            textContentColor = Color.LightGray
+        )
+    }
+}
 
 @Composable
 fun rememberLauncherIcon(): ImageBitmap? {
@@ -323,12 +357,21 @@ fun ResolutionControlContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column {
-                                Text(
-                                    text = stringResource(id = R.string.target_resolution),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = colorResource(id = R.color.white),
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(bottom = 8.dp)
-                                )
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.target_resolution),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = colorResource(id = R.color.white)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    HelpButton(
+                                        title = stringResource(id = R.string.target_resolution),
+                                        message = stringResource(id = R.string.help_resolution_desc)
+                                    )
+                                }
                                 OutlinedTextField(
                                     value = resOptions.find { it.first == resolution }
                                         ?.let {
@@ -416,12 +459,21 @@ fun ResolutionControlContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column {
-                                Text(
-                                    text = stringResource(id = R.string.stencil_mesh),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = colorResource(id = R.color.white),
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(bottom = 8.dp)
-                                )
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.stencil_mesh),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = colorResource(id = R.color.white)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    HelpButton(
+                                        title = stringResource(id = R.string.stencil_mesh),
+                                        message = stringResource(id = R.string.help_stencil_mesh_desc)
+                                    )
+                                }
                                 OutlinedTextField(
                                     value = smOptions.find { it.first == stencilMesh }?.second
                                         ?: stencilMesh,
@@ -481,12 +533,21 @@ fun ResolutionControlContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column {
-                                Text(
-                                    text = stringResource(id = R.string.foveated_rendering),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = colorResource(id = R.color.white),
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(bottom = 8.dp)
-                                )
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.foveated_rendering),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = colorResource(id = R.color.white)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    HelpButton(
+                                        title = stringResource(id = R.string.foveated_rendering),
+                                        message = stringResource(id = R.string.help_ffr_desc)
+                                    )
+                                }
                                 OutlinedTextField(
                                     value = ffrOptions.find { it.first == ffr }?.second ?: ffr,
                                     onValueChange = {},
@@ -551,12 +612,21 @@ fun ResolutionControlContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column {
-                                Text(
-                                    text = stringResource(id = R.string.texture_fov),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = colorResource(id = R.color.white),
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(bottom = 8.dp)
-                                )
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.texture_fov),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = colorResource(id = R.color.white)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    HelpButton(
+                                        title = stringResource(id = R.string.texture_fov),
+                                        message = stringResource(id = R.string.help_texture_fov_desc)
+                                    )
+                                }
                                 OutlinedTextField(
                                     value = if (textureFov.isNotBlank()) "$textureFov$degreeSuffix" else "",
                                     onValueChange = {},
