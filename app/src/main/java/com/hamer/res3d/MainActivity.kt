@@ -602,11 +602,11 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = onApplyClick,
                             modifier = Modifier
-                                .fillMaxWidth(0.8f)
+                                .fillMaxWidth(0.6f)
+                                .padding(top = 40.dp)
                                 .height(56.dp),
                             shape = MaterialTheme.shapes.medium,
                             colors = ButtonDefaults.buttonColors(
