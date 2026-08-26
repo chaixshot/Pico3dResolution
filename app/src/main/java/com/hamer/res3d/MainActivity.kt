@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -72,13 +74,13 @@ fun Modifier.drawPicoScrollbar(state: ScrollState): Modifier = drawWithContent {
         // Inset the scrollbar vertically to stay within the 12.dp rounded corners
         val verticalInset = 16.dp.toPx()
         val horizontalOffset = 14.dp.toPx()
-        
+
         val viewHeight = size.height
         val drawableHeight = viewHeight - (verticalInset * 2)
-        
+
         // Ensure knobHeight doesn't exceed the drawable area
         val knobHeight = minOf(40.dp.toPx(), drawableHeight)
-        
+
         val scrollProgress = if (state.maxValue > 0) state.value.toFloat() / state.maxValue else 0f
         val topOffset = verticalInset + (scrollProgress * (drawableHeight - knobHeight))
 
@@ -114,12 +116,16 @@ class MainActivity : ComponentActivity() {
 }
 
 data class ConfigValues(
-    val linkageValue: String = "Unknown"
+    val resolution: String = "Unknown",
+    val stencilMesh: String = "Unknown",
+    val ffr: String = "Unknown"
 )
 
 @Composable
 fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var resolution by remember { mutableStateOf("") }
+    var stencilMesh by remember { mutableStateOf("") }
+    var ffr by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
@@ -130,8 +136,14 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         scope.launch {
             val (values, error) = fetchCurrentValues(cacheDir, appUid)
             currentValues = values
-            if (values.linkageValue != "Unknown" && values.linkageValue != "N/A") {
-                resolution = values.linkageValue
+            if (values.resolution != "Unknown" && values.resolution != "N/A") {
+                resolution = values.resolution
+            }
+            if (values.stencilMesh != "Unknown" && values.stencilMesh != "N/A") {
+                stencilMesh = values.stencilMesh
+            }
+            if (values.ffr != "Unknown" && values.ffr != "N/A") {
+                ffr = values.ffr
             }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
@@ -146,13 +158,23 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     ResolutionControlContent(
         currentValues = currentValues,
         resolution = resolution,
+        stencilMesh = stencilMesh,
+        ffr = ffr,
         status = status,
         onResolutionChange = { resolution = it },
+        onStencilMeshChange = { stencilMesh = it },
+        onFfrChange = { ffr = it },
         onApplyClick = {
-            if (resolution.isNotBlank()) {
+            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
-                    val (success, error) = applyResolution(resolution, cacheDir, appUid)
+                    val (success, error) = applySettings(
+                        resolution,
+                        stencilMesh,
+                        ffr,
+                        cacheDir,
+                        appUid
+                    )
                     if (success) {
                         status = if (error == "Success. Rebooting...") {
                             resources.getString(R.string.status_rebooting)
@@ -178,8 +200,12 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
 fun ResolutionControlContent(
     currentValues: ConfigValues,
     resolution: String,
+    stencilMesh: String,
+    ffr: String,
     status: String,
     onResolutionChange: (String) -> Unit,
+    onStencilMeshChange: (String) -> Unit,
+    onFfrChange: (String) -> Unit,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -190,17 +216,17 @@ fun ResolutionControlContent(
     ) {
         Column(
             modifier = Modifier
-                .padding(48.dp)
+                .padding(30.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(bottom = 20.dp)
             ) {
                 val launcherIcon = rememberLauncherIcon()
-                
+
                 if (launcherIcon != null) {
                     Image(
                         bitmap = launcherIcon,
@@ -227,7 +253,7 @@ fun ResolutionControlContent(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = stringResource(id = R.string.app_title),
@@ -235,8 +261,6 @@ fun ResolutionControlContent(
                     color = colorResource(id = R.color.white)
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             Card(
                 colors = CardDefaults.cardColors(
@@ -259,46 +283,21 @@ fun ResolutionControlContent(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(48.dp),
                     verticalAlignment = Alignment.Top
                 ) {
-                    // Left Side: Current Config Card
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(
-                            containerColor = colorResource(id = R.color.content_bg)
-                        ),
-                        shape = MaterialTheme.shapes.large
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Text(
-                                text = stringResource(id = R.string.current_system_config),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = colorResource(id = R.color.white)
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 12.dp),
-                                thickness = 1.dp,
-                                color = colorResource(id = R.color.card_bg)
-                            )
-                            val pixelSuffix = stringResource(id = R.string.pixel)
-                            Text(
-                                text = stringResource(id = R.string.linkage_value_label, currentValues.linkageValue, pixelSuffix),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.LightGray
-                            )
-                        }
-                    }
-
-                    // Right Side: Dropdown and Action
+                    // Left Side: Dropdowns (User's Row 1)
                     Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        var expanded by remember { mutableStateOf(false) }
-                        val options = listOf(
+                        val pixelSuffix = stringResource(id = R.string.pixel)
+                        val enabledText = stringResource(id = R.string.enabled)
+                        val disabledText = stringResource(id = R.string.disabled)
+
+                        // 1. Resolution Dropdown
+                        var resExpanded by remember { mutableStateOf(false) }
+                        val resOptions = listOf(
                             "384" to stringResource(id = R.string.preset_ultra_performance),
                             "752" to stringResource(id = R.string.preset_performance),
                             "1504" to stringResource(id = R.string.preset_default),
@@ -309,8 +308,8 @@ fun ResolutionControlContent(
 
                         @OptIn(ExperimentalMaterial3Api::class)
                         ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = !expanded },
+                            expanded = resExpanded,
+                            onExpandedChange = { resExpanded = !resExpanded },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column {
@@ -320,16 +319,22 @@ fun ResolutionControlContent(
                                     color = colorResource(id = R.color.white),
                                     modifier = Modifier.padding(bottom = 8.dp)
                                 )
-                                val pixelSuffix = stringResource(id = R.string.pixel)
                                 OutlinedTextField(
-                                    value = options.find { it.first == resolution }
-                                        ?.let { stringResource(id = R.string.dropdown_value_format, it.first, pixelSuffix, it.second) }
+                                    value = resOptions.find { it.first == resolution }
+                                        ?.let {
+                                            stringResource(
+                                                id = R.string.dropdown_value_format,
+                                                it.first,
+                                                pixelSuffix,
+                                                it.second
+                                            )
+                                        }
                                         ?: "$resolution $pixelSuffix",
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = {
                                         ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = expanded
+                                            expanded = resExpanded
                                         )
                                     },
                                     modifier = Modifier
@@ -347,12 +352,10 @@ fun ResolutionControlContent(
                                     textStyle = MaterialTheme.typography.bodyMedium
                                 )
                             }
-
                             val scrollState = rememberScrollState()
-
                             ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
+                                expanded = resExpanded,
+                                onDismissRequest = { resExpanded = false },
                                 modifier = Modifier
                                     .background(
                                         color = colorResource(id = R.color.dropdown_bg),
@@ -362,38 +365,175 @@ fun ResolutionControlContent(
                             ) {
                                 Column(
                                     modifier = Modifier
-                                        .heightIn(max = 280.dp)
+                                        .heightIn(max = 240.dp)
                                         .verticalScroll(scrollState)
                                         .padding(horizontal = 6.dp, vertical = 6.dp)
                                 ) {
-                                    val pixelSuffix = stringResource(id = R.string.pixel)
-                                    options.forEach { option ->
+                                    resOptions.forEach { option ->
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
-                                                    text = stringResource(id = R.string.dropdown_value_format, option.first, pixelSuffix, option.second),
-                                                    color = Color.White
+                                                    text = stringResource(
+                                                        id = R.string.dropdown_value_format,
+                                                        option.first,
+                                                        pixelSuffix,
+                                                        option.second
+                                                    ), color = Color.White
                                                 )
                                             },
                                             onClick = {
-                                                onResolutionChange(option.first)
-                                                expanded = false
+                                                onResolutionChange(option.first); resExpanded =
+                                                false
                                             },
                                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
+                                            modifier = Modifier.clip(RoundedCornerShape(8.dp))
                                         )
                                     }
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        // 2. Stencil Mesh Dropdown
+                        var smExpanded by remember { mutableStateOf(false) }
+                        val smOptions = listOf(
+                            "1" to enabledText,
+                            "0" to disabledText
+                        )
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        ExposedDropdownMenuBox(
+                            expanded = smExpanded,
+                            onExpandedChange = { smExpanded = !smExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column {
+                                Text(
+                                    text = stringResource(id = R.string.stencil_mesh),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colorResource(id = R.color.white),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                OutlinedTextField(
+                                    value = smOptions.find { it.first == stencilMesh }?.second
+                                        ?: stencilMesh,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = smExpanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedContainerColor = colorResource(id = R.color.card_bg),
+                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            ExposedDropdownMenu(
+                                expanded = smExpanded,
+                                onDismissRequest = { smExpanded = false },
+                                modifier = Modifier.background(
+                                    color = colorResource(id = R.color.dropdown_bg),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            ) {
+                                smOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option.second, color = Color.White) },
+                                        onClick = {
+                                            onStencilMeshChange(option.first); smExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                    )
+                                }
+                            }
+                        }
 
+                        // 3. Foveated Rendering Dropdown
+                        var ffrExpanded by remember { mutableStateOf(false) }
+                        val ffrOptions = listOf(
+                            "1" to enabledText,
+                            "-1" to disabledText
+                        )
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        ExposedDropdownMenuBox(
+                            expanded = ffrExpanded,
+                            onExpandedChange = { ffrExpanded = !ffrExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column {
+                                Text(
+                                    text = stringResource(id = R.string.foveated_rendering),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colorResource(id = R.color.white),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                OutlinedTextField(
+                                    value = ffrOptions.find { it.first == ffr }?.second ?: ffr,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = ffrExpanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedContainerColor = colorResource(id = R.color.card_bg),
+                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            ExposedDropdownMenu(
+                                expanded = ffrExpanded,
+                                onDismissRequest = { ffrExpanded = false },
+                                modifier = Modifier.background(
+                                    color = colorResource(id = R.color.dropdown_bg),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            ) {
+                                ffrOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option.second, color = Color.White) },
+                                        onClick = {
+                                            onFfrChange(option.first); ffrExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Right Side: Apply & Status (User's Row 2)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = onApplyClick,
                             modifier = Modifier
-                                .width(200.dp)
+                                .fillMaxWidth(0.8f)
                                 .height(56.dp),
                             shape = MaterialTheme.shapes.medium,
                             colors = ButtonDefaults.buttonColors(
@@ -410,41 +550,58 @@ fun ResolutionControlContent(
                 }
             }
 
-            if (status.isNotBlank()) {
-                Spacer(modifier = Modifier.height(24.dp))
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (status.contains("Error") || status.contains("Failed"))
-                            colorResource(id = R.color.pico_red)
-                        else colorResource(id = R.color.pico_green)
-                    ),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Text(
-                        text = status,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
-                }
-            }
-
-            val uriHandler = LocalUriHandler.current
-
-            Card(
-                onClick = { uriHandler.openUri("https://github.com/chaixshot/Pico3dResolution") },
-                modifier = Modifier.padding(top = 24.dp, bottom = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White.copy(alpha = 0.05f)
-                ),
-                shape = MaterialTheme.shapes.small
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(48.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    text = stringResource(id = R.string.github_link),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    val uriHandler = LocalUriHandler.current
+                    Card(
+                        onClick = { uriHandler.openUri("https://github.com/chaixshot/Pico3dResolution") },
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White.copy(alpha = 0.05f)
+                        ),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.github_link),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    if (status.isNotBlank()) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (status.contains("Error") || status.contains("Failed"))
+                                    colorResource(id = R.color.pico_red)
+                                else colorResource(id = R.color.pico_green)
+                            ),
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = status,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -454,7 +611,9 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_READ_DB)
 
-        var linkageVal = "N/A"
+        var resVal = "N/A"
+        var smVal = "N/A"
+        var ffrVal = "N/A"
         var errorMsg = ""
 
         try {
@@ -472,14 +631,23 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
                         null,
                         SQLiteDatabase.OPEN_READONLY
                     )
-                    db.rawQuery(
-                        "SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%' LIMIT 1",
-                        null
-                    ).use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            linkageVal = cursor.getString(0) ?: "null"
+
+                    fun queryValue(key: String): String {
+                        db.rawQuery(
+                            "SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE ? LIMIT 1",
+                            arrayOf("%$key%")
+                        ).use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                return cursor.getString(0) ?: "null"
+                            }
                         }
+                        return "N/A"
                     }
+
+                    resVal = queryValue("sdk_eyebuffer")
+                    smVal = queryValue("sdk_enableFFRBySYS")
+                    ffrVal = queryValue("sdk_stencilMeshStatus")
+
                     db.close()
                     tempDb.delete()
                 } else {
@@ -492,10 +660,16 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
             errorMsg = e.message ?: "Unknown error"
         }
 
-        ConfigValues(linkageVal) to errorMsg
+        ConfigValues(resVal, smVal, ffrVal) to errorMsg
     }
 
-suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean, String> =
+suspend fun applySettings(
+    res: String,
+    sm: String,
+    ffr: String,
+    cacheDir: File,
+    uid: Int
+): Pair<Boolean, String> =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_APPLY_DB)
 
@@ -516,10 +690,26 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
                 null,
                 SQLiteDatabase.OPEN_READWRITE
             )
-            db.execSQL(
-                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
-                arrayOf(res)
-            )
+
+            if (res.isNotBlank()) {
+                db.execSQL(
+                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
+                    arrayOf(res)
+                )
+            }
+            if (sm.isNotBlank()) {
+                db.execSQL(
+                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
+                    arrayOf(sm)
+                )
+            }
+            if (ffr.isNotBlank()) {
+                db.execSQL(
+                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
+                    arrayOf(ffr)
+                )
+            }
+
             db.close()
 
             // 3. Write back and verify changes before rebooting
@@ -538,18 +728,20 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
             // Call fetchCurrentValues to verify the actual state of the system DB
             val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
 
-            val isVerified = verifiedValues.linkageValue == res
+            val isResVerified = res.isBlank() || verifiedValues.resolution == res
+            val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
+            val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
 
-            if (isVerified) {
+            if (isResVerified && isSmVerified && isFfrVerified) {
                 android.util.Log.d("Res3D", "Verification success. Rebooting...")
                 runRootCommand("reboot")
                 return@withContext true to "Success. Rebooting..."
             } else {
                 val details =
-                    "Got L:${verifiedValues.linkageValue}"
+                    "Res:${verifiedValues.resolution}, SM:${verifiedValues.stencilMesh}, FFR:${verifiedValues.ffr}"
                 android.util.Log.e(
                     "Res3D",
-                    "Verification failed. Expected $res but $details. Error: $fetchError"
+                    "Verification failed. Expected ($res, $sm, $ffr) but got ($details). Error: $fetchError"
                 )
                 return@withContext false to "Verification failed. DB values did not change."
             }
@@ -605,11 +797,17 @@ fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
             currentValues = ConfigValues(
-                linkageValue = "1600"
+                resolution = "1600",
+                stencilMesh = "1",
+                ffr = "1"
             ),
             resolution = "2160",
+            stencilMesh = "1",
+            ffr = "1",
             status = "Ready",
             onResolutionChange = {},
+            onStencilMeshChange = {},
+            onFfrChange = {},
             onApplyClick = {}
         )
     }

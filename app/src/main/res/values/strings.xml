@@ -23,4 +23,8 @@
     <string name="preset_native">Native Resolution</string>
     <string name="preset_pico_specific">Pico Specifically</string>
     <string name="preset_anti_aliasing">Anti-aliasing</string>
+    <string name="stencil_mesh">Stencil Mesh</string>
+    <string name="foveated_rendering">Foveated Rendering</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
 </resources>
