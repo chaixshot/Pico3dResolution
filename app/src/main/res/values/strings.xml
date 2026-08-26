@@ -27,4 +27,6 @@
     <string name="foveated_rendering">Foveated Rendering</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
+    <string name="texture_fov">Texture Fov</string>
+    <string name="degree">°</string>
 </resources>

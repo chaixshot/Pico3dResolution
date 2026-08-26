@@ -118,7 +118,8 @@ class MainActivity : ComponentActivity() {
 data class ConfigValues(
     val resolution: String = "Unknown",
     val stencilMesh: String = "Unknown",
-    val ffr: String = "Unknown"
+    val ffr: String = "Unknown",
+    val textureFov: String = "Unknown"
 )
 
 @Composable
@@ -126,6 +127,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var resolution by remember { mutableStateOf("") }
     var stencilMesh by remember { mutableStateOf("") }
     var ffr by remember { mutableStateOf("") }
+    var textureFov by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
@@ -145,6 +147,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             if (values.ffr != "Unknown" && values.ffr != "N/A") {
                 ffr = values.ffr
             }
+            if (values.textureFov != "Unknown" && values.textureFov != "N/A") {
+                textureFov = values.textureFov
+            }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
             }
@@ -160,18 +165,21 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         resolution = resolution,
         stencilMesh = stencilMesh,
         ffr = ffr,
+        textureFov = textureFov,
         status = status,
         onResolutionChange = { resolution = it },
         onStencilMeshChange = { stencilMesh = it },
         onFfrChange = { ffr = it },
+        onTextureFovChange = { textureFov = it },
         onApplyClick = {
-            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank()) {
+            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
                     val (success, error) = applySettings(
                         resolution,
                         stencilMesh,
                         ffr,
+                        textureFov,
                         cacheDir,
                         appUid
                     )
@@ -202,10 +210,12 @@ fun ResolutionControlContent(
     resolution: String,
     stencilMesh: String,
     ffr: String,
+    textureFov: String,
     status: String,
     onResolutionChange: (String) -> Unit,
     onStencilMeshChange: (String) -> Unit,
     onFfrChange: (String) -> Unit,
+    onTextureFovChange: (String) -> Unit,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -529,6 +539,69 @@ fun ResolutionControlContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top
                     ) {
+                        // 4. Texture Fov Dropdown
+                        var tfExpanded by remember { mutableStateOf(false) }
+                        val tfOptions = listOf("95", "85", "75", "65")
+                        val degreeSuffix = stringResource(id = R.string.degree)
+
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        ExposedDropdownMenuBox(
+                            expanded = tfExpanded,
+                            onExpandedChange = { tfExpanded = !tfExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column {
+                                Text(
+                                    text = stringResource(id = R.string.texture_fov),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colorResource(id = R.color.white),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                OutlinedTextField(
+                                    value = if (textureFov.isNotBlank()) "$textureFov$degreeSuffix" else "",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = tfExpanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedContainerColor = colorResource(id = R.color.card_bg),
+                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            ExposedDropdownMenu(
+                                expanded = tfExpanded,
+                                onDismissRequest = { tfExpanded = false },
+                                modifier = Modifier.background(
+                                    color = colorResource(id = R.color.dropdown_bg),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            ) {
+                                tfOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = "$option$degreeSuffix", color = Color.White) },
+                                        onClick = {
+                                            onTextureFovChange(option); tfExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                    )
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = onApplyClick,
@@ -614,6 +687,7 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
         var resVal = "N/A"
         var smVal = "N/A"
         var ffrVal = "N/A"
+        var tfVal = "N/A"
         var errorMsg = ""
 
         try {
@@ -647,6 +721,7 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
                     resVal = queryValue("sdk_eyebuffer")
                     smVal = queryValue("sdk_enableFFRBySYS")
                     ffrVal = queryValue("sdk_stencilMeshStatus")
+                    tfVal = queryValue("sdk_EyeTextureFov")
 
                     db.close()
                     tempDb.delete()
@@ -660,13 +735,14 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
             errorMsg = e.message ?: "Unknown error"
         }
 
-        ConfigValues(resVal, smVal, ffrVal) to errorMsg
+        ConfigValues(resVal, smVal, ffrVal, tfVal) to errorMsg
     }
 
 suspend fun applySettings(
     res: String,
     sm: String,
     ffr: String,
+    tf: String,
     cacheDir: File,
     uid: Int
 ): Pair<Boolean, String> =
@@ -709,6 +785,12 @@ suspend fun applySettings(
                     arrayOf(ffr)
                 )
             }
+            if (tf.isNotBlank()) {
+                db.execSQL(
+                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
+                    arrayOf(tf)
+                )
+            }
 
             db.close()
 
@@ -731,17 +813,18 @@ suspend fun applySettings(
             val isResVerified = res.isBlank() || verifiedValues.resolution == res
             val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
             val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
+            val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
-            if (isResVerified && isSmVerified && isFfrVerified) {
+            if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
                 android.util.Log.d("Res3D", "Verification success. Rebooting...")
                 runRootCommand("reboot")
                 return@withContext true to "Success. Rebooting..."
             } else {
                 val details =
-                    "Res:${verifiedValues.resolution}, SM:${verifiedValues.stencilMesh}, FFR:${verifiedValues.ffr}"
+                    "Res:${verifiedValues.resolution}, SM:${verifiedValues.stencilMesh}, FFR:${verifiedValues.ffr}, TF:${verifiedValues.textureFov}"
                 android.util.Log.e(
                     "Res3D",
-                    "Verification failed. Expected ($res, $sm, $ffr) but got ($details). Error: $fetchError"
+                    "Verification failed. Expected ($res, $sm, $ffr, $tf) but got ($details). Error: $fetchError"
                 )
                 return@withContext false to "Verification failed. DB values did not change."
             }
@@ -799,15 +882,18 @@ fun ResolutionControlPreview() {
             currentValues = ConfigValues(
                 resolution = "1600",
                 stencilMesh = "1",
-                ffr = "1"
+                ffr = "1",
+                textureFov = "95"
             ),
             resolution = "2160",
             stencilMesh = "1",
             ffr = "1",
+            textureFov = "95",
             status = "Ready",
             onResolutionChange = {},
             onStencilMeshChange = {},
             onFfrChange = {},
+            onTextureFovChange = {},
             onApplyClick = {}
         )
     }
