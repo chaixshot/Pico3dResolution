@@ -16,6 +16,11 @@
 ## 🌟 主要功能
 
 *   **🎯 全局分辨率缩放**：更改所有 3D VR 应用程序的内部渲染分辨率。
+*   **📐 高级渲染控制**：
+    *   **遮罩网格 (Stencil Mesh)**：通过防止渲染隐藏像素来优化 GPU 资源。
+    *   **注视点渲染 (Foveated Rendering)**：通过集中中心区域分辨率来优化性能。
+    *   **纹理视场角 (Texture FOV)**：精细调整渲染眼图的视场角。
+*   **❓ 交互式帮助**：每个设置都集成说明按钮，解释技术细节和性能权衡。
 *   **📊 优化预设**：从针对性能或清晰度优化的预定义值中进行选择：
     *   **384px**: 超级性能
     *   **752px**: 性能
@@ -24,8 +29,8 @@
     *   **2448px**: Pico 特定
     *   **2816px**: 抗锯齿
 *   **🔍 实时验证**：在重启前自动验证数据库更改是否成功。
-*   **🛠️ PICO uUI 风格**：使用 Jetpack Compose 和 Material 3 构建的原生外观界面。
-*   **🌍 多语言支持**：支持 27 种语言，包括英语、中文、俄语、泰语等。
+*   **🛠️ 现代 UI**：响应式 Jetpack Compose 界面，针对 VR 横屏模式进行了双列布局优化。
+*   **🌍 全面本地化**：支持 27 种语言，并采用了专业的行业术语。
 *   **🔐 Root 安全**：使用 `content` 命令安全地修改系统的 PVR 配置。
 
 ## ⛏️ 前提条件
@@ -55,7 +60,7 @@
 ## 🛠️ 技术细节
 
 ### 工作原理
-此应用程序通过使用 Root 权限修改系统的 PVR 配置数据库（`/data/user_de/0/com.pvr.configuration/databases/config.db`）。它使用 Android `content` 命令 API 专门针对 `ConfigBean` 和 `RuleBean` 表中的 `sdk_eyebuffer` 参数。
+此应用程序通过使用 Root 权限修改系统的 PVR 配置数据库（`/data/user_de/0/com.pvr.configuration/databases/config.db`）。它针对 `RuleBean` 表中的 `sdk_eyebuffer`、`sdk_enableFFRBySYS`、`sdk_stencilMeshStatus` 和 `sdk_EyeTextureFov` 等参数。
 
 ## 💖 特别鸣谢
 

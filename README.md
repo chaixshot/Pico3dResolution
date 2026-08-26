@@ -16,6 +16,11 @@
 ## 🌟 Key Features
 
 *   **🎯 Global Resolution Scaling**: Change the internal rendering resolution for all 3D VR applications.
+*   **📐 Advanced Rendering Controls**:
+    *   **Stencil Mesh**: Optimize GPU resources by preventing rendering of hidden pixels.
+    *   **Foveated Rendering**: Optimize performance by concentrating resolution in the central focus area.
+    *   **Texture FOV**: Fine-tune the field of view for rendered eye textures.
+*   **❓ Interactive Help**: Integrated documentation for each setting to explain technical details and trade-offs.
 *   **📊 Optimized Presets**: Choose from predefined values optimized for performance or clarity:
     *   **384px**: Ultra Performance
     *   **752px**: Performance
@@ -24,8 +29,8 @@
     *   **2448px**: Pico Specific
     *   **2816px**: Anti-aliasing
 *   **🔍 Real-time Verification**: Automatically verifies if the database changes were successful before rebooting.
-*   **🛠️ PICO UI Style**: A native-looking interface built with Jetpack Compose and Material 3.
-*   **🌍 Multi-language Support**: Supports 27 languages including English, Chinese, Russian, Thai, and more.
+*   **🛠️ Modern UI**: Responsive Jetpack Compose interface, optimized for VR landscape mode with a dual-column layout.
+*   **🌍 Multi-language Support**: Full localization for 27 languages with technical industry terminology.
 *   **🔐 Root Safety**: Uses `content` commands to safely modify the system's PVR configuration.
 
 ## ⛏️ Prerequisites
@@ -55,7 +60,7 @@
 ## 🛠️ Technical Details
 
 ### How it works
-This app works by using root access to modify the system's PVR configuration database (`/data/user_de/0/com.pvr.configuration/databases/config.db`). It specifically targets the `sdk_eyebuffer` parameters in both `ConfigBean` and `RuleBean` tables using the Android `content` command API.
+This app works by using root access to modify the system's PVR configuration database (`/data/user_de/0/com.pvr.configuration/databases/config.db`). It targets parameters like `sdk_eyebuffer`, `sdk_enableFFRBySYS`, `sdk_stencilMeshStatus`, and `sdk_EyeTextureFov` in the `RuleBean` table.
 
 ## 💖 Special Thanks
 
