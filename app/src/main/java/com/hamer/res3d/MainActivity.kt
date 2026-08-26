@@ -114,8 +114,6 @@ class MainActivity : ComponentActivity() {
 }
 
 data class ConfigValues(
-    val configValue: String = "Unknown",
-    val defaultValue: String = "Unknown",
     val linkageValue: String = "Unknown"
 )
 
@@ -132,8 +130,8 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         scope.launch {
             val (values, error) = fetchCurrentValues(cacheDir, appUid)
             currentValues = values
-            if (values.configValue != "Unknown" && values.configValue != "N/A") {
-                resolution = values.configValue
+            if (values.linkageValue != "Unknown" && values.linkageValue != "N/A") {
+                resolution = values.linkageValue
             }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
@@ -284,16 +282,6 @@ fun ResolutionControlContent(
                                 color = colorResource(id = R.color.card_bg)
                             )
                             val pixelSuffix = stringResource(id = R.string.pixel)
-                            Text(
-                                text = stringResource(id = R.string.config_value_label, currentValues.configValue, pixelSuffix),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.LightGray
-                            )
-                            Text(
-                                text = stringResource(id = R.string.default_value_label, currentValues.defaultValue, pixelSuffix),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.LightGray
-                            )
                             Text(
                                 text = stringResource(id = R.string.linkage_value_label, currentValues.linkageValue, pixelSuffix),
                                 style = MaterialTheme.typography.bodyLarge,
@@ -466,8 +454,6 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_READ_DB)
 
-        var configVal = "N/A"
-        var defaultVal = "N/A"
         var linkageVal = "N/A"
         var errorMsg = ""
 
@@ -486,15 +472,6 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
                         null,
                         SQLiteDatabase.OPEN_READONLY
                     )
-                    db.rawQuery(
-                        "SELECT CONFIG_VALUE, DEFAULT_CONFIG_VALUE FROM ConfigBean WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%' LIMIT 1",
-                        null
-                    ).use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            configVal = cursor.getString(0) ?: "null"
-                            defaultVal = cursor.getString(1) ?: "null"
-                        }
-                    }
                     db.rawQuery(
                         "SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%' LIMIT 1",
                         null
@@ -515,7 +492,7 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
             errorMsg = e.message ?: "Unknown error"
         }
 
-        ConfigValues(configVal, defaultVal, linkageVal) to errorMsg
+        ConfigValues(linkageVal) to errorMsg
     }
 
 suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean, String> =
@@ -540,10 +517,6 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
                 SQLiteDatabase.OPEN_READWRITE
             )
             db.execSQL(
-                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
-                arrayOf(res, res)
-            )
-            db.execSQL(
                 "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
                 arrayOf(res)
             )
@@ -565,8 +538,7 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
             // Call fetchCurrentValues to verify the actual state of the system DB
             val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
 
-            val isVerified = verifiedValues.configValue == res &&
-                    verifiedValues.linkageValue == res
+            val isVerified = verifiedValues.linkageValue == res
 
             if (isVerified) {
                 android.util.Log.d("Res3D", "Verification success. Rebooting...")
@@ -574,7 +546,7 @@ suspend fun applyResolution(res: String, cacheDir: File, uid: Int): Pair<Boolean
                 return@withContext true to "Success. Rebooting..."
             } else {
                 val details =
-                    "Got C:${verifiedValues.configValue}, L:${verifiedValues.linkageValue}"
+                    "Got L:${verifiedValues.linkageValue}"
                 android.util.Log.e(
                     "Res3D",
                     "Verification failed. Expected $res but $details. Error: $fetchError"
@@ -633,8 +605,6 @@ fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
             currentValues = ConfigValues(
-                configValue = "1600",
-                defaultValue = "1600",
                 linkageValue = "1600"
             ),
             resolution = "2160",
