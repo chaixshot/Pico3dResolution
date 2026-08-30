@@ -842,11 +842,19 @@ suspend fun applySettings(
                     "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
                     arrayOf(res)
                 )
+                db.execSQL(
+                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
+                    arrayOf(res, res)
+                )
             }
             if (sm.isNotBlank()) {
                 db.execSQL(
                     "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
                     arrayOf(sm)
+                )
+                db.execSQL(
+                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
+                    arrayOf(sm, sm)
                 )
             }
             if (ffr.isNotBlank()) {
@@ -854,11 +862,19 @@ suspend fun applySettings(
                     "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
                     arrayOf(ffr)
                 )
+                db.execSQL(
+                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
+                    arrayOf(ffr, ffr)
+                )
             }
             if (tf.isNotBlank()) {
                 db.execSQL(
                     "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
                     arrayOf(tf)
+                )
+                db.execSQL(
+                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
+                    arrayOf(tf, tf)
                 )
             }
 
