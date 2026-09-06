@@ -20,7 +20,6 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
@@ -42,6 +41,19 @@
         </activity>
 
         <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Applies Pico 3D Resolution and GPU power levels at boot." />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="82" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
+
+        <meta-data
             android:name="isPUI"
             android:value="1" />
         <meta-data
@@ -50,6 +62,26 @@
         <meta-data
             android:name="com.pvr.hmd.trackingmode"
             android:value="3dof" />
+
+        <receiver
+            android:name=".GuardianReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.hamer.res3d.ACTION_START_GUARDIAN" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".GuardianService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <provider
+            android:name=".GuardianProvider"
+            android:authorities="com.hamer.res3d.guardian"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
 </manifest>

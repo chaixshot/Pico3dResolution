@@ -33,5 +33,16 @@
     <string name="help_stencil_mesh_desc">An optimization that prevents rendering pixels that are physically hidden by the headset\'s lens borders (corners), saving GPU resources.</string>
     <string name="help_ffr_desc">Optimizes rendering by providing full resolution for the central focus area while lowering resolution in peripheral areas where detail is less noticeable.</string>
     <string name="help_texture_fov_desc">Adjusts the field of view of the rendered eye textures. Lowering this can improve performance by rendering less area, but will narrow your view.</string>
+    <string name="max_pwrlevel">Max Power Level</string>
+    <string name="min_pwrlevel">Min Power Level</string>
+    <string name="help_pwrlevel_desc">Controls the GPU power level (PwrLevel). Lower numbers usually mean higher frequency (performance). Max PwrLevel is the limit for highest performance, Min PwrLevel is the limit for lowest performance.</string>
+    <string name="pwr_level_label">Level</string>
+    <string name="pwr_peak_performance">Peak Performance</string>
+    <string name="pwr_high_load">High Load</string>
+    <string name="pwr_standard_load">Standard Load</string>
+    <string name="pwr_balanced">Balanced</string>
+    <string name="pwr_low_power">Low Power</string>
+    <string name="pwr_minimum_power">Minimum Power</string>
+    <string name="pwr_deep_idle">Power Saving</string>
     <string name="close">Close</string>
 </resources>

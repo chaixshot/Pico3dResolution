@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
@@ -29,7 +27,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -106,16 +103,11 @@ const val TEMP_APPLY_DB = "config_apply.db"
 fun Modifier.drawPicoScrollbar(state: ScrollState): Modifier = drawWithContent {
     drawContent()
     if (state.maxValue > 0) {
-        // Inset the scrollbar vertically to stay within the 12.dp rounded corners
         val verticalInset = 16.dp.toPx()
         val horizontalOffset = 14.dp.toPx()
-
         val viewHeight = size.height
         val drawableHeight = viewHeight - (verticalInset * 2)
-
-        // Ensure knobHeight doesn't exceed the drawable area
         val knobHeight = minOf(40.dp.toPx(), drawableHeight)
-
         val scrollProgress = if (state.maxValue > 0) state.value.toFloat() / state.maxValue else 0f
         val topOffset = verticalInset + (scrollProgress * (drawableHeight - knobHeight))
 
@@ -136,7 +128,7 @@ class MainActivity : ComponentActivity() {
             Pico3dResolutionTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = Color.Transparent // Ensure Scaffold doesn't draw a background
+                    containerColor = Color.Transparent
                 ) { innerPadding ->
                     ResolutionControl(
                         modifier = Modifier
@@ -154,7 +146,9 @@ data class ConfigValues(
     val resolution: String = "Unknown",
     val stencilMesh: String = "Unknown",
     val ffr: String = "Unknown",
-    val textureFov: String = "Unknown"
+    val textureFov: String = "Unknown",
+    val maxPwrLevel: String = "Unknown",
+    val minPwrLevel: String = "Unknown"
 )
 
 @Composable
@@ -163,10 +157,14 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var stencilMesh by remember { mutableStateOf("") }
     var ffr by remember { mutableStateOf("") }
     var textureFov by remember { mutableStateOf("") }
+    var maxPwrLevel by remember { mutableStateOf("") }
+    var minPwrLevel by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
-    val resources = androidx.compose.ui.platform.LocalContext.current.resources
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val storageContext = context.createDeviceProtectedStorageContext()
+    val resources = context.resources
     val appUid = android.os.Process.myUid()
 
     fun refreshValues() {
@@ -185,6 +183,12 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             if (values.textureFov != "Unknown" && values.textureFov != "N/A") {
                 textureFov = values.textureFov
             }
+            if (values.maxPwrLevel != "Unknown" && values.maxPwrLevel != "N/A") {
+                maxPwrLevel = values.maxPwrLevel
+            }
+            if (values.minPwrLevel != "Unknown" && values.minPwrLevel != "N/A") {
+                minPwrLevel = values.minPwrLevel
+            }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
             }
@@ -201,13 +205,17 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         stencilMesh = stencilMesh,
         ffr = ffr,
         textureFov = textureFov,
+        maxPwrLevel = maxPwrLevel,
+        minPwrLevel = minPwrLevel,
         status = status,
         onResolutionChange = { resolution = it },
         onStencilMeshChange = { stencilMesh = it },
         onFfrChange = { ffr = it },
         onTextureFovChange = { textureFov = it },
+        onMaxPwrLevelChange = { maxPwrLevel = it },
+        onMinPwrLevelChange = { minPwrLevel = it },
         onApplyClick = {
-            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank()) {
+            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
                     val (success, error) = applySettings(
@@ -215,8 +223,11 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         stencilMesh,
                         ffr,
                         textureFov,
+                        maxPwrLevel,
+                        minPwrLevel,
                         cacheDir,
-                        appUid
+                        appUid,
+                        storageContext
                     )
                     if (success) {
                         status = if (error == "Success. Rebooting...") {
@@ -246,11 +257,15 @@ fun ResolutionControlContent(
     stencilMesh: String,
     ffr: String,
     textureFov: String,
+    maxPwrLevel: String,
+    minPwrLevel: String,
     status: String,
     onResolutionChange: (String) -> Unit,
     onStencilMeshChange: (String) -> Unit,
     onFfrChange: (String) -> Unit,
     onTextureFovChange: (String) -> Unit,
+    onMaxPwrLevelChange: (String) -> Unit,
+    onMinPwrLevelChange: (String) -> Unit,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -281,7 +296,6 @@ fun ResolutionControlContent(
                             .clip(RoundedCornerShape(12.dp))
                     )
                 } else {
-                    // Fallback to blue R if loading failed
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -335,12 +349,11 @@ fun ResolutionControlContent(
                     val enabledText = stringResource(id = R.string.enabled)
                     val disabledText = stringResource(id = R.string.disabled)
 
-                    // Left Side: Dropdowns (User's Row 1)
+                    // Left Side: Dropdowns
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-
                         // 1. Resolution Dropdown
                         var resExpanded by remember { mutableStateOf(false) }
                         val resOptions = listOf(
@@ -437,8 +450,7 @@ fun ResolutionControlContent(
                                                 )
                                             },
                                             onClick = {
-                                                onResolutionChange(option.first); resExpanded =
-                                                false
+                                                onResolutionChange(option.first); resExpanded = false
                                             },
                                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
@@ -596,7 +608,7 @@ fun ResolutionControlContent(
                         }
                     }
 
-                    // Right Side: Apply & Status (User's Row 2)
+                    // Right Side: Texture FOV & Power Levels
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -674,6 +686,186 @@ fun ResolutionControlContent(
                             }
                         }
 
+                        // 5. Power Level Row
+                        var maxExpanded by remember { mutableStateOf(false) }
+                        var minExpanded by remember { mutableStateOf(false) }
+                        val pwrOptions = listOf(
+                            "0" to stringResource(id = R.string.pwr_peak_performance),
+                            "1" to stringResource(id = R.string.pwr_high_load),
+                            "2" to stringResource(id = R.string.pwr_standard_load),
+                            "3" to stringResource(id = R.string.pwr_balanced),
+                            "4" to stringResource(id = R.string.pwr_low_power),
+                            "5" to stringResource(id = R.string.pwr_minimum_power),
+                            "6" to stringResource(id = R.string.pwr_deep_idle)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Max PwrLevel
+                            Column(modifier = Modifier.weight(1f)) {
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = maxExpanded,
+                                    onExpandedChange = { maxExpanded = !maxExpanded },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.max_pwrlevel),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            HelpButton(
+                                                title = stringResource(id = R.string.max_pwrlevel),
+                                                message = stringResource(id = R.string.help_pwrlevel_desc)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = pwrOptions.find { it.first == maxPwrLevel }?.second
+                                                ?: maxPwrLevel,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = {
+                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                    expanded = maxExpanded
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .menuAnchor()
+                                                .fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    val maxScrollState = rememberScrollState()
+                                    ExposedDropdownMenu(
+                                        expanded = maxExpanded,
+                                        onDismissRequest = { maxExpanded = false },
+                                        modifier = Modifier
+                                            .background(
+                                                color = colorResource(id = R.color.dropdown_bg),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .drawPicoScrollbar(maxScrollState)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .heightIn(max = 240.dp)
+                                                .verticalScroll(maxScrollState)
+                                                .padding(horizontal = 6.dp, vertical = 6.dp)
+                                        ) {
+                                            pwrOptions.forEach { option ->
+                                                DropdownMenuItem(
+                                                    text = {
+                                                        Text(text = option.second, color = Color.White)
+                                                    },
+                                                    onClick = {
+                                                        onMaxPwrLevelChange(option.first); maxExpanded = false
+                                                    },
+                                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                    modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Min PwrLevel
+                            Column(modifier = Modifier.weight(1f)) {
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = minExpanded,
+                                    onExpandedChange = { minExpanded = !minExpanded },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.min_pwrlevel),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = pwrOptions.find { it.first == minPwrLevel }?.second
+                                                ?: minPwrLevel,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = {
+                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                    expanded = minExpanded
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .menuAnchor()
+                                                .fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    val minScrollState = rememberScrollState()
+                                    ExposedDropdownMenu(
+                                        expanded = minExpanded,
+                                        onDismissRequest = { minExpanded = false },
+                                        modifier = Modifier
+                                            .background(
+                                                color = colorResource(id = R.color.dropdown_bg),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .drawPicoScrollbar(minScrollState)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .heightIn(max = 240.dp)
+                                                .verticalScroll(minScrollState)
+                                                .padding(horizontal = 6.dp, vertical = 6.dp)
+                                        ) {
+                                            pwrOptions.forEach { option ->
+                                                DropdownMenuItem(
+                                                    text = {
+                                                        Text(text = option.second, color = Color.White)
+                                                    },
+                                                    onClick = {
+                                                        onMinPwrLevelChange(option.first); minExpanded = false
+                                                    },
+                                                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                    modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -706,9 +898,11 @@ fun ResolutionControlContent(
                             Button(
                                 onClick = {
                                     onResolutionChange("1504")
-                                    onStencilMeshChange(enabledText)
-                                    onFfrChange(enabledText)
+                                    onStencilMeshChange("1")
+                                    onFfrChange("1")
                                     onTextureFovChange("95")
+                                    onMaxPwrLevelChange("0")
+                                    onMinPwrLevelChange("6")
                                 },
                                 modifier = Modifier.size(56.dp),
                                 shape = MaterialTheme.shapes.medium,
@@ -785,14 +979,20 @@ fun ResolutionControlContent(
     }
 }
 
+private fun readSysfs(path: String): String {
+    val (success, output) = runRootCommandWithOutput("cat $path")
+    return if (success) output else "N/A"
+}
+
 suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, String> =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_READ_DB)
-
         var resVal = "N/A"
         var smVal = "N/A"
         var ffrVal = "N/A"
         var tfVal = "N/A"
+        var maxPwr = "N/A"
+        var minPwr = "N/A"
         var errorMsg = ""
 
         try {
@@ -836,11 +1036,15 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
             } else {
                 errorMsg = error
             }
+
+            maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+            minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+
         } catch (e: Exception) {
             errorMsg = e.message ?: "Unknown error"
         }
 
-        ConfigValues(resVal, smVal, ffrVal, tfVal) to errorMsg
+        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr) to errorMsg
     }
 
 suspend fun applySettings(
@@ -848,14 +1052,64 @@ suspend fun applySettings(
     sm: String,
     ffr: String,
     tf: String,
+    maxPwr: String,
+    minPwr: String,
     cacheDir: File,
-    uid: Int
+    uid: Int,
+    context: android.content.Context
 ): Pair<Boolean, String> =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_APPLY_DB)
 
         try {
             runRootCommand("setenforce 0 || true")
+
+            if (maxPwr.isNotBlank()) {
+                runRootCommand("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+            }
+            if (minPwr.isNotBlank()) {
+                runRootCommand("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+            }
+
+            // Save pwrlevel to app config (DeviceProtected Storage for Xposed access during boot)
+            val storageContext = context.createDeviceProtectedStorageContext()
+            val prefs = storageContext.getSharedPreferences("pwr_prefs", android.content.Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putString("max_pwrlevel", maxPwr)
+                putString("min_pwrlevel", minPwr)
+                commit() // Use commit to ensure it's written immediately
+            }
+            
+            // Ensure the preferences file is readable by Xposed (running in system server)
+            try {
+                val dataDir = storageContext.dataDir
+                val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
+                android.util.Log.d("Res3D", "Saving prefs to: ${prefFile.absolutePath}")
+                
+                if (prefFile.exists()) {
+                    prefFile.setReadable(true, false)
+                    prefFile.parentFile?.setReadable(true, false)
+                    prefFile.parentFile?.setExecutable(true, false)
+                    
+                    // Create a simple boot relay file for easier access during early boot (matching pico-resfix style)
+                    val relayPath = "/data/local/tmp/res3d_pwr.relay"
+                    val relayCmd = "echo $maxPwr:$minPwr > $relayPath"
+                    
+                    // Use root to force permissions and create relay
+                    runRootCommand(
+                        "chmod 664 ${prefFile.absolutePath}",
+                        "chmod 775 ${prefFile.parentFile?.absolutePath}",
+                        "cp ${prefFile.absolutePath} /data/system/res3d_pwr_prefs.xml",
+                        "chmod 666 /data/system/res3d_pwr_prefs.xml",
+                        "chown 1000:1000 /data/system/res3d_pwr_prefs.xml",
+                        relayCmd,
+                        "chmod 666 $relayPath",
+                        "chown 1000:1000 $relayPath"
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("Res3D", "Failed to set pref file permissions", e)
+            }
 
             val (cpSuccess, cpError) = runRootCommand(
                 "cp $DB_PATH ${tempDb.absolutePath}",
@@ -915,8 +1169,6 @@ suspend fun applySettings(
 
             db.close()
 
-            // 3. Write back and verify changes before rebooting
-            android.util.Log.d("Res3D", "Step 3: Writing back and verifying changes...")
             val (writeSuccess, writeError) = runRootCommand(
                 "cat ${tempDb.absolutePath} > $DB_PATH",
                 "sync"
@@ -928,8 +1180,7 @@ suspend fun applySettings(
                 return@withContext false to "Write back failed: $writeError"
             }
 
-            // Call fetchCurrentValues to verify the actual state of the system DB
-            val (verifiedValues, fetchError) = fetchCurrentValues(cacheDir, uid)
+            val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid)
 
             val isResVerified = res.isBlank() || verifiedValues.resolution == res
             val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
@@ -937,16 +1188,9 @@ suspend fun applySettings(
             val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
             if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                android.util.Log.d("Res3D", "Verification success. Rebooting...")
                 runRootCommand("reboot")
                 return@withContext true to "Success. Rebooting..."
             } else {
-                val details =
-                    "Res:${verifiedValues.resolution}, SM:${verifiedValues.stencilMesh}, FFR:${verifiedValues.ffr}, TF:${verifiedValues.textureFov}"
-                android.util.Log.e(
-                    "Res3D",
-                    "Verification failed. Expected ($res, $sm, $ffr, $tf) but got ($details). Error: $fetchError"
-                )
                 return@withContext false to "Verification failed. DB values did not change."
             }
         } catch (e: Exception) {
@@ -962,35 +1206,53 @@ private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
     try {
         process = Runtime.getRuntime().exec("su")
         os = DataOutputStream(process.outputStream)
-
         for (cmd in commands) {
             os.writeBytes("$cmd\n")
         }
         os.writeBytes("exit\n")
         os.flush()
-
         val errors = StringBuilder()
         errorReader = BufferedReader(InputStreamReader(process.errorStream))
         var line: String?
         while (errorReader.readLine().also { line = it } != null) {
             errors.append(line).append(" ")
         }
-
         val exitValue = process.waitFor()
-        val errorMsg = errors.toString().trim()
-
-        return (exitValue == 0) to errorMsg
+        return (exitValue == 0) to errors.toString().trim()
     } catch (e: Exception) {
         return false to (e.message ?: "su execution failed")
     } finally {
-        try {
-            os?.close()
-        } catch (ignore: Exception) {
+        try { os?.close() } catch (ignore: Exception) {}
+        try { errorReader?.close() } catch (ignore: Exception) {}
+        process?.destroy()
+    }
+}
+
+private fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, String> {
+    var process: Process? = null
+    var os: DataOutputStream? = null
+    var inputReader: BufferedReader? = null
+    try {
+        process = Runtime.getRuntime().exec("su")
+        os = DataOutputStream(process.outputStream)
+        for (cmd in commands) {
+            os.writeBytes("$cmd\n")
         }
-        try {
-            errorReader?.close()
-        } catch (ignore: Exception) {
+        os.writeBytes("exit\n")
+        os.flush()
+        val output = StringBuilder()
+        inputReader = BufferedReader(InputStreamReader(process.inputStream))
+        var line: String?
+        while (inputReader.readLine().also { line = it } != null) {
+            output.append(line).append("\n")
         }
+        val exitValue = process.waitFor()
+        return (exitValue == 0) to output.toString().trim()
+    } catch (e: Exception) {
+        return false to (e.message ?: "su execution failed")
+    } finally {
+        try { os?.close() } catch (ignore: Exception) {}
+        try { inputReader?.close() } catch (ignore: Exception) {}
         process?.destroy()
     }
 }
@@ -1000,21 +1262,20 @@ private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
 fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
-            currentValues = ConfigValues(
-                resolution = "1600",
-                stencilMesh = "1",
-                ffr = "1",
-                textureFov = "95"
-            ),
+            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6"),
             resolution = "2160",
             stencilMesh = "1",
             ffr = "1",
             textureFov = "95",
+            maxPwrLevel = "0",
+            minPwrLevel = "6",
             status = "Ready",
             onResolutionChange = {},
             onStencilMeshChange = {},
             onFfrChange = {},
             onTextureFovChange = {},
+            onMaxPwrLevelChange = {},
+            onMinPwrLevelChange = {},
             onApplyClick = {}
         )
     }
