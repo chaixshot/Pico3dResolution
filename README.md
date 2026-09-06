@@ -16,10 +16,13 @@
 ## 🌟 Key Features
 
 *   **🎯 Global Resolution Scaling**: Change the internal rendering resolution for all 3D VR applications.
+*   **⚡ GPU Power Level Controls**: Manually set the GPU's `max_pwrlevel` and `min_pwrlevel` to lock performance states (ranging from Peak Performance to Power Saving).
 *   **📐 Advanced Rendering Controls**:
     *   **Stencil Mesh**: Optimize GPU resources by preventing rendering of hidden pixels.
     *   **Foveated Rendering**: Optimize performance by concentrating resolution in the central focus area.
     *   **Texture FOV**: Fine-tune the field of view for rendered eye textures.
+*   **🔄 One-Click Restore**: A dedicated "Restore Default" button to instantly revert all settings to safe, standard Pico values.
+*   **🧩 Boot Persistence**: Integrated LSPosed (Xposed) module support to automatically re-apply GPU power levels after every reboot.
 *   **❓ Interactive Help**: Integrated documentation for each setting to explain technical details and trade-offs.
 *   **📊 Optimized Presets**: Choose from predefined values optimized for performance or clarity:
     *   **384px**: Ultra Performance
@@ -44,10 +47,12 @@
 
 1.  **Download and Install** the latest `Pico3dResolution.apk`.
 2.  **Open the app** and grant **Root/Superuser** permissions when requested.
-3.  **Select your target resolution** from the dropdown menu.
-4.  **Click "Apply & Reboot"**.
-5.  The app will update the system database and verify the values.
-6.  **Wait for the headset to reboot**. Your new resolution is now active!
+3.  **Select your target resolution** and/or **GPU Power Levels** from the dropdown menus.
+4.  **Click "Apply"**.
+      *   If resolution/rendering settings were changed, the app will show **"Apply & Reboot"** and the headset will restart.
+      *   If only **Power Levels** were changed, the app will show **"Apply"** and changes take effect immediately without a reboot.
+5.  **(Optional) Auto-Apply at Boot:** To keep your GPU power levels active after a reboot, enable the module in the **LSPosed Manager** app.
+6.  **Wait for the process to complete**. Your new settings are now active!
 
 ## ⁉️ FAQ / Troubleshooting
 
@@ -61,7 +66,9 @@
 ## 🛠️ Technical Details
 
 ### How it works
-This app works by using root access to modify the system's PVR configuration database (`/data/user_de/0/com.pvr.configuration/databases/config.db`). It targets parameters like `sdk_eyebuffer`, `sdk_enableFFRBySYS`, `sdk_stencilMeshStatus`, and `sdk_EyeTextureFov` in the `RuleBean` table.
+*   **Resolution & Rendering:** This app uses root access to modify the system's PVR configuration database (`/data/user_de/0/com.pvr.configuration/databases/config.db`). It targets parameters like `sdk_eyebuffer`, `sdk_enableFFRBySYS`, `sdk_stencilMeshStatus`, and `sdk_EyeTextureFov` in the `RuleBean` and `ConfigBean` tables.
+*   **GPU Performance:** It modifies the kernel sysfs nodes located at `/sys/class/kgsl/kgsl-3d0/max_pwrlevel` and `min_pwrlevel` to force specific GPU frequency states.
+*   **Boot Restoration:** An integrated LSPosed module hooks into the `system_server` process to trigger the app's restoration service via a `ContentProvider` query immediately after boot completion.
 
 ## 💖 Special Thanks
 
