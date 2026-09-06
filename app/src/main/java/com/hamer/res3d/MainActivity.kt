@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -330,14 +331,15 @@ fun ResolutionControlContent(
                     horizontalArrangement = Arrangement.spacedBy(48.dp),
                     verticalAlignment = Alignment.Top
                 ) {
+                    val pixelSuffix = stringResource(id = R.string.pixel)
+                    val enabledText = stringResource(id = R.string.enabled)
+                    val disabledText = stringResource(id = R.string.disabled)
+
                     // Left Side: Dropdowns (User's Row 1)
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        val pixelSuffix = stringResource(id = R.string.pixel)
-                        val enabledText = stringResource(id = R.string.enabled)
-                        val disabledText = stringResource(id = R.string.disabled)
 
                         // 1. Resolution Dropdown
                         var resExpanded by remember { mutableStateOf(false) }
@@ -672,22 +674,55 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        Button(
-                            onClick = onApplyClick,
+                        Row(
                             modifier = Modifier
-                                .fillMaxWidth(0.6f)
-                                .padding(top = 40.dp)
-                                .height(56.dp),
-                            shape = MaterialTheme.shapes.medium,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(id = R.color.dropdown_bg)
-                            )
+                                .fillMaxWidth()
+                                .padding(top = 40.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.apply_reboot),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White
-                            )
+                            Button(
+                                onClick = onApplyClick,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
+                                shape = MaterialTheme.shapes.medium,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.dropdown_bg)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 4.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.apply_reboot),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color.White,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            Button(
+                                onClick = {
+                                    onResolutionChange("1504")
+                                    onStencilMeshChange(enabledText)
+                                    onFfrChange(enabledText)
+                                    onTextureFovChange("95")
+                                },
+                                modifier = Modifier.size(56.dp),
+                                shape = MaterialTheme.shapes.medium,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.dropdown_bg)
+                                ),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Refresh,
+                                    contentDescription = "Restore Default",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }
