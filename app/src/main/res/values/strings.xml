@@ -4,6 +4,7 @@
     <string name="app_description">Globally adjust the rendering resolution for all 3D VR applications on your Pico headset. Higher values improve clarity but may impact performance.\n\nThis app works by using root access to modify the system\'s PVR configuration database (config.db), specifically targeting the \'sdk_eyebuffer\' parameters to force a custom resolution. A reboot is required to apply the changes.</string>
     <string name="current_system_config">Current System Config</string>
     <string name="target_resolution">Target Resolution</string>
+    <string name="apply">Apply</string>
     <string name="apply_reboot">Apply &amp; Reboot</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>

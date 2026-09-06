@@ -1,5 +1,6 @@
 package com.hamer.res3d
 
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -199,6 +200,11 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         refreshValues()
     }
 
+    val requiresReboot = resolution != currentValues.resolution ||
+            stencilMesh != currentValues.stencilMesh ||
+            ffr != currentValues.ffr ||
+            textureFov != currentValues.textureFov
+
     ResolutionControlContent(
         currentValues = currentValues,
         resolution = resolution,
@@ -214,10 +220,12 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         onTextureFovChange = { textureFov = it },
         onMaxPwrLevelChange = { maxPwrLevel = it },
         onMinPwrLevelChange = { minPwrLevel = it },
+        requiresReboot = requiresReboot,
         onApplyClick = {
             if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
+                    
                     val (success, error) = applySettings(
                         resolution,
                         stencilMesh,
@@ -227,7 +235,8 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         minPwrLevel,
                         cacheDir,
                         appUid,
-                        storageContext
+                        storageContext,
+                        requiresReboot
                     )
                     if (success) {
                         status = if (error == "Success. Rebooting...") {
@@ -266,6 +275,7 @@ fun ResolutionControlContent(
     onTextureFovChange: (String) -> Unit,
     onMaxPwrLevelChange: (String) -> Unit,
     onMinPwrLevelChange: (String) -> Unit,
+    requiresReboot: Boolean,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -885,7 +895,7 @@ fun ResolutionControlContent(
                                 contentPadding = PaddingValues(horizontal = 4.dp)
                             ) {
                                 Text(
-                                    text = stringResource(id = R.string.apply_reboot),
+                                    text = if (requiresReboot) stringResource(id = R.string.apply_reboot) else stringResource(id = R.string.apply),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = Color.White,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -1056,7 +1066,8 @@ suspend fun applySettings(
     minPwr: String,
     cacheDir: File,
     uid: Int,
-    context: android.content.Context
+    context: Context,
+    shouldReboot: Boolean
 ): Pair<Boolean, String> =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_APPLY_DB)
@@ -1188,8 +1199,12 @@ suspend fun applySettings(
             val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
             if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                runRootCommand("reboot")
-                return@withContext true to "Success. Rebooting..."
+                if (shouldReboot) {
+                    runRootCommand("reboot")
+                    return@withContext true to "Success. Rebooting..."
+                } else {
+                    return@withContext true to "Applied successfully!"
+                }
             } else {
                 return@withContext false to "Verification failed. DB values did not change."
             }
@@ -1276,6 +1291,7 @@ fun ResolutionControlPreview() {
             onTextureFovChange = {},
             onMaxPwrLevelChange = {},
             onMinPwrLevelChange = {},
+            requiresReboot = true,
             onApplyClick = {}
         )
     }
