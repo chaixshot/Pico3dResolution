@@ -40,6 +40,8 @@
 
 *   **VR-шлем Pico** (Pico 4, Pico Neo 3 и т. д.)
 *   **Root-доступ** (требуется Magisk)
+      *   Рекомендуется использовать [picounlock](https://github.com/chaixshot/more-picohaxx)
+*   **Среда:** Должен быть установлен и активен **[LSPosed Framework](https://github.com/JingMatrix/Vector/releases/tag/v2.0)**.
 *   **Разрешение суперпользователя**: Предоставьте root-доступ по запросу приложения.
 
 ## 📖 Как пользоваться?

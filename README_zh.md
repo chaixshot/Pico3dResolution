@@ -40,6 +40,8 @@
 
 *   **Pico VR 头显**（Pico 4、Pico Neo 3 等）
 *   **Root 权限**（需要 Magisk）
+      *   建议使用 [picounlock](https://github.com/chaixshot/more-picohaxx)
+*   **环境：** 必须安装并激活 **[LSPosed 框架](https://github.com/JingMatrix/Vector/releases/tag/v2.0)**。
 *   **超级用户权限**：在应用程序提示时授予 Root 权限。
 
 ## 📖 如何使用？
