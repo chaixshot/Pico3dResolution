@@ -4,6 +4,7 @@
     <string name="app_description">Ajuste globalmente a resolução de renderização para todas as aplicações VR 3D nos seus óculos Pico. Valores mais elevados melhoram a nitidez, mas podem afetar o desempenho.\n\nEsta aplicação funciona através do acesso root para modificar a base de dados de configuração PVR do sistema (config.db), visando especificamente os parâmetros \'sdk_eyebuffer\' para forçar uma resolução personalizada. É necessário reiniciar para aplicar as alterações.</string>
     <string name="current_system_config">Configuração Atual do Sistema</string>
     <string name="target_resolution">Resolução Alvo</string>
+    <string name="apply">Aplicar</string>
     <string name="apply_reboot">Aplicar e Reiniciar</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Uma otimização que evita a renderização de pixels que estão fisicamente ocultos pelas bordas das lentes do headset (cantos), economizando recursos da GPU.</string>
     <string name="help_ffr_desc">Otimiza a renderização fornecendo resolução total para a área de foco central, enquanto diminui a resolução em áreas periféricas onde os detalhes são menos perceptíveis.</string>
     <string name="help_texture_fov_desc">Ajusta o campo de visão das texturas oculares renderizadas. Diminuir isso pode melhorar o desempenho ao renderizar menos área, mas estreitará sua visão.</string>
+    <string name="max_pwrlevel">Nível de potência máx.</string>
+    <string name="min_pwrlevel">Nível de potência mín.</string>
+    <string name="help_pwrlevel_desc">Controla o nível de potência do GPU (PwrLevel). Números mais baixos significam geralmente uma frequência (desempenho) mais elevada. O PwrLevel máx. é o limite para o desempenho mais elevado, o PwrLevel mín. é o limite para o desempenho mais baixo.</string>
+    <string name="pwr_level_label">Nível</string>
+    <string name="pwr_peak_performance">Desempenho máximo</string>
+    <string name="pwr_high_load">Carga alta</string>
+    <string name="pwr_standard_load">Carga padrão</string>
+    <string name="pwr_balanced">Equilibrado</string>
+    <string name="pwr_low_power">Baixa potência</string>
+    <string name="pwr_minimum_power">Potência mínima</string>
+    <string name="pwr_deep_idle">Poupança de energia</string>
     <string name="close">Fechar</string>
 </resources>

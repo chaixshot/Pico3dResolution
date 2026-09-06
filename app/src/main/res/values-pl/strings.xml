@@ -4,6 +4,7 @@
     <string name="app_description">Globalnie dostosuj rozdzielczość renderowania dla wszystkich aplikacji 3D VR na goglach Pico. Wyższe wartości poprawiają ostrość, ale mogą wpływać na wydajność.\n\nTa aplikacja działa poprzez wykorzystanie dostępu root do modyfikacji systemowej bazy danych konfiguracji PVR (config.db), w szczególności celując w parametry \'sdk_eyebuffer\', aby wymusić niestandardową rozdzielczość. Aby zastosować zmiany, wymagany jest restart.</string>
     <string name="current_system_config">Aktualna konfiguracja systemu</string>
     <string name="target_resolution">Docelowa rozdzielczość</string>
+    <string name="apply">Zastosuj</string>
     <string name="apply_reboot">Zastosuj i uruchom ponownie</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Piksel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Optymalizacja zapobiegająca renderowaniu pikseli fizycznie ukrytych przez krawędzie soczewek gogli (rogi), co oszczędza zasoby GPU.</string>
     <string name="help_ffr_desc">Optymalizuje renderowanie, zapewniając pełną rozdzielczość w centralnym obszarze ostrości przy jednoczesnym obniżeniu rozdzielczości w obszarach peryferyjnych, gdzie szczegóły są mniej zauważalne.</string>
     <string name="help_texture_fov_desc">Dostosowuje pole widzenia renderowanych tekstur oczu. Zmniejszenie tej wartości może poprawić wydajność poprzez renderowanie mniejszego obszaru, ale zawęzi widok.</string>
+    <string name="max_pwrlevel">Maks. poziom mocy</string>
+    <string name="min_pwrlevel">Min. poziom mocy</string>
+    <string name="help_pwrlevel_desc">Kontroluje poziom mocy GPU (PwrLevel). Niższe liczby zazwyczaj oznaczają wyższą częstotliwość (wydajność). Maks. PwrLevel to limit dla najwyższej wydajności, Min. PwrLevel to limit dla najniższej wydajności.</string>
+    <string name="pwr_level_label">Poziom</string>
+    <string name="pwr_peak_performance">Wydajność szczytowa</string>
+    <string name="pwr_high_load">Wysokie obciążenie</string>
+    <string name="pwr_standard_load">Standardowe obciążenie</string>
+    <string name="pwr_balanced">Zrównoważony</string>
+    <string name="pwr_low_power">Niska moc</string>
+    <string name="pwr_minimum_power">Minimalna moc</string>
+    <string name="pwr_deep_idle">Oszczędzanie energii</string>
     <string name="close">Zamknij</string>
 </resources>

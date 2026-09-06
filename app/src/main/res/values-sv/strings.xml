@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">Pico3dResolution</string>
     <string name="app_title">Pico 3D-upplösning</string>
-    <string name="app_description">Justera renderingsupplösningen globalt för alla 3D VR-applikationer på ditt Pico-headset. Högre värden förbättrar tydligheten men kan påverka prestandan.\n\nDenna app fungerar genom att använda root-åtkomst för att ändra systemets PVR-konfigurationsdatabas (config.db), specifikt inriktad på \'sdk_eyebuffer\'-parametrarna för att tvinga fram en anpassad upplösning. En omstart krävs för att tillämpa ändringarna.</string>
+    <string name="app_description">Justera renderingsupplösningen globalt for alla 3D VR-applikationer på ditt Pico-headset. Högre värden förbättrar tydligheten men kan påverka prestandan.\n\nDenna app fungerar genom att använda root-åtkomst för att ändra systemets PVR-konfigurationsdatabas (config.db), specifikt inriktad på \'sdk_eyebuffer\'-parametrarna för att tvinga fram en anpassad upplösning. En omstart krävs för att tillämpa ändringarna.</string>
     <string name="current_system_config">Nuvarande systemkonfiguration</string>
     <string name="target_resolution">Målupplösning</string>
+    <string name="apply">Verkställ</string>
     <string name="apply_reboot">Verkställ och starta om</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -31,7 +32,18 @@
     <string name="degree">°</string>
     <string name="help_resolution_desc">Justerar den globala renderingsstorleken för EyeBuffer. Högre värden förbättrar tydligheten men ökar latensen och minskar prestandan. Rekommenderad skala är mellan 0,5 och 2,0.</string>
     <string name="help_stencil_mesh_desc">En optimering som förhindrar rendering av pixlar som fysiskt döljs av headsetets linskanter (hörn), vilket sparar GPU-resurser.</string>
-    <string name="help_ffr_desc">Optimerar rendering genom att ge full upplösning för det centrala fokusområdet samtidigt som upplösningen sänks i perifera områden där detaljer är mindre märkbara.</string>
-    <string name="help_texture_fov_desc">Justerar synfältet för de renderade ögontexturerna. Att sänka detta kan förbättra prestandan genom att rendera mindre yta, men kommer att smalna av din vy.</string>
+    <string name="help_ffr_desc">Optimerar rendering genom att ge full upplösning for det centrala fokusområdet samtidigt som upplösningen sänks i perifera områden där detaljer är mindre märkbara.</string>
+    <string name="help_texture_fov_desc">Justerar synsfeltet för de renderade ögontexturerna. Att sänka detta kan förbättra prestandan genom att rendera mindre yta, men kommer att smalna av din vy.</string>
+    <string name="max_pwrlevel">Max effektnivå</string>
+    <string name="min_pwrlevel">Min effektnivå</string>
+    <string name="help_pwrlevel_desc">Styr GPU-effektnivån (PwrLevel). Lägre siffror innebär vanligtvis högre frekvens (prestanda). Max PwrLevel är gränsen för högsta prestanda, Min PwrLevel är gränsen for lägsta prestanda.</string>
+    <string name="pwr_level_label">Nivå</string>
+    <string name="pwr_peak_performance">Topprestanda</string>
+    <string name="pwr_high_load">Hög belastning</string>
+    <string name="pwr_standard_load">Standardbelastning</string>
+    <string name="pwr_balanced">Balanserad</string>
+    <string name="pwr_low_power">Låg effekt</string>
+    <string name="pwr_minimum_power">Minimum effekt</string>
+    <string name="pwr_deep_idle">Energisparläge</string>
     <string name="close">Stäng</string>
 </resources>

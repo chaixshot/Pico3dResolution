@@ -4,6 +4,7 @@
     <string name="app_description">ปรับความละเอียดการเรนเดอร์ทั่วโลกสำหรับแอปพลิเคชัน 3D VR ทั้งหมดบนชุดหูฟัง Pico ของคุณ ค่าที่สูงขึ้นจะช่วยเพิ่มความชัดเจน แต่อาจส่งผลกระทบต่อประสิทธิภาพการทำงาน\n\nแอปนี้ทำงานโดยใช้การเข้าถึงรูทเพื่อแก้ไขฐานข้อมูลการกำหนดค่า PVR ของระบบ (config.db) โดยเน้นไปที่พารามิเตอร์ \'sdk_eyebuffer\' โดยเฉพาะเพื่อบังคับใช้ความละเอียดที่กำหนดเอง ต้องรีบูตเพื่อใช้การเปลี่ยนแปลง</string>
     <string name="current_system_config">การกำหนดค่าระบบปัจจุบัน</string>
     <string name="target_resolution">ความละเอียดเป้าหมาย</string>
+    <string name="apply">นำไปใช้</string>
     <string name="apply_reboot">นำไปใช้และรีบูต</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">พิกเซล</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">การเพิ่มประสิทธิภาพที่ป้องกันการเรนเดอร์พิกเซลที่ถูกซ่อนโดยขอบเลนส์ของชุดหูฟัง (มุม) ซึ่งช่วยประหยัดทรัพยากร GPU</string>
     <string name="help_ffr_desc">ปรับการเรนเดอร์ให้เหมาะสมโดยให้ความละเอียดเต็มที่สำหรับพื้นที่โฟกัสตรงกลาง ในขณะที่ลดความละเอียดลงในพื้นที่รอบข้างที่มองเห็นรายละเอียดได้น้อยกว่า</string>
     <string name="help_texture_fov_desc">ปรับมุมมอง (Field of View) ของพื้นผิวตาที่เรนเดอร์ การลดค่านี้สามารถปรับปรุงประสิทธิภาพได้โดยการเรนเดอร์พื้นที่น้อยลง แต่จะทำให้มุมมองของคุณแคบลง</string>
+    <string name="max_pwrlevel">ระดับพลังงานสูงสุด</string>
+    <string name="min_pwrlevel">ระดับพลังงานต่ำสุด</string>
+    <string name="help_pwrlevel_desc">ควบคุมระดับพลังงาน GPU (PwrLevel) ตัวเลขที่ต่ำกว่ามักหมายถึงความถี่ (ประสิทธิภาพ) ที่สูงกว่า ระดับ PwrLevel สูงสุดคือขีดจำกัดสำหรับประสิทธิภาพสูงสุด ระดับ PwrLevel ต่ำสุดคือขีดจำกัดสำหรับประสิทธิภาพต่ำสุด</string>
+    <string name="pwr_level_label">ระดับ</string>
+    <string name="pwr_peak_performance">ประสิทธิภาพสูงสุด (Peak)</string>
+    <string name="pwr_high_load">โหลดสูง</string>
+    <string name="pwr_standard_load">โหลดมาตรฐาน</string>
+    <string name="pwr_balanced">สมดุล</string>
+    <string name="pwr_low_power">พลังงานต่ำ</string>
+    <string name="pwr_minimum_power">พลังงานขั้นต่ำ</string>
+    <string name="pwr_deep_idle">ประหยัดพลังงาน</string>
     <string name="close">ปิด</string>
 </resources>

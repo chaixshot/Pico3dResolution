@@ -4,6 +4,7 @@
     <string name="app_description">Säädä renderöintiresoluutiota maailmanlaajuisesti kaikille Pico-lasiesi 3D VR-sovelluksille. Suuremmat arvot parantavat selkeyttä, mutta voivat vaikuttaa suorituskykyyn.\n\nTämä sovellus toimii käyttämällä root-oikeuksia järjestelmän PVR-kokoonpanotietokannan (config.db) muokkaamiseen, erityisesti kohdentamalla \'sdk_eyebuffer\'-parametrit mukautetun resoluution pakottamiseksi. Muutosten käyttöönottamiseksi tarvitaan uudelleenkäynnistys.</string>
     <string name="current_system_config">Nykyinen järjestelmäkokoonpano</string>
     <string name="target_resolution">Tavoiteresoluutio</string>
+    <string name="apply">Käytä</string>
     <string name="apply_reboot">Käytä ja käynnistä uudelleen</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pikseli</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Optimointi, joka estää sellaisten pikselien renderöinnin, jotka jäävät fyysisesti lasien linssien reunojen (kulmien) taakse, säästäen näin näytönohjaimen resursseja.</string>
     <string name="help_ffr_desc">Optimoi renderöinnin tarjoamalla täyden resoluution keskeiselle tarkennetulle alueelle ja laskemalla resoluutiota reuna-alueilla, joilla yksityiskohdat ovat vähemmän huomattavia.</string>
     <string name="help_texture_fov_desc">Säätää renderöityjen silmätekstuurien näkökenttää. Tämän laskeminen voi parantaa suorituskykyä renderöimällä pienemmän alueen, mutta se kaventaa näkymääsi.</string>
+    <string name="max_pwrlevel">Suurin tehotaso</string>
+    <string name="min_pwrlevel">Pienin tehotaso</string>
+    <string name="help_pwrlevel_desc">Ohjaa GPU:n tehotasoa (PwrLevel). Pienemmät luvut tarkoittavat yleensä korkeampaa taajuutta (suorituskykyä). Suurin PwrLevel on korkeimman suorituskyvyn raja, pienin PwrLevel on alhaisimman suorituskyvyn raja.</string>
+    <string name="pwr_level_label"> Taso</string>
+    <string name="pwr_peak_performance">Huippusuorituskyky</string>
+    <string name="pwr_high_load">Korkea kuormitus</string>
+    <string name="pwr_standard_load">Vakiokuormitus</string>
+    <string name="pwr_balanced">Tasapainotettu</string>
+    <string name="pwr_low_power">Alhainen teho</string>
+    <string name="pwr_minimum_power">Minimiteho</string>
+    <string name="pwr_deep_idle">Virransäästö</string>
     <string name="close">Sulje</string>
 </resources>

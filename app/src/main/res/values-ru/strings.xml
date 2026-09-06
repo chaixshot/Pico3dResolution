@@ -4,6 +4,7 @@
     <string name="app_description">Глобально настройте разрешение рендеринга для всех 3D VR приложений на вашей гарнитуре Pico. Более высокие значения улучшают четкость, но могут повлиять на производительность.\n\nЭто приложение работает, используя root-доступ для изменения системной базы данных конфигурации PVR (config.db), специально нацеливаясь на параметры \'sdk_eyebuffer\' для принудительного установления пользовательского разрешения. Для применения изменений требуется перезагрузка.</string>
     <string name="current_system_config">Текущая конфигурация системы</string>
     <string name="target_resolution">Целевое разрешение</string>
+    <string name="apply">Применить</string>
     <string name="apply_reboot">Применить и перезагрузить</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Пиксель</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Оптимизация, которая предотвращает рендеринг пикселей, физически скрытых краями линз гарнитуры (углами), экономя ресурсы GPU.</string>
     <string name="help_ffr_desc">Оптимизирует рендеринг, обеспечивая полное разрешение для центральной области фокусировки и снижая разрешение в периферийных областях, где детали менее заметны.</string>
     <string name="help_texture_fov_desc">Регулирует поле зрения рендеримых текстур глаз. Уменьшение этого значения может повысить производительность за счет уменьшения области рендеринга, но сузит ваш обзор.</string>
+    <string name="max_pwrlevel">Макс. уровень мощности</string>
+    <string name="min_pwrlevel">Мин. уровень мощности</string>
+    <string name="help_pwrlevel_desc">Управляет уровнем мощности GPU (PwrLevel). Меньшие числа обычно означают более высокую частоту (производительность). Макс. PwrLevel — это предел для максимальной производительности, Мин. PwrLevel — предел для минимальной производительности.</string>
+    <string name="pwr_level_label">Уровень</string>
+    <string name="pwr_peak_performance">Пиковая производительность</string>
+    <string name="pwr_high_load">Высокая нагрузка</string>
+    <string name="pwr_standard_load">Стандартная нагрузка</string>
+    <string name="pwr_balanced">Сбалансированный</string>
+    <string name="pwr_low_power">Низкое энергопотребление</string>
+    <string name="pwr_minimum_power">Минимальная мощность</string>
+    <string name="pwr_deep_idle">Энергосбережение</string>
     <string name="close">Закрыть</string>
 </resources>

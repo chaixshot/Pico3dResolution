@@ -4,6 +4,7 @@
     <string name="app_description">Pico başlığınızdaki tüm 3D VR uygulamaları için oluşturma çözünürlüğünü küresel olarak ayarlayın. Daha yüksek değerler netliği artırır ancak performansı etkileyebilir.\n\nBu uygulama, sistemin PVR yapılandırma veritabanını (config.db) değiştirmek için root erişimini kullanarak, özellikle özel bir çözünürlüğü zorlamak için \'sdk_eyebuffer\' parametrelerini hedefler. Değişiklikleri uygulamak için yeniden başlatma gereklidir.</string>
     <string name="current_system_config">Mevcut Sistem Yapılandırması</string>
     <string name="target_resolution">Hedef Çözünürlük</string>
+    <string name="apply">Uygula</string>
     <string name="apply_reboot">Uygula ve Yeniden Başlat</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Piksel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Başlığın lens kenarları (köşeleri) tarafından fiziksel olarak gizlenen piksellerin oluşturulmasını önleyerek GPU kaynaklarından tasarruf sağlayan bir optimizasyondur.</string>
     <string name="help_ffr_desc">Merkezi odak alanı için tam çözünürlük sağlarken, ayrıntıların daha az fark edildiği çevresel alanlarda çözünürlüğü düşürerek oluşturmayı optimize eder.</string>
     <string name="help_texture_fov_desc">Oluşturulan göz dokularının görüş alanını ayarlar. Bunu düşürmek, daha az alan oluşturarak performansı artırabilir ancak görüşünüzü daraltacaktır.</string>
+    <string name="max_pwrlevel">Maks. Güç Seviyesi</string>
+    <string name="min_pwrlevel">Min. Güç Seviyesi</string>
+    <string name="help_pwrlevel_desc">GPU güç seviyesini (PwrLevel) kontrol eder. Düşük sayılar genellikle daha yüksek frekans (performans) anlamına gelir. Maks PwrLevel en yüksek performans için sınırdır, Min PwrLevel en düşük performans için sınırdır.</string>
+    <string name="pwr_level_label">Seviye</string>
+    <string name="pwr_peak_performance">Zirve Performansı</string>
+    <string name="pwr_high_load">Yüksek Yük</string>
+    <string name="pwr_standard_load">Standart Yük</string>
+    <string name="pwr_balanced">Dengeli</string>
+    <string name="pwr_low_power">Düşük Güç</string>
+    <string name="pwr_minimum_power">Minimum Güç</string>
+    <string name="pwr_deep_idle">Güç Tasarrufu</string>
     <string name="close">Kapat</string>
 </resources>

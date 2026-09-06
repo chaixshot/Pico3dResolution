@@ -4,6 +4,7 @@
     <string name="app_description">Picoヘッドセット上のすべての3D VRアプリケーションのレンダリング解像度をグローバルに調整します。値を大きくすると鮮明になりますが、パフォーマンスに影響を与える可能性があります。\n\nこのアプリは、rootアクセスを使用してシステムのPVR構成データベース (config.db) を変更し、特に \'sdk_eyebuffer\' パラメータをターゲットにしてカスタム解像度を強制します。変更を適用するには再起動が必要です。</string>
     <string name="current_system_config">現在のシステム構成</string>
     <string name="target_resolution">ターゲット解像度</string>
+    <string name="apply">適用</string>
     <string name="apply_reboot">適用して再起動</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">ピクセル</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">ヘッドセットのレンズの境界（四隅）によって物理的に隠れているピクセルのレンダリングを防ぎ、GPUリソースを節約する最適化です。</string>
     <string name="help_ffr_desc">中央のフォーカスエリアにはフル解像度を提供し、細部が目立たない周辺エリアの解像度を下げることで、レンダリングを最適化します。</string>
     <string name="help_texture_fov_desc">レンダリングされる瞳テクスチャの視野角を調整します。これを下げると、レンダリング範囲が狭まりパフォーマンスが向上しますが、視野も狭くなります。</string>
+    <string name="max_pwrlevel">最大電力レベル</string>
+    <string name="min_pwrlevel">最小電力レベル</string>
+    <string name="help_pwrlevel_desc">GPUの電力レベル (PwrLevel) を制御します。通常、数値が小さいほど周波数が高く（パフォーマンスが高く）なります。最大 PwrLevel は最高パフォーマンスの制限、最小 PwrLevel は最低パフォーマンスの制限です。</string>
+    <string name="pwr_level_label">レベル</string>
+    <string name="pwr_peak_performance">ピークパフォーマンス</string>
+    <string name="pwr_high_load">高負荷</string>
+    <string name="pwr_standard_load">標準負荷</string>
+    <string name="pwr_balanced">バランス</string>
+    <string name="pwr_low_power">低電力</string>
+    <string name="pwr_minimum_power">最小電力</string>
+    <string name="pwr_deep_idle">省電力</string>
     <string name="close">閉じる</string>
 </resources>

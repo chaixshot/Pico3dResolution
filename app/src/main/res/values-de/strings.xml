@@ -4,6 +4,7 @@
     <string name="app_description">Passen Sie die Rendering-Auflösung für alle 3D-VR-Anwendungen auf Ihrem Pico-Headset global an. Höhere Werte verbessern die Klarheit, können jedoch die Leistung beeinträchtigen.\n\nDiese App nutzt Root-Zugriff, um die PVR-Konfigurationsdatenbank des Systems (config.db) zu ändern, wobei speziell die Parameter \'sdk_eyebuffer\' angesprochen werden, um eine benutzerdefinierte Auflösung zu erzwingen. Ein Neustart ist erforderlich, um die Änderungen zu übernehmen.</string>
     <string name="current_system_config">Aktuelle Systemkonfiguration</string>
     <string name="target_resolution">Zielauflösung</string>
+    <string name="apply">Anwenden</string>
     <string name="apply_reboot">Anwenden &amp; Neustart</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Eine Optimierung, die das Rendern von Pixeln verhindert, die physikalisch durch die Linsenränder des Headsets (Ecken) verdeckt sind, wodurch GPU-Ressourcen gespart werden.</string>
     <string name="help_ffr_desc">Optimiert das Rendering, indem die volle Auflösung für den zentralen Fokusbereich bereitgestellt wird, während die Auflösung in Randbereichen verringert wird, in denen Details weniger auffallen.</string>
     <string name="help_texture_fov_desc">Passt das Sichtfeld der gerenderten Augentexturen an. Das Verringern dieses Werts kann die Leistung verbessern, da weniger Fläche gerendert wird, verengt jedoch die Sicht.</string>
+    <string name="max_pwrlevel">Max. Leistungsstufe</string>
+    <string name="min_pwrlevel">Min. Leistungsstufe</string>
+    <string name="help_pwrlevel_desc">Steuert die GPU-Leistungsstufe (PwrLevel). Niedrigere Zahlen bedeuten normalerweise eine höhere Frequenz (Leistung). Max. PwrLevel ist das Limit für die höchste Leistung, Min. PwrLevel ist das Limit für die niedrigste Leistung.</string>
+    <string name="pwr_level_label">Stufe</string>
+    <string name="pwr_peak_performance">Spitzenleistung</string>
+    <string name="pwr_high_load">Hohe Last</string>
+    <string name="pwr_standard_load">Standardlast</string>
+    <string name="pwr_balanced">Ausgewogen</string>
+    <string name="pwr_low_power">Niedrige Leistung</string>
+    <string name="pwr_minimum_power">Minimale Leistung</string>
+    <string name="pwr_deep_idle">Energiesparmodus</string>
     <string name="close">Schließen</string>
 </resources>

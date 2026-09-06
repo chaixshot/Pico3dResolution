@@ -4,6 +4,7 @@
     <string name="app_description">Ajustați global rezoluția de redare pentru toate aplicațiile VR 3D de pe casca Pico. Valorile mai mari îmbunătățesc claritatea, dar pot afecta performanța.\n\nAceastă aplicație funcționează utilizând accesul root pentru a modifica baza de date de configurare PVR a sistemului (config.db), vizând în mod specific parametrii \'sdk_eyebuffer\' pentru a forța o rezoluție personalizată. Este necesară o repornire pentru a aplica modificările.</string>
     <string name="current_system_config">Configurația actuală a sistemului</string>
     <string name="target_resolution">Rezoluție țintă</string>
+    <string name="apply">Aplică</string>
     <string name="apply_reboot">Aplică și repornește</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">O optimizare care previne randarea pixelilor care sunt ascunși fizic de marginile lentilelor căștii (colțuri), economisind resursele GPU.</string>
     <string name="help_ffr_desc">Optimizează randarea prin furnizarea rezoluției complete pentru zona centrală de focalizare, scăzând în același timp rezoluția în zonele periferice unde detaliile sunt mai puțin vizibile.</string>
     <string name="help_texture_fov_desc">Ajustează câmpul vizual al texturilor ochilor redate. Reducerea acestuia poate îmbunătăți performanța prin randarea unei zone mai mici, dar vă va îngusta vederea.</string>
+    <string name="max_pwrlevel">Nivel maxim de putere</string>
+    <string name="min_pwrlevel">Nivel minim de putere</string>
+    <string name="help_pwrlevel_desc">Controlează nivelul de putere al GPU (PwrLevel). Numerele mai mici înseamnă, de obicei, o frecvență (performanță) mai mare. Max PwrLevel este limita pentru performanța maximă, Min PwrLevel este limita pentru performanța minimă.</string>
+    <string name="pwr_level_label">Nivel</string>
+    <string name="pwr_peak_performance">Performanță maximă</string>
+    <string name="pwr_high_load">Sarcină mare</string>
+    <string name="pwr_standard_load">Sarcină standard</string>
+    <string name="pwr_balanced">Echilibrat</string>
+    <string name="pwr_low_power">Putere redusă</string>
+    <string name="pwr_minimum_power">Putere minimă</string>
+    <string name="pwr_deep_idle">Economisire energie</string>
     <string name="close">Închide</string>
 </resources>

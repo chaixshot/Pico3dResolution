@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">Pico3dResolution</string>
     <string name="app_title">Resolução Pico 3D</string>
-    <string name="app_description">Ajuste globalmente a resolução de renderização para todos os aplicativos VR 3D no seu headset Pico. Valores mais altos melhoram a clareza, mas podem afetar o desempenho.\n\nEste aplicativo funciona usando acesso root para modificar o banco de dados de configuração PVR do sistema (config.db), visando especificamente os parâmetros \'sdk_eyebuffer\' para forçar uma resolução personalizada. É necessário reiniciar para aplicar as alterações.</string>
+    <string name="app_description">Ajuste globalmente a resolução de renderização para todos os aplicativos VR 3D no seu headset Pico. Valores mais altos melhoram a clareza, mas podem afetar o desempenho.\n\nEste aplicativo funciona usando acesso root para modificar o banco de dados de configuração PVR do sistema (config.db), visando especificamente os parâmetros \'sdk_eyebuffer\' para forzar uma resolução personalizada. É necessário reiniciar para aplicar as alterações.</string>
     <string name="current_system_config">Configuração Atual do Sistema</string>
     <string name="target_resolution">Resolução Alvo</string>
+    <string name="apply">Aplicar</string>
     <string name="apply_reboot">Aplicar e Reiniciar</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -26,12 +27,23 @@
     <string name="stencil_mesh">Stencil Mesh</string>
     <string name="foveated_rendering">Renderização Foveada</string>
     <string name="enabled">Ativado</string>
-    <string name="disabled">Desactivado</string>
+    <string name="disabled">Desativado</string>
     <string name="texture_fov">FOV da Textura</string>
     <string name="degree">°</string>
     <string name="help_resolution_desc">Ajusta o tamanho global do EyeBuffer de renderização. Valores mais altos melhoram a clareza, mas aumentam a latência e reduzem o desempenho. A escala recomendada é entre 0,5 e 2,0.</string>
     <string name="help_stencil_mesh_desc">Uma otimização que evita a renderização de pixels que estão fisicamente ocultos pelas bordas das lentes do headset (cantos), economizando recursos da GPU.</string>
     <string name="help_ffr_desc">Otimiza a renderização fornecendo resolução total para a área de foco central, enquanto diminui a resolução em áreas periféricas onde os detalhes são menos perceptíveis.</string>
     <string name="help_texture_fov_desc">Ajusta o campo de visão das texturas oculares renderizadas. Diminuir isso pode melhorar o desempenho ao renderizar menos área, mas estreitará sua visão.</string>
+    <string name="max_pwrlevel">Nível de potência máx.</string>
+    <string name="min_pwrlevel">Nível de potência mín.</string>
+    <string name="help_pwrlevel_desc">Controla o nível de potência da GPU (PwrLevel). Números menores geralmente significam frequência (desempenho) mais alta. O PwrLevel máx. é o limite para o desempenho mais alto, o PwrLevel mín. é o limite para o desempenho mais baixo.</string>
+    <string name="pwr_level_label">Nível</string>
+    <string name="pwr_peak_performance">Desempenho máximo</string>
+    <string name="pwr_high_load">Carga alta</string>
+    <string name="pwr_standard_load">Carga padrão</string>
+    <string name="pwr_balanced">Equilibrado</string>
+    <string name="pwr_low_power">Baixa potência</string>
+    <string name="pwr_minimum_power">Potência mínima</string>
+    <string name="pwr_deep_idle">Economia de energia</string>
     <string name="close">Fechar</string>
 </resources>

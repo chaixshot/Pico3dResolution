@@ -4,6 +4,7 @@
     <string name="app_description">Globálně upravte rozlišení vykreslování pro všechny 3D VR aplikace na vašem headsetu Pico. Vyšší hodnoty zlepšují čistotu, ale mohou ovlivnit výkon.\n\nTato aplikace funguje tak, že pomocí přístupu root upravuje systémovou konfigurační databázi PVR (config.db), konkrétně se zaměřuje na parametry \'sdk_eyebuffer\' pro vynucení vlastního rozlišení. Pro uplatnění změn je vyžadován restart.</string>
     <string name="current_system_config">Aktuální systémová konfigurace</string>
     <string name="target_resolution">Cílové rozlišení</string>
+    <string name="apply">Použít</string>
     <string name="apply_reboot">Použít a restartovat</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Optimalizace, která zabraňuje vykreslování pixelů, které jsou fyzicky skryty okraji čoček náhlavní soupravy (rohy), čímž šetří zdroje GPU.</string>
     <string name="help_ffr_desc">Optimalizuje vykreslování poskytováním plného rozlišení pro centrální oblast zaostření a zároveň snižuje rozliшение v okrajových oblastech, kde jsou detaily méně patrné.</string>
     <string name="help_texture_fov_desc">Upravuje zorné pole vykreslovaných textur očí. Snížení této hodnoty může zlepšit výkon vykreslováním menší plochy, ale zúží váš výhled.</string>
+    <string name="max_pwrlevel">Maximální úroveň výkonu</string>
+    <string name="min_pwrlevel">Minimální úroveň výkonu</string>
+    <string name="help_pwrlevel_desc">Ovládá úroveň výkonu GPU (PwrLevel). Nižší čísla obvykle znamenají vyšší frekvenci (výkon). Max PwrLevel je limit pro nejvyšší výkon, Min PwrLevel je limit pro nejnižší výkon.</string>
+    <string name="pwr_level_label">Úroveň</string>
+    <string name="pwr_peak_performance">Špičkový výkon</string>
+    <string name="pwr_high_load">Vysoká zátěž</string>
+    <string name="pwr_standard_load">Standardní zátěž</string>
+    <string name="pwr_balanced">Vyvážený</string>
+    <string name="pwr_low_power">Nízký výkon</string>
+    <string name="pwr_minimum_power">Minimální výkon</string>
+    <string name="pwr_deep_idle">Úspora energie</string>
     <string name="close">Zavřít</string>
 </resources>

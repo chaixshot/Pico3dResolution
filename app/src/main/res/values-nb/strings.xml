@@ -4,6 +4,7 @@
     <string name="app_description">Juster renderingsoppløsningen globalt for alle 3D VR-applikasjoner på ditt Pico-headset. Høyere verdier forbedrer klarheten, men kan påvirke ytelsen.\n\nDenne appen fungerer ved å bruke root-tilgang til å endre systemets PVR-konfigurasjonsdatabase (config.db), spesifikt rettet mot \'sdk_eyebuffer\'-parametrene for å tvinge frem en egendefinert oppløsning. En omstart er nødvendig for å bruke endringene.</string>
     <string name="current_system_config">Gjeldende systemkonfigurasjon</string>
     <string name="target_resolution">Måloppløsning</string>
+    <string name="apply">Bruk</string>
     <string name="apply_reboot">Bruk og start på nytt</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Piksel</string>
@@ -29,9 +30,20 @@
     <string name="disabled">Deaktivert</string>
     <string name="texture_fov">Tekstur-synsfelt</string>
     <string name="degree">°</string>
-    <string name="help_resolution_desc">Justerer den globale EyeBuffer-størrelsen for rendering. Høyere verdier gir bedre klarhet, men øker forsinkelsen og reduserer ytelsen. Anbefalt skala er mellom 0,5 og 2,0.</string>
-    <string name="help_stencil_mesh_desc">En optimalisering som forhindrer rendering av piksler som er fysisk skjult av hodesettets linsekanter (hjørner), noe som sparer GPU-ressurser.</string>
+    <string name="help_resolution_desc">Justerer den globale EyeBuffer-størrelsen for rendering. Høyere verdier gir bedre klarheten, men øker forsinkelsen og reduserer ytelsen. Anbefalt skala er mellom 0,5 og 2,0.</string>
+    <string name="help_stencil_mesh_desc">En optimalisering som forhindrer rendering av piksler som er fysisk skjult av hodesettets linsekanter (hjørner), noe som sparer GPU-ressourcer.</string>
     <string name="help_ffr_desc">Optimaliserer rendering ved å gi full oppløsning for det sentrale fokusområdet, mens oppløsningen senkes i perifere områder der detaljer er mindre merkbare.</string>
     <string name="help_texture_fov_desc">Justerer synsfeltet for de rendrede øyeteksturene. Å senke dette kan forbedre ytelsen ved å rendre et mindre område, men vil gjøre synsfeltet smalere.</string>
+    <string name="max_pwrlevel">Maks. strømnivå</string>
+    <string name="min_pwrlevel">Min. strømnivå</string>
+    <string name="help_pwrlevel_desc">Kontrollerer GPU-strømnivået (PwrLevel). Lavere tall betyr vanligvis høyere frekvens (ytelse). Maks. PwrLevel er grensen for høyeste ytelse, Min. PwrLevel er grensen for laveste ytelse.</string>
+    <string name="pwr_level_label">Nivå</string>
+    <string name="pwr_peak_performance">Toppytelse</string>
+    <string name="pwr_high_load">Høy belastning</string>
+    <string name="pwr_standard_load">Standard belastning</string>
+    <string name="pwr_balanced">Balansert</string>
+    <string name="pwr_low_power">Lavt strømforbruk</string>
+    <string name="pwr_minimum_power">Minimum strømforbruk</string>
+    <string name="pwr_deep_idle">Strømsparing</string>
     <string name="close">Lukk</string>
 </resources>

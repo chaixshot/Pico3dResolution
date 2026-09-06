@@ -4,6 +4,7 @@
     <string name="app_description">Προσαρμόστε καθολικά την ανάλυση απόδοσης για όλες τις εφαρμογές 3D VR στο σετ κεφαλής Pico. Οι υψηλότερες τιμές βελτιώνουν την καθαρότητα, αλλά ενδέχεται να επηρεάσουν την απόδοση.\n\nΑυτή η εφαρμογή λειτουργεί χρησιμοποιώντας πρόσβαση root για την τροποποίηση της βάσης δεδομένων διαμόρφωσης PVR του συστήματος (config.db), στοχεύοντας ειδικά στις παραμέτρους \'sdk_eyebuffer\' για την επιβολή προσαρμοσμένης ανάλυσης. Απαιτείται επανεκκίνηση για την εφαρμογή των αλλαγών.</string>
     <string name="current_system_config">Τρέχουσα διαμόρφωση συστήματος</string>
     <string name="target_resolution">Ανάλυση στόχου</string>
+    <string name="apply">Εφαρμογή</string>
     <string name="apply_reboot">Εφαρμογή &amp; Επανεκκίνηση</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Pixel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Μια βελτιστοποίηση που εμποδίζει την απόδοση pixel που κρύβονται φυσικά από τα όρια των φακών του σετ κεφαλής (γωνίες), εξοικονομώντας πόρους GPU.</string>
     <string name="help_ffr_desc">Βελτιστοποιεί την απόδοση παρέχοντας πλήρη ανάλυση για την κεντρική περιοχή εστίασης ενώ μειώνει την ανάλυση σε περιφερειακές περιοχές όπου η λεπτομέρεια είναι λιγότερο αισθητή.</string>
     <string name="help_texture_fov_desc">Προσαρμόζει το οπτικό πεδίο των υφών των ματιών που αποδίδονται. Η μείωση αυτού μπορεί να βελτιώσει την απόδοση αποδίδοντας λιγότερη περιοχή, αλλά θα στενέψει την προβολή σας.</string>
+    <string name="max_pwrlevel">Μέγιστο επίπεδο ισχύος</string>
+    <string name="min_pwrlevel">Ελάχιστο επίπεδο ισχύος</string>
+    <string name="help_pwrlevel_desc">Ελέγχει το επίπεδο ισχύος της GPU (PwrLevel). Οι χαμηλότεροι αριθμοί σημαίνουν συνήθως υψηλότερη συχνότητα (απόδοση). Το Max PwrLevel είναι το όριο για την υψηλότερη απόδοση, το Min PwrLevel είναι το όριο για τη χαμηλότερη απόδοση.</string>
+    <string name="pwr_level_label">Επίπεδο</string>
+    <string name="pwr_peak_performance">Μέγιστη απόδοση</string>
+    <string name="pwr_high_load">Υψηλό φορτίο</string>
+    <string name="pwr_standard_load">Τυπικό φορτίο</string>
+    <string name="pwr_balanced">Ισορροπημένο</string>
+    <string name="pwr_low_power">Χαμηλή ισχύς</string>
+    <string name="pwr_minimum_power">Ελάχιστη ισχύς</string>
+    <string name="pwr_deep_idle">Εξοικονόμηση ενέργειας</string>
     <string name="close">Κλείσιμο</string>
 </resources>

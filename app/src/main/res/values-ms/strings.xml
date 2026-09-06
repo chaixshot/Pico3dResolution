@@ -4,6 +4,7 @@
     <string name="app_description">Laraskan resolusi pemaparan secara global untuk semua aplikasi 3D VR pada set kepala Pico anda. Nilai yang lebih tinggi meningkatkan kejelasan tetapi mungkin menjejaskan prestasi.\n\nAplikasi ini berfungsi dengan menggunakan akses root untuk mengubah suai pangkalan data konfigurasi PVR sistem (config.db), secara khusus menyasarkan parameter \'sdk_eyebuffer\' untuk memaksa resolusi tersuai. But semula diperlukan untuk menggunakan perubahan.</string>
     <string name="current_system_config">Konfigurasi Sistem Semasa</string>
     <string name="target_resolution">Resolusi Sasaran</string>
+    <string name="apply">Guna</string>
     <string name="apply_reboot">Guna &amp; But Semula</string>
     <string name="github_link">GitHub: chaixshot/Pico3dResolution</string>
     <string name="pixel">Piksel</string>
@@ -33,5 +34,16 @@
     <string name="help_stencil_mesh_desc">Pengoptimuman yang menghalang pemaparan piksel yang tersembunyi secara fizikal oleh sempadan kanta set kepala (penjuru), menjimatkan sumber GPU.</string>
     <string name="help_ffr_desc">Mengoptimumkan pemaparan dengan memberikan resolusi penuh untuk kawasan fokus pusat sambil merendahkan resolusi di kawasan persisian di mana butiran kurang ketara.</string>
     <string name="help_texture_fov_desc">Melaraskan medan pandangan tekstur mata yang dipaparkan. Menurunkan ini boleh meningkatkan prestasi dengan memaparkan kawasan yang kurang, tetapi akan mengecilkan pandangan anda.</string>
+    <string name="max_pwrlevel">Tahap Kuasa Maksimum</string>
+    <string name="min_pwrlevel">Tahap Kuasa Minimum</string>
+    <string name="help_pwrlevel_desc">Mengawal tahap kuasa GPU (PwrLevel). Nombor yang lebih rendah biasanya bermaksud frekuensi (prestasi) yang lebih tinggi. PwrLevel Maks ialah had untuk prestasi tertinggi, PwrLevel Min ialah had untuk prestasi terendah.</string>
+    <string name="pwr_level_label">Tahap</string>
+    <string name="pwr_peak_performance">Prestasi Puncak</string>
+    <string name="pwr_high_load">Beban Tinggi</string>
+    <string name="pwr_standard_load">Beban Standard</string>
+    <string name="pwr_balanced">Seimbang</string>
+    <string name="pwr_low_power">Kuasa Rendah</string>
+    <string name="pwr_minimum_power">Kuasa Minimum</string>
+    <string name="pwr_deep_idle">Penjimatan Kuasa</string>
     <string name="close">Tutup</string>
 </resources>
