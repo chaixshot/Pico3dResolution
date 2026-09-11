@@ -200,7 +200,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         refreshValues()
     }
 
-    val requiresReboot = resolution != currentValues.resolution ||
+    val databaseChanged = resolution != currentValues.resolution ||
             stencilMesh != currentValues.stencilMesh ||
             ffr != currentValues.ffr ||
             textureFov != currentValues.textureFov
@@ -220,7 +220,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         onTextureFovChange = { textureFov = it },
         onMaxPwrLevelChange = { maxPwrLevel = it },
         onMinPwrLevelChange = { minPwrLevel = it },
-        requiresReboot = requiresReboot,
+        databaseChanged = databaseChanged,
         onApplyClick = {
             if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank()) {
                 scope.launch {
@@ -236,7 +236,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         cacheDir,
                         appUid,
                         storageContext,
-                        requiresReboot
+                        databaseChanged
                     )
                     if (success) {
                         status = if (error == "Success. Rebooting...") {
@@ -275,7 +275,7 @@ fun ResolutionControlContent(
     onTextureFovChange: (String) -> Unit,
     onMaxPwrLevelChange: (String) -> Unit,
     onMinPwrLevelChange: (String) -> Unit,
-    requiresReboot: Boolean,
+    databaseChanged: Boolean,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -895,7 +895,7 @@ fun ResolutionControlContent(
                                 contentPadding = PaddingValues(horizontal = 4.dp)
                             ) {
                                 Text(
-                                    text = if (requiresReboot) stringResource(id = R.string.apply_reboot) else stringResource(id = R.string.apply),
+                                    text = if (databaseChanged) stringResource(id = R.string.apply_reboot) else stringResource(id = R.string.apply),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = Color.White,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -1067,7 +1067,7 @@ suspend fun applySettings(
     cacheDir: File,
     uid: Int,
     context: Context,
-    shouldReboot: Boolean
+    databaseChanged: Boolean
 ): Pair<Boolean, String> =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_APPLY_DB)
@@ -1120,6 +1120,10 @@ suspend fun applySettings(
                 }
             } catch (e: Exception) {
                 android.util.Log.e("Res3D", "Failed to set pref file permissions", e)
+            }
+
+            if (!databaseChanged) {
+                return@withContext true to "Applied successfully!"
             }
 
             val (cpSuccess, cpError) = runRootCommand(
@@ -1199,12 +1203,8 @@ suspend fun applySettings(
             val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
             if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                if (shouldReboot) {
-                    runRootCommand("reboot")
-                    return@withContext true to "Success. Rebooting..."
-                } else {
-                    return@withContext true to "Applied successfully!"
-                }
+                runRootCommand("reboot")
+                return@withContext true to "Success. Rebooting..."
             } else {
                 return@withContext false to "Verification failed. DB values did not change."
             }
@@ -1291,7 +1291,7 @@ fun ResolutionControlPreview() {
             onTextureFovChange = {},
             onMaxPwrLevelChange = {},
             onMinPwrLevelChange = {},
-            requiresReboot = true,
+            databaseChanged = true,
             onApplyClick = {}
         )
     }
