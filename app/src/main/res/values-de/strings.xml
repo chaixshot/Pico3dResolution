@@ -16,6 +16,9 @@
     <string name="status_applied_success">Erfolgreich angewendet!</string>
     <string name="status_rebooting">Erfolg. Neustart...</string>
     <string name="status_error_prefix">Fehler: %1$s</string>
+    <string name="status_copy_failed">Kopieren fehlgeschlagen: %1$s</string>
+    <string name="status_temp_missing">Temporäre Datei fehlt</string>
+    <string name="status_write_failed">Zurückschreiben fehlgeschlagen: %1$s</string>
     <string name="status_read_error_prefix">Lesefehler: %1$s</string>
     <string name="status_verify_failed">Verifizierung fehlgeschlagen. DB-Werte haben sich nicht geändert.</string>
     <string name="preset_ultra_performance">Ultra-Leistung</string>

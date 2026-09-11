@@ -16,6 +16,9 @@
     <string name="status_applied_success">Úspěšně použito!</string>
     <string name="status_rebooting">Úspěch. Restartování...</string>
     <string name="status_error_prefix">Chyba: %1$s</string>
+    <string name="status_copy_failed">Kopírování selhalo: %1$s</string>
+    <string name="status_temp_missing">Chybí dočasný soubor</string>
+    <string name="status_write_failed">Zpětný zápis selhal: %1$s</string>
     <string name="status_read_error_prefix">Chyba čtení: %1$s</string>
     <string name="status_verify_failed">Ověření selhalo. Hodnoty DB se nezměnily.</string>
     <string name="preset_ultra_performance">Ultra výkon</string>

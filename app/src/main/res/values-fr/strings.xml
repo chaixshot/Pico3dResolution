@@ -16,6 +16,9 @@
     <string name="status_applied_success">Appliqué avec succès !</string>
     <string name="status_rebooting">Succès. Redémarrage...</string>
     <string name="status_error_prefix">Erreur : %1$s</string>
+    <string name="status_copy_failed">Échec de la copie : %1$s</string>
+    <string name="status_temp_missing">Fichier temporaire manquant</string>
+    <string name="status_write_failed">Échec de la réécriture : %1$s</string>
     <string name="status_read_error_prefix">Erreur de lecture : %1$s</string>
     <string name="status_verify_failed">La vérification a échoué. Les valeurs de la base de données n\'ont pas changé.</string>
     <string name="preset_ultra_performance">Performance ultra</string>

@@ -16,6 +16,9 @@
     <string name="status_applied_success">성공적으로 적용되었습니다!</string>
     <string name="status_rebooting">성공. 재부팅 중...</string>
     <string name="status_error_prefix">오류: %1$s</string>
+    <string name="status_copy_failed">복사 실패: %1$s</string>
+    <string name="status_temp_missing">임시 파일 누락</string>
+    <string name="status_write_failed">다시 쓰기 실패: %1$s</string>
     <string name="status_read_error_prefix">읽기 오류: %1$s</string>
     <string name="status_verify_failed">확인 실패. DB 값이 변경되지 않았습니다.</string>
     <string name="preset_ultra_performance">울트라 성능</string>

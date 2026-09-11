@@ -16,6 +16,9 @@
     <string name="status_applied_success">应用成功！</string>
     <string name="status_rebooting">成功。正在重启...</string>
     <string name="status_error_prefix">错误: %1$s</string>
+    <string name="status_copy_failed">复制失败：%1$s</string>
+    <string name="status_temp_missing">临时文件缺失</string>
+    <string name="status_write_failed">写回失败：%1$s</string>
     <string name="status_read_error_prefix">读取错误: %1$s</string>
     <string name="status_verify_failed">验证失败。数据库值未更改。</string>
     <string name="preset_ultra_performance">极速性能</string>

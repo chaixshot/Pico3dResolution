@@ -16,6 +16,9 @@
     <string name="status_applied_success">Berjaya digunakan!</string>
     <string name="status_rebooting">Berjaya. But semula...</string>
     <string name="status_error_prefix">Ralat: %1$s</string>
+    <string name="status_copy_failed">Salinan gagal: %1$s</string>
+    <string name="status_temp_missing">Fail sementara hilang</string>
+    <string name="status_write_failed">Tulis semula gagal: %1$s</string>
     <string name="status_read_error_prefix">Ralat Baca: %1$s</string>
     <string name="status_verify_failed">Pengesahan gagal. Nilai DB tidak berubah.</string>
     <string name="preset_ultra_performance">Prestasi Ultra</string>

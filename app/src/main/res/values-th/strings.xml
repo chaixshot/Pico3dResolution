@@ -16,6 +16,9 @@
     <string name="status_applied_success">นำไปใช้สำเร็จแล้ว!</string>
     <string name="status_rebooting">สำเร็จ กำลังรีบูต...</string>
     <string name="status_error_prefix">ข้อผิดพลาด: %1$s</string>
+    <string name="status_copy_failed">คัดลอกล้มเหลว: %1$s</string>
+    <string name="status_temp_missing">ไฟล์ชั่วคราวหายไป</string>
+    <string name="status_write_failed">เขียนกลับล้มเหลว: %1$s</string>
     <string name="status_read_error_prefix">ข้อผิดพลาดในการอ่าน: %1$s</string>
     <string name="status_verify_failed">การยืนยันล้มเหลว ค่า DB ไม่เปลี่ยนแปลง</string>
     <string name="preset_ultra_performance">ประสิทธิภาพสูงสุด</string>

@@ -16,6 +16,9 @@
     <string name="status_applied_success">Успешно применено!</string>
     <string name="status_rebooting">Успех. Перезагрузка...</string>
     <string name="status_error_prefix">Ошибка: %1$s</string>
+    <string name="status_copy_failed">Ошибка копирования: %1$s</string>
+    <string name="status_temp_missing">Временный файл отсутствует</string>
+    <string name="status_write_failed">Ошибка обратной записи: %1$s</string>
     <string name="status_read_error_prefix">Ошибка чтения: %1$s</string>
     <string name="status_verify_failed">Ошибка проверки. Значения в БД не изменились.</string>
     <string name="preset_ultra_performance">Ультра производительность</string>

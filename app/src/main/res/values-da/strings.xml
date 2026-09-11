@@ -16,6 +16,9 @@
     <string name="status_applied_success">Anvendt med succes!</string>
     <string name="status_rebooting">Succes. Genstarter...</string>
     <string name="status_error_prefix">Fejl: %1$s</string>
+    <string name="status_copy_failed">Kopiering mislykkedes: %1$s</string>
+    <string name="status_temp_missing">Midlertidig fil mangler</string>
+    <string name="status_write_failed">Tilbageskrivning mislykkedes: %1$s</string>
     <string name="status_read_error_prefix">Læsefejl: %1$s</string>
     <string name="status_verify_failed">Bekræftelse mislykkedes. DB-værdier ændrede sig ikke.</string>
     <string name="preset_ultra_performance">Ultra ydeevne</string>

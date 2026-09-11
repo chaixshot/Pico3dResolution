@@ -16,6 +16,9 @@
     <string name="status_applied_success">Zastosowano pomyślnie!</string>
     <string name="status_rebooting">Sukces. Ponowne uruchamianie...</string>
     <string name="status_error_prefix">Błąd: %1$s</string>
+    <string name="status_copy_failed">Kopiowanie nie powiodło się: %1$s</string>
+    <string name="status_temp_missing">Brak pliku tymczasowego</string>
+    <string name="status_write_failed">Zapis zwrotny nie powiódł się: %1$s</string>
     <string name="status_read_error_prefix">Błąd odczytu: %1$s</string>
     <string name="status_verify_failed">Weryfikacja nie powiodła się. Wartości w bazie danych nie zmieniły się.</string>
     <string name="preset_ultra_performance">Ultra wydajność</string>

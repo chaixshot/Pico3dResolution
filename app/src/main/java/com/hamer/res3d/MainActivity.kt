@@ -1179,8 +1179,8 @@ suspend fun applySettings(
                     "chown $uid:$uid ${tempDb.absolutePath}",
                     "chmod 666 ${tempDb.absolutePath}"
                 )
-                if (!cpSuccess) return@withContext false to "Copy failed: $cpError"
-                if (!tempDb.exists()) return@withContext false to "Temp file missing"
+                if (!cpSuccess) return@withContext false to context.getString(R.string.status_copy_failed, cpError)
+                if (!tempDb.exists()) return@withContext false to context.getString(R.string.status_temp_missing)
 
                 val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
 
@@ -1247,7 +1247,7 @@ suspend fun applySettings(
                 )
 
                 if (!writeSuccess) {
-                    return@withContext false to "Write back failed: $writeError"
+                    return@withContext false to context.getString(R.string.status_write_failed, writeError)
                 }
 
                 val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid)
@@ -1259,15 +1259,15 @@ suspend fun applySettings(
 
                 if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
                     runRootCommand("reboot")
-                    return@withContext true to "Success. Rebooting..."
+                    return@withContext true to context.getString(R.string.status_rebooting)
                 } else {
-                    return@withContext false to "Verification failed. DB values did not change."
+                    return@withContext false to context.getString(R.string.status_verify_failed)
                 }
             } else {
-                return@withContext true to "Applied successfully!"
+                return@withContext true to context.getString(R.string.status_applied_success)
             }
         } catch (e: Exception) {
-            return@withContext false to (e.message ?: "Unknown exception")
+            return@withContext false to (e.message ?: context.getString(R.string.status_error_prefix, "Unknown"))
         } finally {
             db?.takeIf { it.isOpen }?.close()
             if (tempDb.exists()) tempDb.delete()

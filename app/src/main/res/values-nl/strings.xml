@@ -16,6 +16,9 @@
     <string name="status_applied_success">Succesvol toegepast!</string>
     <string name="status_rebooting">Succes. Herstarten...</string>
     <string name="status_error_prefix">Fout: %1$s</string>
+    <string name="status_copy_failed">Kopiëren mislukt: %1$s</string>
+    <string name="status_temp_missing">Tijdelijk bestand ontbreekt</string>
+    <string name="status_write_failed">Terugschrijven mislukt: %1$s</string>
     <string name="status_read_error_prefix">Leesfout: %1$s</string>
     <string name="status_verify_failed">Verificatie mislukt. DB-waarden zijn niet veranderd.</string>
     <string name="preset_ultra_performance">Ultra prestaties</string>

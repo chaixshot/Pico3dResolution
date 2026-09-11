@@ -16,6 +16,9 @@
     <string name="status_applied_success">套用成功！</string>
     <string name="status_rebooting">成功。正在重新啟動...</string>
     <string name="status_error_prefix">錯誤: %1$s</string>
+    <string name="status_copy_failed">複製失敗：%1$s</string>
+    <string name="status_temp_missing">臨時文件缺失</string>
+    <string name="status_write_failed">寫回失敗：%1$s</string>
     <string name="status_read_error_prefix">讀取錯誤: %1$s</string>
     <string name="status_verify_failed">驗證失敗。資料庫值未更改。</string>
     <string name="preset_ultra_performance">極速效能</string>

@@ -16,6 +16,9 @@
     <string name="status_applied_success">Applicato con successo!</string>
     <string name="status_rebooting">Successo. Riavvio in corso...</string>
     <string name="status_error_prefix">Errore: %1$s</string>
+    <string name="status_copy_failed">Copia non riuscita: %1$s</string>
+    <string name="status_temp_missing">File temporaneo mancante</string>
+    <string name="status_write_failed">Scrittura inversa non riuscita: %1$s</string>
     <string name="status_read_error_prefix">Errore di lettura: %1$s</string>
     <string name="status_verify_failed">Verifica non riuscita. I valori del database non sono cambiati.</string>
     <string name="preset_ultra_performance">Prestazioni ultra</string>

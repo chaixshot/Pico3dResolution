@@ -16,6 +16,9 @@
     <string name="status_applied_success">Εφαρμόστηκε με επιτυχία!</string>
     <string name="status_rebooting">Επιτυχία. Επανεκκίνηση...</string>
     <string name="status_error_prefix">Σφάλμα: %1$s</string>
+    <string name="status_copy_failed">Η αντιγραφή απέτυχε: %1$s</string>
+    <string name="status_temp_missing">Το προσωρινό αρχείο λείπει</string>
+    <string name="status_write_failed">Η επανεγγραφή απέτυχε: %1$s</string>
     <string name="status_read_error_prefix">Σφάλμα ανάγνωσης: %1$s</string>
     <string name="status_verify_failed">Η επαλήθευση απέτυχε. Οι τιμές της βάσης δεδομένων δεν άλλαξαν.</string>
     <string name="preset_ultra_performance">Εξαιρετική απόδοση</string>

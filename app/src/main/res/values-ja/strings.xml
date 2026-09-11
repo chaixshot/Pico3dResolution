@@ -16,6 +16,9 @@
     <string name="status_applied_success">正常に適用されました！</string>
     <string name="status_rebooting">成功しました。再起動しています...</string>
     <string name="status_error_prefix">エラー: %1$s</string>
+    <string name="status_copy_failed">コピーに失敗しました: %1$s</string>
+    <string name="status_temp_missing">一時ファイルが見つかりません</string>
+    <string name="status_write_failed">書き戻しに失敗しました: %1$s</string>
     <string name="status_read_error_prefix">読み取りエラー: %1$s</string>
     <string name="status_verify_failed">検証に失敗しました。DBの値が変更されませんでした。</string>
     <string name="preset_ultra_performance">ウルトラパフォーマンス</string>

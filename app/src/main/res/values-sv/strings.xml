@@ -16,6 +16,9 @@
     <string name="status_applied_success">Verkställd med framgång!</string>
     <string name="status_rebooting">Framgång. Startar om...</string>
     <string name="status_error_prefix">Fel: %1$s</string>
+    <string name="status_copy_failed">Kopiering misslyckades: %1$s</string>
+    <string name="status_temp_missing">Tillfällig fil saknas</string>
+    <string name="status_write_failed">Återskrivning misslyckades: %1$s</string>
     <string name="status_read_error_prefix">Läsfel: %1$s</string>
     <string name="status_verify_failed">Verifiering misslyckades. DB-värden ändrades inte.</string>
     <string name="preset_ultra_performance">Ultra prestanda</string>

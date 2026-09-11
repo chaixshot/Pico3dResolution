@@ -16,6 +16,9 @@
     <string name="status_applied_success">Käytetty onnistuneesti!</string>
     <string name="status_rebooting">Onnistui. Käynnistetään uudelleen...</string>
     <string name="status_error_prefix">Virhe: %1$s</string>
+    <string name="status_copy_failed">Kopiointi epäonnistui: %1$s</string>
+    <string name="status_temp_missing">Väliaikaistiedosto puuttuu</string>
+    <string name="status_write_failed">Takaisinkirjoitus epäonnistui: %1$s</string>
     <string name="status_read_error_prefix">Lukuvirhe: %1$s</string>
     <string name="status_verify_failed">Varmistus epäonnistui. Tietokannan arvot eivät muuttuneet.</string>
     <string name="preset_ultra_performance">Erittäin hyvä suorituskyky</string>
