@@ -1,6 +1,7 @@
 package com.hamer.res3d
 
 import android.content.Context
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 
 @Composable
@@ -71,7 +73,10 @@ fun HelpButton(title: String, message: String) {
             text = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text(stringResource(id = R.string.close), color = colorResource(id = R.color.toggle_button))
+                    Text(
+                        stringResource(id = R.string.close),
+                        color = colorResource(id = R.color.toggle_button)
+                    )
                 }
             },
             containerColor = colorResource(id = R.color.card_bg),
@@ -237,7 +242,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
-                    
+
                     val (success, error) = applySettings(
                         resolution,
                         stencilMesh,
@@ -471,7 +476,8 @@ fun ResolutionControlContent(
                                                 )
                                             },
                                             onClick = {
-                                                onResolutionChange(option.first); resExpanded = false
+                                                onResolutionChange(option.first); resExpanded =
+                                                false
                                             },
                                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                             modifier = Modifier.clip(RoundedCornerShape(8.dp))
@@ -696,7 +702,12 @@ fun ResolutionControlContent(
                             ) {
                                 tfOptions.forEach { option ->
                                     DropdownMenuItem(
-                                        text = { Text(text = "$option$degreeSuffix", color = Color.White) },
+                                        text = {
+                                            Text(
+                                                text = "$option$degreeSuffix",
+                                                color = Color.White
+                                            )
+                                        },
                                         onClick = {
                                             onTextureFovChange(option); tfExpanded = false
                                         },
@@ -794,10 +805,14 @@ fun ResolutionControlContent(
                                             pwrOptions.forEach { option ->
                                                 DropdownMenuItem(
                                                     text = {
-                                                        Text(text = option.second, color = Color.White)
+                                                        Text(
+                                                            text = option.second,
+                                                            color = Color.White
+                                                        )
                                                     },
                                                     onClick = {
-                                                        onMaxPwrLevelChange(option.first); maxExpanded = false
+                                                        onMaxPwrLevelChange(option.first); maxExpanded =
+                                                        false
                                                     },
                                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                                     modifier = Modifier.clip(RoundedCornerShape(8.dp))
@@ -872,10 +887,14 @@ fun ResolutionControlContent(
                                             pwrOptions.forEach { option ->
                                                 DropdownMenuItem(
                                                     text = {
-                                                        Text(text = option.second, color = Color.White)
+                                                        Text(
+                                                            text = option.second,
+                                                            color = Color.White
+                                                        )
                                                     },
                                                     onClick = {
-                                                        onMinPwrLevelChange(option.first); minExpanded = false
+                                                        onMinPwrLevelChange(option.first); minExpanded =
+                                                        false
                                                     },
                                                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                                     modifier = Modifier.clip(RoundedCornerShape(8.dp))
@@ -906,7 +925,9 @@ fun ResolutionControlContent(
                                 contentPadding = PaddingValues(horizontal = 4.dp)
                             ) {
                                 Text(
-                                    text = if (databaseChanged) stringResource(id = R.string.apply_reboot) else stringResource(id = R.string.apply),
+                                    text = if (databaseChanged) stringResource(id = R.string.apply_reboot) else stringResource(
+                                        id = R.string.apply
+                                    ),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = Color.White,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -1082,146 +1103,164 @@ suspend fun applySettings(
 ): Pair<Boolean, String> =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_APPLY_DB)
+        var db: SQLiteDatabase? = null
 
         try {
-            runRootCommand("setenforce 0 || true")
-
-            if (maxPwr.isNotBlank()) {
-                runRootCommand("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-            }
-            if (minPwr.isNotBlank()) {
-                runRootCommand("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-            }
+            // Batch root execution to avoid spawning multiple expensive root shells
+            val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
+            if (maxPwr.isNotBlank()) initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+            if (minPwr.isNotBlank()) initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+            runRootCommand(*initialRootCmds.toTypedArray())
 
             // Save pwrlevel to app config (DeviceProtected Storage for Xposed access during boot)
             val storageContext = context.createDeviceProtectedStorageContext()
-            val prefs = storageContext.getSharedPreferences("pwr_prefs", android.content.Context.MODE_PRIVATE)
+            val prefs = storageContext.getSharedPreferences(
+                "pwr_prefs",
+                Context.MODE_PRIVATE
+            )
             prefs.edit().apply {
                 putString("max_pwrlevel", maxPwr)
                 putString("min_pwrlevel", minPwr)
-                commit() // Use commit to ensure it's written immediately
+                commit()
             }
-            
-            // Ensure the preferences file is readable by Xposed (running in system server)
+
+            // Ensure preferences file permissions and relay staging
             try {
                 val dataDir = storageContext.dataDir
                 val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
-                android.util.Log.d("Res3D", "Saving prefs to: ${prefFile.absolutePath}")
-                
+                Log.d("Res3D", "Saving prefs to: ${prefFile.absolutePath}")
+
                 if (prefFile.exists()) {
                     prefFile.setReadable(true, false)
                     prefFile.parentFile?.setReadable(true, false)
                     prefFile.parentFile?.setExecutable(true, false)
-                    
-                    // Create a simple boot relay file for easier access during early boot (matching pico-resfix style)
+
+                    val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
                     val relayPath = "/data/local/tmp/res3d_pwr.relay"
                     val relayCmd = "echo $maxPwr:$minPwr > $relayPath"
-                    
-                    // Use root to force permissions and create relay
+
                     runRootCommand(
                         "chmod 664 ${prefFile.absolutePath}",
                         "chmod 775 ${prefFile.parentFile?.absolutePath}",
-                        "cp ${prefFile.absolutePath} /data/system/res3d_pwr_prefs.xml",
-                        "chmod 666 /data/system/res3d_pwr_prefs.xml",
-                        "chown 1000:1000 /data/system/res3d_pwr_prefs.xml",
+                        "cp ${prefFile.absolutePath} $targetSystemPrefsPath",
+                        "chmod 666 $targetSystemPrefsPath",
+                        "chown 1000:1000 $targetSystemPrefsPath",
+                        "chcon u:object_r:system_data_file:s0 $targetSystemPrefsPath",
                         relayCmd,
                         "chmod 666 $relayPath",
                         "chown 1000:1000 $relayPath"
                     )
                 }
             } catch (e: Exception) {
-                android.util.Log.e("Res3D", "Failed to set pref file permissions", e)
+                Log.e("Res3D", "Failed to set pref file permissions", e)
             }
 
-            if (!databaseChanged) {
+            // Start or signal GuardianService
+            try {
+                val serviceIntent = Intent(context, GuardianService::class.java)
+                context.startService(serviceIntent)
+            } catch (e: Exception) {
+                Log.e("Res3D", "Failed to start GuardianService", e)
+            }
+
+            if (databaseChanged) {
+                val (cpSuccess, cpError) = runRootCommand(
+                    "cp $DB_PATH ${tempDb.absolutePath}",
+                    "chown $uid:$uid ${tempDb.absolutePath}",
+                    "chmod 666 ${tempDb.absolutePath}"
+                )
+                if (!cpSuccess) return@withContext false to "Copy failed: $cpError"
+                if (!tempDb.exists()) return@withContext false to "Temp file missing"
+
+                val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
+
+                if (hasParamUpdates) {
+                    db = SQLiteDatabase.openDatabase(
+                        tempDb.absolutePath,
+                        null,
+                        SQLiteDatabase.OPEN_READWRITE
+                    )
+
+                    db.beginTransaction()
+                    try {
+                        if (res.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
+                                arrayOf(res)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
+                                arrayOf(res, res)
+                            )
+                        }
+                        if (sm.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
+                                arrayOf(sm)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
+                                arrayOf(sm, sm)
+                            )
+                        }
+                        if (ffr.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
+                                arrayOf(ffr)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
+                                arrayOf(ffr, ffr)
+                            )
+                        }
+                        if (tf.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
+                                arrayOf(tf)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
+                                arrayOf(tf, tf)
+                            )
+                        }
+                        db.setTransactionSuccessful()
+                    } finally {
+                        db.endTransaction()
+                        db.close()
+                        db = null
+                    }
+                }
+
+                val (writeSuccess, writeError) = runRootCommand(
+                    "cat ${tempDb.absolutePath} > $DB_PATH",
+                    "sync"
+                )
+
+                if (!writeSuccess) {
+                    return@withContext false to "Write back failed: $writeError"
+                }
+
+                val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid)
+
+                val isResVerified = res.isBlank() || verifiedValues.resolution == res
+                val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
+                val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
+                val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
+
+                if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
+                    runRootCommand("reboot")
+                    return@withContext true to "Success. Rebooting..."
+                } else {
+                    return@withContext false to "Verification failed. DB values did not change."
+                }
+            } else {
                 return@withContext true to "Applied successfully!"
             }
-
-            val (cpSuccess, cpError) = runRootCommand(
-                "cp $DB_PATH ${tempDb.absolutePath}",
-                "chown $uid:$uid ${tempDb.absolutePath}",
-                "chmod 666 ${tempDb.absolutePath}"
-            )
-            if (!cpSuccess) return@withContext false to "Copy failed: $cpError"
-
-            if (!tempDb.exists()) return@withContext false to "Temp file missing"
-
-            val db = SQLiteDatabase.openDatabase(
-                tempDb.absolutePath,
-                null,
-                SQLiteDatabase.OPEN_READWRITE
-            )
-
-            if (res.isNotBlank()) {
-                db.execSQL(
-                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
-                    arrayOf(res)
-                )
-                db.execSQL(
-                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
-                    arrayOf(res, res)
-                )
-            }
-            if (sm.isNotBlank()) {
-                db.execSQL(
-                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
-                    arrayOf(sm)
-                )
-                db.execSQL(
-                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
-                    arrayOf(sm, sm)
-                )
-            }
-            if (ffr.isNotBlank()) {
-                db.execSQL(
-                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
-                    arrayOf(ffr)
-                )
-                db.execSQL(
-                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
-                    arrayOf(ffr, ffr)
-                )
-            }
-            if (tf.isNotBlank()) {
-                db.execSQL(
-                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
-                    arrayOf(tf)
-                )
-                db.execSQL(
-                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
-                    arrayOf(tf, tf)
-                )
-            }
-
-            db.close()
-
-            val (writeSuccess, writeError) = runRootCommand(
-                "cat ${tempDb.absolutePath} > $DB_PATH",
-                "sync"
-            )
-
-            if (tempDb.exists()) tempDb.delete()
-
-            if (!writeSuccess) {
-                return@withContext false to "Write back failed: $writeError"
-            }
-
-            val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid)
-
-            val isResVerified = res.isBlank() || verifiedValues.resolution == res
-            val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
-            val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
-            val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
-
-            if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                runRootCommand("reboot")
-                return@withContext true to "Success. Rebooting..."
-            } else {
-                return@withContext false to "Verification failed. DB values did not change."
-            }
         } catch (e: Exception) {
-            if (tempDb.exists()) tempDb.delete()
             return@withContext false to (e.message ?: "Unknown exception")
+        } finally {
+            db?.takeIf { it.isOpen }?.close()
+            if (tempDb.exists()) tempDb.delete()
         }
     }
 
@@ -1248,8 +1287,14 @@ private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
     } catch (e: Exception) {
         return false to (e.message ?: "su execution failed")
     } finally {
-        try { os?.close() } catch (ignore: Exception) {}
-        try { errorReader?.close() } catch (ignore: Exception) {}
+        try {
+            os?.close()
+        } catch (ignore: Exception) {
+        }
+        try {
+            errorReader?.close()
+        } catch (ignore: Exception) {
+        }
         process?.destroy()
     }
 }
@@ -1277,8 +1322,14 @@ private fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, Str
     } catch (e: Exception) {
         return false to (e.message ?: "su execution failed")
     } finally {
-        try { os?.close() } catch (ignore: Exception) {}
-        try { inputReader?.close() } catch (ignore: Exception) {}
+        try {
+            os?.close()
+        } catch (ignore: Exception) {
+        }
+        try {
+            inputReader?.close()
+        } catch (ignore: Exception) {
+        }
         process?.destroy()
     }
 }
