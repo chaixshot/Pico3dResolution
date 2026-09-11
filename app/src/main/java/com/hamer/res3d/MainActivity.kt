@@ -37,6 +37,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.hamer.res3d.ui.theme.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -221,6 +222,15 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             stencilMesh != currentValues.stencilMesh ||
             ffr != currentValues.ffr ||
             textureFov != currentValues.textureFov
+
+    val applyingText = stringResource(id = R.string.status_applying)
+    LaunchedEffect(status) {
+        if (status.isNotBlank() && status != applyingText) {
+            val isError = status.contains("Error") || status.contains("Failed")
+            delay(if (isError) 10000L else 3000L)
+            status = ""
+        }
+    }
 
     ResolutionControlContent(
         currentValues = currentValues,
