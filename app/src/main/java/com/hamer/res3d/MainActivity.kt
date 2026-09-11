@@ -31,6 +31,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.hamer.res3d.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -196,8 +199,17 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         }
     }
 
-    LaunchedEffect(Unit) {
-        refreshValues()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshValues()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     val databaseChanged = resolution != currentValues.resolution ||
@@ -244,7 +256,6 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         } else {
                             resources.getString(R.string.status_applied_success)
                         }
-                        refreshValues()
                     } else {
                         status = if (error == "Verification failed. DB values did not change.") {
                             resources.getString(R.string.status_verify_failed)
