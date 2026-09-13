@@ -7,7 +7,11 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools-proguard.html
 
-# Add any custom keep rules here.
+# Root execution via app_process uses this class by name string.
+# We must keep the class and its main method un-obfuscated.
+-keep class com.hamer.res3d.DbUpdater {
+    public static void main(java.lang.String[]);
+}
 
 # Keep Compose internal classes that might be accessed via reflection or are otherwise needed
 -keepclassmembers class ** {

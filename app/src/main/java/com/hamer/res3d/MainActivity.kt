@@ -179,7 +179,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
 
     fun refreshValues() {
         scope.launch {
-            val (values, error) = fetchCurrentValues(cacheDir, appUid)
+            val (values, error) = fetchCurrentValues(cacheDir, appUid, context)
             currentValues = values
             if (values.resolution != "Unknown" && values.resolution != "N/A") {
                 resolution = values.resolution
@@ -390,7 +390,7 @@ fun ResolutionControlContent(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        // 1. Resolution Dropdown
+                        // Resolution Dropdown
                         var resExpanded by remember { mutableStateOf(false) }
                         val resOptions = listOf(
                             "384" to stringResource(id = R.string.preset_ultra_performance),
@@ -497,7 +497,7 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        // 2. Stencil Mesh Dropdown
+                        // Stencil Mesh Dropdown
                         var smExpanded by remember { mutableStateOf(false) }
                         val smOptions = listOf(
                             "1" to enabledText,
@@ -571,7 +571,7 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        // 3. Foveated Rendering Dropdown
+                        // Foveated Rendering Dropdown
                         var ffrExpanded by remember { mutableStateOf(false) }
                         val ffrOptions = listOf(
                             "1" to enabledText,
@@ -651,7 +651,7 @@ fun ResolutionControlContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top
                     ) {
-                        // 4. Texture Fov Dropdown
+                        // Texture Fov Dropdown
                         var tfExpanded by remember { mutableStateOf(false) }
                         val tfOptions = listOf("95", "85", "75", "65")
                         val degreeSuffix = stringResource(id = R.string.degree)
@@ -728,7 +728,7 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        // 5. Power Level Row
+                        // Power Level Row
                         var maxExpanded by remember { mutableStateOf(false) }
                         var minExpanded by remember { mutableStateOf(false) }
                         val pwrOptions = listOf(
@@ -1036,9 +1036,12 @@ private fun readSysfs(path: String): String {
     return if (success) output else "N/A"
 }
 
-suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, String> =
+suspend fun fetchCurrentValues(
+    cacheDir: File,
+    uid: Int,
+    context: Context
+): Pair<ConfigValues, String> =
     withContext(Dispatchers.IO) {
-        val tempDb = File(cacheDir, TEMP_READ_DB)
         var resVal = "N/A"
         var smVal = "N/A"
         var ffrVal = "N/A"
@@ -1047,6 +1050,31 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
         var minPwr = "N/A"
         var errorMsg = ""
 
+        //######## Primary method: app_process via com.hamer.res3d.DbUpdater
+        try {
+            val apkPath = context.applicationInfo.publicSourceDir
+            val cmd =
+                "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater read \"$DB_PATH\""
+            val (success, output) = runRootCommandWithOutput(cmd)
+
+            if (success && output.contains("RES=")) {
+                val lines = output.split("\n")
+                for (line in lines) {
+                    if (line.startsWith("RES=")) resVal = line.substringAfter("RES=")
+                    if (line.startsWith("SM=")) smVal = line.substringAfter("SM=")
+                    if (line.startsWith("FFR=")) ffrVal = line.substringAfter("FFR=")
+                    if (line.startsWith("TF=")) tfVal = line.substringAfter("TF=")
+                }
+                maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+                minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+                return@withContext ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr) to ""
+            }
+        } catch (e: Exception) {
+            // Silently fall through to fallback
+        }
+
+        //######## Fallback method: Direct SQLite copy (Desktop style)
+        val tempDb = File(cacheDir, TEMP_READ_DB)
         try {
             val (success, error) = runRootCommand(
                 "setenforce 0 || true",
@@ -1094,6 +1122,8 @@ suspend fun fetchCurrentValues(cacheDir: File, uid: Int): Pair<ConfigValues, Str
 
         } catch (e: Exception) {
             errorMsg = e.message ?: "Unknown error"
+        } finally {
+            if (tempDb.exists()) tempDb.delete()
         }
 
         ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr) to errorMsg
@@ -1174,83 +1204,106 @@ suspend fun applySettings(
             }
 
             if (databaseChanged) {
-                val (cpSuccess, cpError) = runRootCommand(
-                    "cp $DB_PATH ${tempDb.absolutePath}",
-                    "chown $uid:$uid ${tempDb.absolutePath}",
-                    "chmod 666 ${tempDb.absolutePath}"
-                )
-                if (!cpSuccess) return@withContext false to context.getString(R.string.status_copy_failed, cpError)
-                if (!tempDb.exists()) return@withContext false to context.getString(R.string.status_temp_missing)
-
                 val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
+                var primaryWorked = false
 
                 if (hasParamUpdates) {
-                    db = SQLiteDatabase.openDatabase(
-                        tempDb.absolutePath,
-                        null,
-                        SQLiteDatabase.OPEN_READWRITE
-                    )
-
-                    db.beginTransaction()
+                    //######## Primary method: app_process via DbUpdater
                     try {
-                        if (res.isNotBlank()) {
-                            db.execSQL(
-                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
-                                arrayOf(res)
-                            )
-                            db.execSQL(
-                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
-                                arrayOf(res, res)
+                        val apkPath = context.applicationInfo.publicSourceDir
+                        val cmd =
+                            "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater write \"$DB_PATH\" '$res' '$sm' '$ffr' '$tf'"
+                        val (success, output) = runRootCommandWithOutput(cmd)
+                        if (success && output.contains("WRITE_SUCCESS")) {
+                            primaryWorked = true
+                        }
+                    } catch (e: Exception) {
+                        // Silently fall through to fallback
+                    }
+
+                    if (!primaryWorked) {
+                        //######## Fallback method: Direct SQLite copy (Desktop style)
+                        val (cpSuccess, cpError) = runRootCommand(
+                            "cp $DB_PATH ${tempDb.absolutePath}",
+                            "chown $uid:$uid ${tempDb.absolutePath}",
+                            "chmod 666 ${tempDb.absolutePath}"
+                        )
+                        if (!cpSuccess) return@withContext false to context.getString(
+                            R.string.status_copy_failed,
+                            cpError
+                        )
+                        if (!tempDb.exists()) return@withContext false to context.getString(R.string.status_temp_missing)
+
+                        db = SQLiteDatabase.openDatabase(
+                            tempDb.absolutePath,
+                            null,
+                            SQLiteDatabase.OPEN_READWRITE
+                        )
+
+                        db.beginTransaction()
+                        try {
+                            if (res.isNotBlank()) {
+                                db.execSQL(
+                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
+                                    arrayOf(res)
+                                )
+                                db.execSQL(
+                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
+                                    arrayOf(res, res)
+                                )
+                            }
+                            if (sm.isNotBlank()) {
+                                db.execSQL(
+                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
+                                    arrayOf(sm)
+                                )
+                                db.execSQL(
+                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
+                                    arrayOf(sm, sm)
+                                )
+                            }
+                            if (ffr.isNotBlank()) {
+                                db.execSQL(
+                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
+                                    arrayOf(ffr)
+                                )
+                                db.execSQL(
+                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
+                                    arrayOf(ffr, ffr)
+                                )
+                            }
+                            if (tf.isNotBlank()) {
+                                db.execSQL(
+                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
+                                    arrayOf(tf)
+                                )
+                                db.execSQL(
+                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
+                                    arrayOf(tf, tf)
+                                )
+                            }
+                            db.setTransactionSuccessful()
+                        } finally {
+                            db.endTransaction()
+                            db.close()
+                            db = null
+                        }
+
+                        val (writeSuccess, writeError) = runRootCommand(
+                            "cat ${tempDb.absolutePath} > $DB_PATH",
+                            "sync"
+                        )
+
+                        if (!writeSuccess) {
+                            return@withContext false to context.getString(
+                                R.string.status_write_failed,
+                                writeError
                             )
                         }
-                        if (sm.isNotBlank()) {
-                            db.execSQL(
-                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
-                                arrayOf(sm)
-                            )
-                            db.execSQL(
-                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
-                                arrayOf(sm, sm)
-                            )
-                        }
-                        if (ffr.isNotBlank()) {
-                            db.execSQL(
-                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
-                                arrayOf(ffr)
-                            )
-                            db.execSQL(
-                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
-                                arrayOf(ffr, ffr)
-                            )
-                        }
-                        if (tf.isNotBlank()) {
-                            db.execSQL(
-                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
-                                arrayOf(tf)
-                            )
-                            db.execSQL(
-                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
-                                arrayOf(tf, tf)
-                            )
-                        }
-                        db.setTransactionSuccessful()
-                    } finally {
-                        db.endTransaction()
-                        db.close()
-                        db = null
                     }
                 }
 
-                val (writeSuccess, writeError) = runRootCommand(
-                    "cat ${tempDb.absolutePath} > $DB_PATH",
-                    "sync"
-                )
-
-                if (!writeSuccess) {
-                    return@withContext false to context.getString(R.string.status_write_failed, writeError)
-                }
-
-                val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid)
+                val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid, context)
 
                 val isResVerified = res.isBlank() || verifiedValues.resolution == res
                 val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
@@ -1258,8 +1311,17 @@ suspend fun applySettings(
                 val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
                 if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                    runRootCommand("reboot")
-                    return@withContext true to context.getString(R.string.status_rebooting)
+                    if (primaryWorked) {
+                        val timestampTrigger = "${System.currentTimeMillis()}1"
+                        runRootCommand(
+                            "settings put global sys_set_vrshell_eyebuffer '$res'",
+                            "settings put global scene_change_type '$timestampTrigger'",
+                        )
+                        return@withContext true to context.getString(R.string.status_applied_success)
+                    } else {
+                        runRootCommand("reboot")
+                        return@withContext true to context.getString(R.string.status_rebooting)
+                    }
                 } else {
                     return@withContext false to context.getString(R.string.status_verify_failed)
                 }
@@ -1267,7 +1329,8 @@ suspend fun applySettings(
                 return@withContext true to context.getString(R.string.status_applied_success)
             }
         } catch (e: Exception) {
-            return@withContext false to (e.message ?: context.getString(R.string.status_error_prefix, "Unknown"))
+            return@withContext false to (e.message
+                ?: context.getString(R.string.status_error_prefix, "Unknown"))
         } finally {
             db?.takeIf { it.isOpen }?.close()
             if (tempDb.exists()) tempDb.delete()
