@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Basse consommation</string>
     <string name="pwr_minimum_power">Puissance minimale</string>
     <string name="pwr_deep_idle">Économie d\'énergie</string>
+    <string name="tune_mode">Mode de réglage</string>
+    <string name="tune_stock">D\'origine</string>
+    <string name="tune_performance">Performance</string>
+    <string name="help_tune_mode_desc">Applique des optimisations du noyau et du gouverneur à l\'échelle du système. Le mode Performance règle le CPU/GPU sur des gouverneurs de performance et réduit la latence de planification. Le mode D\'origine restaure le comportement par défaut du système.</string>
     <string name="close">Fermer</string>
 </resources>

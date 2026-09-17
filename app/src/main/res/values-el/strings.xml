@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Χαμηλή ισχύς</string>
     <string name="pwr_minimum_power">Ελάχιστη ισχύς</string>
     <string name="pwr_deep_idle">Εξοικονόμηση ενέργειας</string>
+    <string name="tune_mode">Λειτουργία Συντονισμού</string>
+    <string name="tune_stock">Εργοστασιακή</string>
+    <string name="tune_performance">Απόδοση</string>
+    <string name="help_tune_mode_desc">Εφαρμόζει βελτιστοποιήσεις πυρήνα και ρυθμιστή σε όλο το σύστημα. Η λειτουργία απόδοσης ορίζει την CPU/GPU σε ρυθμιστές απόδοσης και μειώνει την καθυστέρηση προγραμματισμού. Η εργοστασιακή επαναφέρει την προεπιλεγμένη συμπεριφορά του συστήματος.</string>
     <string name="close">Κλείσιμο</string>
 </resources>

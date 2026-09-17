@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Low Power</string>
     <string name="pwr_minimum_power">Minimum Power</string>
     <string name="pwr_deep_idle">Power Saving</string>
+    <string name="tune_mode">Tune Mode</string>
+    <string name="tune_stock">Stock</string>
+    <string name="tune_performance">Performance</string>
+    <string name="help_tune_mode_desc">Applies system-wide kernel and governor optimisations. Performance mode sets CPU/GPU to performance governors and reduces scheduling latency. Stock restores default system behaviour.</string>
     <string name="close">Close</string>
 </resources>

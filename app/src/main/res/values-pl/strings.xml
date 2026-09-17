@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Niska moc</string>
     <string name="pwr_minimum_power">Minimalna moc</string>
     <string name="pwr_deep_idle">Oszczędzanie energii</string>
+    <string name="tune_mode">Tryb strojenia</string>
+    <string name="tune_stock">Fabryczne</string>
+    <string name="tune_performance">Wydajność</string>
+    <string name="help_tune_mode_desc">Stosuje optymalizacje jądra i zarządcy w całym systemie. Tryb wydajności ustawia procesor/kartę graficzną na zarządców wydajności i zmniejsza opóźnienia planowania. Ustawienie fabryczne przywraca domyślne zachowanie systemu.</string>
     <string name="close">Zamknij</string>
 </resources>

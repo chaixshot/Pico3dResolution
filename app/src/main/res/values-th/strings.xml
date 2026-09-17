@@ -48,5 +48,9 @@
     <string name="pwr_low_power">พลังงานต่ำ</string>
     <string name="pwr_minimum_power">พลังงานขั้นต่ำ</string>
     <string name="pwr_deep_idle">ประหยัดพลังงาน</string>
+    <string name="tune_mode">โหมดปรับแต่ง</string>
+    <string name="tune_stock">มาตรฐาน</string>
+    <string name="tune_performance">ประสิทธิภาพ</string>
+    <string name="help_tune_mode_desc">ใช้การเพิ่มประสิทธิภาพเคอร์เนลและตัวควบคุมทั่วทั้งระบบ โหมดประสิทธิภาพจะตั้งค่า CPU/GPU ให้เป็นตัวควบคุมประสิทธิภาพและลดเวลาในการจัดตารางเวลา โหมดมาตรฐานจะคืนค่าพฤติกรรมเริ่มต้นของระบบ</string>
     <string name="close">ปิด</string>
 </resources>

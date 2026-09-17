@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Niedrige Leistung</string>
     <string name="pwr_minimum_power">Minimale Leistung</string>
     <string name="pwr_deep_idle">Energiesparmodus</string>
+    <string name="tune_mode">Tuning-Modus</string>
+    <string name="tune_stock">Standard</string>
+    <string name="tune_performance">Leistung</string>
+    <string name="help_tune_mode_desc">Wende systemweite Kernel- und Governor-Optimierungen an. Der Leistungsmodus setzt CPU/GPU auf Leistungs-Governors und reduziert die Scheduling-Latenz. Standard stellt das Standardverhalten des Systems wieder her.</string>
     <string name="close">Schließen</string>
 </resources>

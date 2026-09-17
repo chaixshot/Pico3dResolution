@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Laag verbruik</string>
     <string name="pwr_minimum_power">Minimaal verbruik</string>
     <string name="pwr_deep_idle">Energiebesparing</string>
+    <string name="tune_mode">Afstemmodus</string>
+    <string name="tune_stock">Standaard</string>
+    <string name="tune_performance">Prestaties</string>
+    <string name="help_tune_mode_desc">Past systeembrede kernel- en governor-optimalisaties toe. De prestatiemodus stelt de CPU/GPU in op prestatiegovernors en vermindert de planningslatentie. Standaard herstelt het standaard systeemgedrag.</string>
     <string name="close">Sluiten</string>
 </resources>

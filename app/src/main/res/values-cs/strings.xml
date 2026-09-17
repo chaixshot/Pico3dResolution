@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Nízký výkon</string>
     <string name="pwr_minimum_power">Minimální výkon</string>
     <string name="pwr_deep_idle">Úspora energie</string>
+    <string name="tune_mode">Režim ladění</string>
+    <string name="tune_stock">Výchozí (Stock)</string>
+    <string name="tune_performance">Výkon</string>
+    <string name="help_tune_mode_desc">Použije optimalizace jádra a regulátoru v celém systému. Režim výkonu nastaví CPU/GPU na regulátory výkonu a sníží latenci plánování. Výchozí (Stock) obnoví výchozí chování systému.</string>
     <string name="close">Zavřít</string>
 </resources>

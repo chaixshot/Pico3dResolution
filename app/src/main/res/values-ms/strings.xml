@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Kuasa Rendah</string>
     <string name="pwr_minimum_power">Kuasa Minimum</string>
     <string name="pwr_deep_idle">Penjimatan Kuasa</string>
+    <string name="tune_mode">Mod Penalaan</string>
+    <string name="tune_stock">Stok</string>
+    <string name="tune_performance">Prestasi</string>
+    <string name="help_tune_mode_desc">Menggunakan pengoptimuman kernel dan gabenor seluruh sistem. Mod prestasi menetapkan CPU/GPU kepada gabenor prestasi dan mengurangkan kependaman penjadualan. Stok memulihkan tingkah laku sistem lalai.</string>
     <string name="close">Tutup</string>
 </resources>

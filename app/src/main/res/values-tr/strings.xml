@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Düşük Güç</string>
     <string name="pwr_minimum_power">Minimum Güç</string>
     <string name="pwr_deep_idle">Güç Tasarrufu</string>
+    <string name="tune_mode">Ayar Modu</string>
+    <string name="tune_stock">Stok</string>
+    <string name="tune_performance">Performans</string>
+    <string name="help_tune_mode_desc">Sistem genelinde çekirdek ve yönetici optimizasyonlarını uygular. Performans modu, CPU/GPU\'yu performans yöneticilerine ayarlar ve zamanlama gecikmesini azaltır. Stok, varsayılan sistem davranışını geri yükler.</string>
     <string name="close">Kapat</string>
 </resources>
