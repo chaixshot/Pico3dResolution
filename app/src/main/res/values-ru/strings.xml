@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Низкое энергопотребление</string>
     <string name="pwr_minimum_power">Минимальная мощность</string>
     <string name="pwr_deep_idle">Энергосбережение</string>
+    <string name="tune_mode">Режим настройки</string>
+    <string name="tune_stock">Стоковый</string>
+    <string name="tune_performance">Производительность</string>
+    <string name="help_tune_mode_desc">Применяет общесистемные оптимизации ядра и регулятора. Режим производительности устанавливает CPU/GPU в регуляторы производительности и сокращает задержку планирования. Стоковый восстанавливает поведение системы по умолчанию.</string>
     <string name="close">Закрыть</string>
 </resources>

@@ -48,5 +48,9 @@
     <string name="pwr_low_power">저전력</string>
     <string name="pwr_minimum_power">최소 전력</string>
     <string name="pwr_deep_idle">절전</string>
+    <string name="tune_mode">튜닝 모드</string>
+    <string name="tune_stock">순정</string>
+    <string name="tune_performance">성능</string>
+    <string name="help_tune_mode_desc">시스템 전반의 커널 및 거버너 최적화를 적용합니다. 성능 모드는 CPU/GPU를 성능 거버너로 설정하고 스케줄링 대기 시간을 줄입니다. 순정은 기본 시스템 동작을 복원합니다.</string>
     <string name="close">닫기</string>
 </resources>

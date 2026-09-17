@@ -48,5 +48,9 @@
     <string name="pwr_low_power">低功耗</string>
     <string name="pwr_minimum_power">最低功耗</string>
     <string name="pwr_deep_idle">省電</string>
+    <string name="tune_mode">調節模式</string>
+    <string name="tune_stock">原廠</string>
+    <string name="tune_performance">效能</string>
+    <string name="help_tune_mode_desc">套用系統範圍的內核和調節器優化。效能模式將 CPU/GPU 設置為效能調節器並減少調度延遲。原廠恢復預設系統行為。</string>
     <string name="close">關閉</string>
 </resources>

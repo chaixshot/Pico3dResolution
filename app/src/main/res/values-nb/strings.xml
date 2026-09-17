@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Lavt strømforbruk</string>
     <string name="pwr_minimum_power">Minimum strømforbruk</string>
     <string name="pwr_deep_idle">Strømsparing</string>
+    <string name="tune_mode">Tune-modus</string>
+    <string name="tune_stock">Standard</string>
+    <string name="tune_performance">Ytelse</string>
+    <string name="help_tune_mode_desc">Bruker systemomfattende kjerne- og governor-optimaliseringer. Ytelsesmodus setter CPU/GPU til ytelses-governors og reduserer planleggingsforsinkelse. Standard gjenoppretter standard systematferd.</string>
     <string name="close">Lukk</string>
 </resources>

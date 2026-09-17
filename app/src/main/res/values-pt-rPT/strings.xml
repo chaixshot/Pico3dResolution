@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Baixa potência</string>
     <string name="pwr_minimum_power">Potência mínima</string>
     <string name="pwr_deep_idle">Poupança de energia</string>
+    <string name="tune_mode">Modo de ajuste</string>
+    <string name="tune_stock">Original</string>
+    <string name="tune_performance">Desempenho</string>
+    <string name="help_tune_mode_desc">Aplica otimizações de kernel e governor em todo o sistema. O modo de desempenho define o CPU/GPU para governors de desempenho e reduz a latência de agendamento. O modo Original restaura o comportamento padrão do sistema.</string>
     <string name="close">Fechar</string>
 </resources>

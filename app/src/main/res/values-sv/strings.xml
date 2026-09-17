@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Låg effekt</string>
     <string name="pwr_minimum_power">Minimum effekt</string>
     <string name="pwr_deep_idle">Energisparläge</string>
+    <string name="tune_mode">Trimningsläge</string>
+    <string name="tune_stock">Standard</string>
+    <string name="tune_performance">Prestanda</string>
+    <string name="help_tune_mode_desc">Tillämpar systemomfattende kärn- och governor-optimeringer. Prestandaläge ställer in CPU/GPU på prestanda-governors och minskar schemaläggningslatens. Standard återställer systemets standardbeteende.</string>
     <string name="close">Stäng</string>
 </resources>

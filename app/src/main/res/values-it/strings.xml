@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Bassa potenza</string>
     <string name="pwr_minimum_power">Potenza minima</string>
     <string name="pwr_deep_idle">Risparmio energetico</string>
+    <string name="tune_mode">Modalità di ottimizzazione</string>
+    <string name="tune_stock">Stock</string>
+    <string name="tune_performance">Prestazioni</string>
+    <string name="help_tune_mode_desc">Applica ottimizzazioni del kernel e del governor a livello di sistema. La modalità prestazioni imposta la CPU/GPU su governor di prestazioni e riduce la latenza di pianificazione. Stock ripristina il comportamento predefinito del sistema.</string>
     <string name="close">Chiudi</string>
 </resources>

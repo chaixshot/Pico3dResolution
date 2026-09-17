@@ -48,5 +48,9 @@
     <string name="pwr_low_power">低電力</string>
     <string name="pwr_minimum_power">最小電力</string>
     <string name="pwr_deep_idle">省電力</string>
+    <string name="tune_mode">チューニングモード</string>
+    <string name="tune_stock">ストック</string>
+    <string name="tune_performance">パフォーマンス</string>
+    <string name="help_tune_mode_desc">システム全体のカーネルとガバナーの最適化を適用します。パフォーマンスモードでは、CPU/GPUをパフォーマンスガバナーに設定し、スケジューリングの遅延を減らします。ストックはシステムのデフォルトの動作を復元します。 </string>
     <string name="close">閉じる</string>
 </resources>

@@ -48,5 +48,9 @@
     <string name="pwr_low_power">Alhainen teho</string>
     <string name="pwr_minimum_power">Minimiteho</string>
     <string name="pwr_deep_idle">Virransäästö</string>
+    <string name="tune_mode">Viritystila</string>
+    <string name="tune_stock">Vakio</string>
+    <string name="tune_performance">Suorituskyky</string>
+    <string name="help_tune_mode_desc">Käyttää järjestelmänlaajuisia ydin- ja säädinoptimointeja. Suorituskykytila asettaa CPU:n/GPU:n suorituskykysäätimiin ja vähentää aikataulutusviivettä. Vakio palauttaa järjestelmän oletuskäyttäytymisen.</string>
     <string name="close">Sulje</string>
 </resources>
