@@ -76,3 +76,4 @@
 
 * [Jetpack Compose](https://developer.android.com/compose) - 现代化 UI 工具包。
 * [Material 3](https://m3.material.io/) - 设计系统组件。
+* [pico4-power-mode](https://github.com/hhhbwc/pico4-power-mode) - 性能调速器调校.

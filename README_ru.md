@@ -76,3 +76,4 @@
 
 * [Jetpack Compose](https://developer.android.com/compose) - Современный инструментарий пользовательского интерфейса.
 * [Material 3](https://m3.material.io/) - Компоненты дизайн-системы.
+* [pico4-power-mode](https://github.com/hhhbwc/pico4-power-mode) - Настройка регулятора производительности.

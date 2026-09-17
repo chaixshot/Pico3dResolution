@@ -76,3 +76,4 @@
 
 * [Jetpack Compose](https://developer.android.com/compose) - Modern UI toolkit.
 * [Material 3](https://m3.material.io/) - Design system components.
+* [pico4-power-mode](https://github.com/hhhbwc/pico4-power-mode) - Performance governor tune.

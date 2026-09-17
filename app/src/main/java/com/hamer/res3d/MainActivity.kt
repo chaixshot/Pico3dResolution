@@ -158,7 +158,8 @@ data class ConfigValues(
     val ffr: String = "Unknown",
     val textureFov: String = "Unknown",
     val maxPwrLevel: String = "Unknown",
-    val minPwrLevel: String = "Unknown"
+    val minPwrLevel: String = "Unknown",
+    val tuneMode: String = "Unknown"
 )
 
 @Composable
@@ -169,6 +170,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var textureFov by remember { mutableStateOf("") }
     var maxPwrLevel by remember { mutableStateOf("") }
     var minPwrLevel by remember { mutableStateOf("") }
+    var tuneMode by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
@@ -198,6 +200,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             }
             if (values.minPwrLevel != "Unknown" && values.minPwrLevel != "N/A") {
                 minPwrLevel = values.minPwrLevel
+            }
+            if (values.tuneMode != "Unknown" && values.tuneMode != "N/A") {
+                tuneMode = values.tuneMode
             }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
@@ -240,6 +245,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         textureFov = textureFov,
         maxPwrLevel = maxPwrLevel,
         minPwrLevel = minPwrLevel,
+        tuneMode = tuneMode,
         status = status,
         onResolutionChange = { resolution = it },
         onStencilMeshChange = { stencilMesh = it },
@@ -247,9 +253,10 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         onTextureFovChange = { textureFov = it },
         onMaxPwrLevelChange = { maxPwrLevel = it },
         onMinPwrLevelChange = { minPwrLevel = it },
+        onTuneModeChange = { tuneMode = it },
         databaseChanged = databaseChanged,
         onApplyClick = {
-            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank()) {
+            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank() || tuneMode.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
 
@@ -260,6 +267,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         textureFov,
                         maxPwrLevel,
                         minPwrLevel,
+                        tuneMode,
                         cacheDir,
                         appUid,
                         storageContext,
@@ -294,6 +302,7 @@ fun ResolutionControlContent(
     textureFov: String,
     maxPwrLevel: String,
     minPwrLevel: String,
+    tuneMode: String,
     status: String,
     onResolutionChange: (String) -> Unit,
     onStencilMeshChange: (String) -> Unit,
@@ -301,6 +310,7 @@ fun ResolutionControlContent(
     onTextureFovChange: (String) -> Unit,
     onMaxPwrLevelChange: (String) -> Unit,
     onMinPwrLevelChange: (String) -> Unit,
+    onTuneModeChange: (String) -> Unit,
     databaseChanged: Boolean,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -497,160 +507,175 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        // Stencil Mesh Dropdown
-                        var smExpanded by remember { mutableStateOf(false) }
-                        val smOptions = listOf(
-                            "1" to enabledText,
-                            "0" to disabledText
-                        )
-                        @OptIn(ExperimentalMaterial3Api::class)
-                        ExposedDropdownMenuBox(
-                            expanded = smExpanded,
-                            onExpandedChange = { smExpanded = !smExpanded },
-                            modifier = Modifier.fillMaxWidth()
+                        // Stencil & Foveated Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                            // Stencil Mesh Dropdown
+                            Column(modifier = Modifier.weight(1f)) {
+                                var smExpanded by remember { mutableStateOf(false) }
+                                val smOptions = listOf(
+                                    "1" to enabledText,
+                                    "0" to disabledText
+                                )
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = smExpanded,
+                                    onExpandedChange = { smExpanded = !smExpanded },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = stringResource(id = R.string.stencil_mesh),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = colorResource(id = R.color.white)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    HelpButton(
-                                        title = stringResource(id = R.string.stencil_mesh),
-                                        message = stringResource(id = R.string.help_stencil_mesh_desc)
-                                    )
-                                }
-                                OutlinedTextField(
-                                    value = smOptions.find { it.first == stencilMesh }?.second
-                                        ?: stencilMesh,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = smExpanded
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.stencil_mesh),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            HelpButton(
+                                                title = stringResource(id = R.string.stencil_mesh),
+                                                message = stringResource(id = R.string.help_stencil_mesh_desc)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = smOptions.find { it.first == stencilMesh }?.second
+                                                ?: stencilMesh,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = {
+                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                    expanded = smExpanded
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .menuAnchor()
+                                                .fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
                                         )
-                                    },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        .fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = Color.White,
-                                        unfocusedTextColor = Color.White,
-                                        focusedContainerColor = colorResource(id = R.color.card_bg),
-                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
-                                        focusedBorderColor = Color.Transparent,
-                                        unfocusedBorderColor = Color.Transparent
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    textStyle = MaterialTheme.typography.bodyMedium
-                                )
+                                    }
+                                    ExposedDropdownMenu(
+                                        expanded = smExpanded,
+                                        onDismissRequest = { smExpanded = false },
+                                        modifier = Modifier.background(
+                                            color = colorResource(id = R.color.dropdown_bg),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                    ) {
+                                        smOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = option.second,
+                                                        color = Color.White
+                                                    )
+                                                },
+                                                onClick = {
+                                                    onStencilMeshChange(option.first); smExpanded =
+                                                    false
+                                                },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                            ExposedDropdownMenu(
-                                expanded = smExpanded,
-                                onDismissRequest = { smExpanded = false },
-                                modifier = Modifier.background(
-                                    color = colorResource(id = R.color.dropdown_bg),
-                                    shape = RoundedCornerShape(12.dp)
+
+                            // Foveated Rendering Dropdown
+                            Column(modifier = Modifier.weight(1f)) {
+                                var ffrExpanded by remember { mutableStateOf(false) }
+                                val ffrOptions = listOf(
+                                    "1" to enabledText,
+                                    "-1" to disabledText
                                 )
-                            ) {
-                                smOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = option.second, color = Color.White) },
-                                        onClick = {
-                                            onStencilMeshChange(option.first); smExpanded = false
-                                        },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                    )
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = ffrExpanded,
+                                    onExpandedChange = { ffrExpanded = !ffrExpanded },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.foveated_rendering),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            HelpButton(
+                                                title = stringResource(id = R.string.foveated_rendering),
+                                                message = stringResource(id = R.string.help_ffr_desc)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = ffrOptions.find { it.first == ffr }?.second
+                                                ?: ffr,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = {
+                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                    expanded = ffrExpanded
+                                                )
+                                            },
+                                            modifier = Modifier
+                                                .menuAnchor()
+                                                .fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    ExposedDropdownMenu(
+                                        expanded = ffrExpanded,
+                                        onDismissRequest = { ffrExpanded = false },
+                                        modifier = Modifier.background(
+                                            color = colorResource(id = R.color.dropdown_bg),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                    ) {
+                                        ffrOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    Text(
+                                                        text = option.second,
+                                                        color = Color.White
+                                                    )
+                                                },
+                                                onClick = {
+                                                    onFfrChange(option.first); ffrExpanded = false
+                                                },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        // Foveated Rendering Dropdown
-                        var ffrExpanded by remember { mutableStateOf(false) }
-                        val ffrOptions = listOf(
-                            "1" to enabledText,
-                            "-1" to disabledText
-                        )
-                        @OptIn(ExperimentalMaterial3Api::class)
-                        ExposedDropdownMenuBox(
-                            expanded = ffrExpanded,
-                            onExpandedChange = { ffrExpanded = !ffrExpanded },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.foveated_rendering),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = colorResource(id = R.color.white)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    HelpButton(
-                                        title = stringResource(id = R.string.foveated_rendering),
-                                        message = stringResource(id = R.string.help_ffr_desc)
-                                    )
-                                }
-                                OutlinedTextField(
-                                    value = ffrOptions.find { it.first == ffr }?.second ?: ffr,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = ffrExpanded
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        .fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = Color.White,
-                                        unfocusedTextColor = Color.White,
-                                        focusedContainerColor = colorResource(id = R.color.card_bg),
-                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
-                                        focusedBorderColor = Color.Transparent,
-                                        unfocusedBorderColor = Color.Transparent
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    textStyle = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                            ExposedDropdownMenu(
-                                expanded = ffrExpanded,
-                                onDismissRequest = { ffrExpanded = false },
-                                modifier = Modifier.background(
-                                    color = colorResource(id = R.color.dropdown_bg),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                            ) {
-                                ffrOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = option.second, color = Color.White) },
-                                        onClick = {
-                                            onFfrChange(option.first); ffrExpanded = false
-                                        },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Right Side: Texture FOV & Power Levels
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
                         // Texture Fov Dropdown
                         var tfExpanded by remember { mutableStateOf(false) }
                         val tfOptions = listOf("95", "85", "75", "65")
@@ -727,7 +752,14 @@ fun ResolutionControlContent(
                                 }
                             }
                         }
+                    }
 
+                    // Right Side: Texture FOV & Power Levels
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
                         // Power Level Row
                         var maxExpanded by remember { mutableStateOf(false) }
                         var minExpanded by remember { mutableStateOf(false) }
@@ -741,7 +773,6 @@ fun ResolutionControlContent(
                             "6" to stringResource(id = R.string.pwr_deep_idle)
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -916,6 +947,82 @@ fun ResolutionControlContent(
                             }
                         }
 
+                        // Tune Mode Dropdown
+                        var tuneExpanded by remember { mutableStateOf(false) }
+                        val tuneOptions = listOf(
+                            "1" to stringResource(id = R.string.tune_performance),
+                            "2" to stringResource(id = R.string.tune_stock)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        @OptIn(ExperimentalMaterial3Api::class)
+                        ExposedDropdownMenuBox(
+                            expanded = tuneExpanded,
+                            onExpandedChange = { tuneExpanded = !tuneExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.tune_mode),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = colorResource(id = R.color.white)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    HelpButton(
+                                        title = stringResource(id = R.string.tune_mode),
+                                        message = stringResource(id = R.string.help_tune_mode_desc)
+                                    )
+                                }
+                                OutlinedTextField(
+                                    value = tuneOptions.find { it.first == tuneMode }?.second
+                                        ?: tuneMode,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = {
+                                        ExposedDropdownMenuDefaults.TrailingIcon(
+                                            expanded = tuneExpanded
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White,
+                                        focusedContainerColor = colorResource(id = R.color.card_bg),
+                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    textStyle = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            ExposedDropdownMenu(
+                                expanded = tuneExpanded,
+                                onDismissRequest = { tuneExpanded = false },
+                                modifier = Modifier.background(
+                                    color = colorResource(id = R.color.dropdown_bg),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            ) {
+                                tuneOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = option.second, color = Color.White) },
+                                        onClick = {
+                                            onTuneModeChange(option.first); tuneExpanded = false
+                                        },
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                    )
+                                }
+                            }
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -955,6 +1062,7 @@ fun ResolutionControlContent(
                                     onTextureFovChange("95")
                                     onMaxPwrLevelChange("0")
                                     onMinPwrLevelChange("6")
+                                    onTuneModeChange("2")
                                 },
                                 modifier = Modifier.size(56.dp),
                                 shape = MaterialTheme.shapes.medium,
@@ -1048,6 +1156,7 @@ suspend fun fetchCurrentValues(
         var tfVal = "N/A"
         var maxPwr = "N/A"
         var minPwr = "N/A"
+        var tuneVal = "N/A"
         var errorMsg = ""
 
         //######## Primary method: app_process via com.hamer.res3d.DbUpdater
@@ -1067,7 +1176,20 @@ suspend fun fetchCurrentValues(
                 }
                 maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
                 minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-                return@withContext ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr) to ""
+
+                val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
+                tuneVal =
+                    if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
+
+                return@withContext ConfigValues(
+                    resVal,
+                    smVal,
+                    ffrVal,
+                    tfVal,
+                    maxPwr,
+                    minPwr,
+                    tuneVal
+                ) to ""
             }
         } catch (e: Exception) {
             // Silently fall through to fallback
@@ -1120,13 +1242,17 @@ suspend fun fetchCurrentValues(
             maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
             minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
 
+            val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
+            tuneVal =
+                if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
+
         } catch (e: Exception) {
             errorMsg = e.message ?: "Unknown error"
         } finally {
             if (tempDb.exists()) tempDb.delete()
         }
 
-        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr) to errorMsg
+        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, tuneVal) to errorMsg
     }
 
 suspend fun applySettings(
@@ -1136,6 +1262,7 @@ suspend fun applySettings(
     tf: String,
     maxPwr: String,
     minPwr: String,
+    tuneMode: String,
     cacheDir: File,
     uid: Int,
     context: Context,
@@ -1150,6 +1277,20 @@ suspend fun applySettings(
             val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
             if (maxPwr.isNotBlank()) initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
             if (minPwr.isNotBlank()) initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+
+            // Apply Tune Mode if selected
+            if (tuneMode == "1") { // Performance
+                initialRootCmds.add("echo performance > /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+                initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
+                initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
+                initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
+            } else if (tuneMode == "2") { // Stock
+                initialRootCmds.add("echo schedutil > /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor")
+                initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
+                initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
+                initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
+            }
+
             runRootCommand(*initialRootCmds.toTypedArray())
 
             // Save pwrlevel to app config (DeviceProtected Storage for Xposed access during boot)
@@ -1412,13 +1553,14 @@ private fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, Str
 fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
-            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6"),
+            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2"),
             resolution = "2160",
             stencilMesh = "1",
             ffr = "1",
             textureFov = "95",
             maxPwrLevel = "0",
             minPwrLevel = "6",
+            tuneMode = "2",
             status = "Ready",
             onResolutionChange = {},
             onStencilMeshChange = {},
@@ -1426,6 +1568,7 @@ fun ResolutionControlPreview() {
             onTextureFovChange = {},
             onMaxPwrLevelChange = {},
             onMinPwrLevelChange = {},
+            onTuneModeChange = {},
             databaseChanged = true,
             onApplyClick = {}
         )
