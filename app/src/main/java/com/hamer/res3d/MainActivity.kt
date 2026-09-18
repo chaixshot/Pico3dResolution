@@ -159,7 +159,9 @@ data class ConfigValues(
     val textureFov: String = "Unknown",
     val maxPwrLevel: String = "Unknown",
     val minPwrLevel: String = "Unknown",
-    val tuneMode: String = "Unknown"
+    val cpuMode: String = "Unknown",
+    val gpuMode: String = "Unknown",
+    val latencyMode: String = "Unknown"
 )
 
 @Composable
@@ -170,7 +172,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var textureFov by remember { mutableStateOf("") }
     var maxPwrLevel by remember { mutableStateOf("") }
     var minPwrLevel by remember { mutableStateOf("") }
-    var tuneMode by remember { mutableStateOf("") }
+    var cpuMode by remember { mutableStateOf("") }
+    var gpuMode by remember { mutableStateOf("") }
+    var latencyMode by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
@@ -205,8 +209,14 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             if (values.minPwrLevel != "Unknown" && values.minPwrLevel != "N/A") {
                 minPwrLevel = values.minPwrLevel
             }
-            if (values.tuneMode != "Unknown" && values.tuneMode != "N/A") {
-                tuneMode = values.tuneMode
+            if (values.cpuMode != "Unknown" && values.cpuMode != "N/A") {
+                cpuMode = values.cpuMode
+            }
+            if (values.gpuMode != "Unknown" && values.gpuMode != "N/A") {
+                gpuMode = values.gpuMode
+            }
+            if (values.latencyMode != "Unknown" && values.latencyMode != "N/A") {
+                latencyMode = values.latencyMode
             }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
@@ -249,7 +259,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         textureFov = textureFov,
         maxPwrLevel = maxPwrLevel,
         minPwrLevel = minPwrLevel,
-        tuneMode = tuneMode,
+        cpuMode = cpuMode,
+        gpuMode = gpuMode,
+        latencyMode = latencyMode,
         status = status,
         onResolutionChange = { resolution = it },
         onStencilMeshChange = { stencilMesh = it },
@@ -257,10 +269,12 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         onTextureFovChange = { textureFov = it },
         onMaxPwrLevelChange = { maxPwrLevel = it },
         onMinPwrLevelChange = { minPwrLevel = it },
-        onTuneModeChange = { tuneMode = it },
+        onCpuModeChange = { cpuMode = it },
+        onGpuModeChange = { gpuMode = it },
+        onLatencyModeChange = { latencyMode = it },
         databaseChanged = databaseChanged,
         onApplyClick = {
-            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank() || tuneMode.isNotBlank()) {
+            if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank() || maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank() || cpuMode.isNotBlank() || gpuMode.isNotBlank() || latencyMode.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
 
@@ -271,7 +285,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         textureFov,
                         maxPwrLevel,
                         minPwrLevel,
-                        tuneMode,
+                        cpuMode,
+                        gpuMode,
+                        latencyMode,
                         cacheDir,
                         appUid,
                         storageContext,
@@ -306,7 +322,9 @@ fun ResolutionControlContent(
     textureFov: String,
     maxPwrLevel: String,
     minPwrLevel: String,
-    tuneMode: String,
+    cpuMode: String,
+    gpuMode: String,
+    latencyMode: String,
     status: String,
     onResolutionChange: (String) -> Unit,
     onStencilMeshChange: (String) -> Unit,
@@ -314,7 +332,9 @@ fun ResolutionControlContent(
     onTextureFovChange: (String) -> Unit,
     onMaxPwrLevelChange: (String) -> Unit,
     onMinPwrLevelChange: (String) -> Unit,
-    onTuneModeChange: (String) -> Unit,
+    onCpuModeChange: (String) -> Unit,
+    onGpuModeChange: (String) -> Unit,
+    onLatencyModeChange: (String) -> Unit,
     databaseChanged: Boolean,
     onApplyClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -951,78 +971,203 @@ fun ResolutionControlContent(
                             }
                         }
 
-                        // Tune Mode Dropdown
-                        var tuneExpanded by remember { mutableStateOf(false) }
+                        // Individual Tune Modes Row
                         val tuneOptions = listOf(
                             "1" to stringResource(id = R.string.tune_performance),
                             "2" to stringResource(id = R.string.tune_stock)
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))
-                        @OptIn(ExperimentalMaterial3Api::class)
-                        ExposedDropdownMenuBox(
-                            expanded = tuneExpanded,
-                            onExpandedChange = { tuneExpanded = !tuneExpanded },
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                            // CPU Mode
+                            Column(modifier = Modifier.weight(1f)) {
+                                var cpuExpanded by remember { mutableStateOf(false) }
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = cpuExpanded,
+                                    onExpandedChange = { cpuExpanded = !cpuExpanded },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = stringResource(id = R.string.tune_mode),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = colorResource(id = R.color.white)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    HelpButton(
-                                        title = stringResource(id = R.string.tune_mode),
-                                        message = stringResource(id = R.string.help_tune_mode_desc)
-                                    )
-                                }
-                                OutlinedTextField(
-                                    value = tuneOptions.find { it.first == tuneMode }?.second
-                                        ?: tuneMode,
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = {
-                                        ExposedDropdownMenuDefaults.TrailingIcon(
-                                            expanded = tuneExpanded
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.cpu_mode),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            HelpButton(
+                                                title = stringResource(id = R.string.cpu_mode),
+                                                message = stringResource(id = R.string.help_cpu_mode_desc)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = tuneOptions.find { it.first == cpuMode }?.second ?: cpuMode,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cpuExpanded) },
+                                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
                                         )
-                                    },
-                                    modifier = Modifier
-                                        .menuAnchor()
-                                        .fillMaxWidth(),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedTextColor = Color.White,
-                                        unfocusedTextColor = Color.White,
-                                        focusedContainerColor = colorResource(id = R.color.card_bg),
-                                        unfocusedContainerColor = colorResource(id = R.color.card_bg),
-                                        focusedBorderColor = Color.Transparent,
-                                        unfocusedBorderColor = Color.Transparent
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    textStyle = MaterialTheme.typography.bodyMedium
-                                )
+                                    }
+                                    ExposedDropdownMenu(
+                                        expanded = cpuExpanded,
+                                        onDismissRequest = { cpuExpanded = false },
+                                        modifier = Modifier.background(
+                                            color = colorResource(id = R.color.dropdown_bg),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                    ) {
+                                        tuneOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = option.second, color = Color.White) },
+                                                onClick = { onCpuModeChange(option.first); cpuExpanded = false },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                            ExposedDropdownMenu(
-                                expanded = tuneExpanded,
-                                onDismissRequest = { tuneExpanded = false },
-                                modifier = Modifier.background(
-                                    color = colorResource(id = R.color.dropdown_bg),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                            ) {
-                                tuneOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = option.second, color = Color.White) },
-                                        onClick = {
-                                            onTuneModeChange(option.first); tuneExpanded = false
-                                        },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                    )
+
+                            // GPU Mode
+                            Column(modifier = Modifier.weight(1f)) {
+                                var gpuExpanded by remember { mutableStateOf(false) }
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = gpuExpanded,
+                                    onExpandedChange = { gpuExpanded = !gpuExpanded },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.gpu_mode),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            HelpButton(
+                                                title = stringResource(id = R.string.gpu_mode),
+                                                message = stringResource(id = R.string.help_gpu_mode_desc)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = tuneOptions.find { it.first == gpuMode }?.second ?: gpuMode,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = gpuExpanded) },
+                                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    ExposedDropdownMenu(
+                                        expanded = gpuExpanded,
+                                        onDismissRequest = { gpuExpanded = false },
+                                        modifier = Modifier.background(
+                                            color = colorResource(id = R.color.dropdown_bg),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                    ) {
+                                        tuneOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = option.second, color = Color.White) },
+                                                onClick = { onGpuModeChange(option.first); gpuExpanded = false },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Latency Mode
+                            Column(modifier = Modifier.weight(1f)) {
+                                var latExpanded by remember { mutableStateOf(false) }
+                                @OptIn(ExperimentalMaterial3Api::class)
+                                ExposedDropdownMenuBox(
+                                    expanded = latExpanded,
+                                    onExpandedChange = { latExpanded = !latExpanded },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = stringResource(id = R.string.latency_mode),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = colorResource(id = R.color.white)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            HelpButton(
+                                                title = stringResource(id = R.string.latency_mode),
+                                                message = stringResource(id = R.string.help_latency_mode_desc)
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = tuneOptions.find { it.first == latencyMode }?.second ?: latencyMode,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = latExpanded) },
+                                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedContainerColor = colorResource(id = R.color.card_bg),
+                                                unfocusedContainerColor = colorResource(id = R.color.card_bg),
+                                                focusedBorderColor = Color.Transparent,
+                                                unfocusedBorderColor = Color.Transparent
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            textStyle = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    ExposedDropdownMenu(
+                                        expanded = latExpanded,
+                                        onDismissRequest = { latExpanded = false },
+                                        modifier = Modifier.background(
+                                            color = colorResource(id = R.color.dropdown_bg),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                    ) {
+                                        tuneOptions.forEach { option ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = option.second, color = Color.White) },
+                                                onClick = { onLatencyModeChange(option.first); latExpanded = false },
+                                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1066,7 +1211,9 @@ fun ResolutionControlContent(
                                     onTextureFovChange("95")
                                     onMaxPwrLevelChange("0")
                                     onMinPwrLevelChange("6")
-                                    onTuneModeChange("2")
+                                    onCpuModeChange("2")
+                                    onGpuModeChange("2")
+                                    onLatencyModeChange("2")
                                 },
                                 modifier = Modifier.size(56.dp),
                                 shape = MaterialTheme.shapes.medium,
@@ -1160,7 +1307,9 @@ suspend fun fetchCurrentValues(
         var tfVal = "N/A"
         var maxPwr = "N/A"
         var minPwr = "N/A"
-        var tuneVal = "N/A"
+        var cpuVal = "N/A"
+        var gpuVal = "N/A"
+        var latVal = "N/A"
         var errorMsg = ""
 
         //######## Primary method: app_process via com.hamer.res3d.DbUpdater
@@ -1182,8 +1331,13 @@ suspend fun fetchCurrentValues(
                 minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
 
                 val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                tuneVal =
-                    if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
+                gpuVal = if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
+
+                val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
+                cpuVal = if (cpuGov == "performance") "1" else if (cpuGov == "schedutil") "2" else "N/A"
+
+                val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
+                latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
 
                 return@withContext ConfigValues(
                     resVal,
@@ -1192,7 +1346,9 @@ suspend fun fetchCurrentValues(
                     tfVal,
                     maxPwr,
                     minPwr,
-                    tuneVal
+                    cpuVal,
+                    gpuVal,
+                    latVal
                 ) to ""
             }
         } catch (e: Exception) {
@@ -1247,8 +1403,13 @@ suspend fun fetchCurrentValues(
             minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
 
             val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
-            tuneVal =
-                if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
+            gpuVal = if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
+
+            val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
+            cpuVal = if (cpuGov == "performance") "1" else if (cpuGov == "schedutil") "2" else "N/A"
+
+            val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
+            latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
 
         } catch (e: Exception) {
             errorMsg = e.message ?: "Unknown error"
@@ -1256,7 +1417,7 @@ suspend fun fetchCurrentValues(
             if (tempDb.exists()) tempDb.delete()
         }
 
-        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, tuneVal) to errorMsg
+        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, cpuVal, gpuVal, latVal) to errorMsg
     }
 
 suspend fun applySettings(
@@ -1266,7 +1427,9 @@ suspend fun applySettings(
     tf: String,
     maxPwr: String,
     minPwr: String,
-    tuneMode: String,
+    cpuMode: String,
+    gpuMode: String,
+    latencyMode: String,
     cacheDir: File,
     uid: Int,
     context: Context,
@@ -1284,47 +1447,31 @@ suspend fun applySettings(
             if (minPwr.isNotBlank())
                 initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
 
-            // Apply Tune Mode if selected
-            if (tuneMode == "1") { // Performance
-                // CPU 0 1 2 3
-                initialRootCmds.add("echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-                initialRootCmds.add("MAX=\$(awk '{print \$NF}' /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies) && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq")
+            // Apply CPU Mode
+            if (cpuMode == "1") { // Performance
+                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
+                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
+            } else if (cpuMode == "2") { // Stock
+                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
+                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
+            }
 
-                // CPU 4 5 6
-                initialRootCmds.add("echo performance > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor")
-                initialRootCmds.add("MAX=\$(awk '{print \$NF}' /sys/devices/system/cpu/cpufreq/policy4/scaling_available_frequencies) && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq")
-
-                // CPU 7
-                initialRootCmds.add("echo performance > /sys/devices/system/cpu/cpufreq/policy7/scaling_governor")
-                initialRootCmds.add("MAX=\$(awk '{print \$NF}' /sys/devices/system/cpu/cpufreq/policy7/scaling_available_frequencies) && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy7/scaling_max_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq")
-
-                // GPU
+            // Apply GPU Mode
+            if (gpuMode == "1") { // Performance
                 initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
                 initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
                 initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
-
-                //Latency
-                initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
-                initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
-            } else if (tuneMode == "2") { // Stock
-                // CPU 0 1 2 3
-                initialRootCmds.add("echo schedutil > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-                initialRootCmds.add("MIN=\$(cat /sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq) && MAX=\$(cat /sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq) && echo \$MIN > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq")
-
-                // CPU 4 5 6
-                initialRootCmds.add("echo schedutil > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor")
-                initialRootCmds.add("MIN=\$(cat /sys/devices/system/cpu/cpufreq/policy4/cpuinfo_min_freq) && MAX=\$(cat /sys/devices/system/cpu/cpufreq/policy4/cpuinfo_max_freq) && echo \$MIN > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq")
-
-                // CPU 7
-                initialRootCmds.add("echo schedutil > /sys/devices/system/cpu/cpufreq/policy7/scaling_governor")
-                initialRootCmds.add("MIN=\$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_min_freq) && MAX=\$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq) && echo \$MIN > /sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy7/scaling_max_freq")
-
-                // GPU
+            } else if (gpuMode == "2") { // Stock
                 initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
                 initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
                 initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
+            }
 
-                //Latency
+            // Apply Latency Mode
+            if (latencyMode == "1") { // Performance
+                initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
+                initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
+            } else if (latencyMode == "2") { // Stock
                 initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
                 initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
             }
@@ -1356,7 +1503,7 @@ suspend fun applySettings(
 
                     val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
                     val relayPath = "/data/local/tmp/res3d_pwr.relay"
-                    val relayCmd = "echo $maxPwr:$minPwr:$tuneMode > $relayPath"
+                    val relayCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode > $relayPath"
 
                     runRootCommand(
                         "chmod 664 ${prefFile.absolutePath}",
@@ -1602,14 +1749,16 @@ suspend fun checkAndEnableXposedScope(packageName: String) = withContext(Dispatc
 fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
-            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2"),
+            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2"),
             resolution = "2160",
             stencilMesh = "1",
             ffr = "1",
             textureFov = "95",
             maxPwrLevel = "0",
             minPwrLevel = "6",
-            tuneMode = "2",
+            cpuMode = "2",
+            gpuMode = "2",
+            latencyMode = "2",
             status = "Ready",
             onResolutionChange = {},
             onStencilMeshChange = {},
@@ -1617,7 +1766,9 @@ fun ResolutionControlPreview() {
             onTextureFovChange = {},
             onMaxPwrLevelChange = {},
             onMinPwrLevelChange = {},
-            onTuneModeChange = {},
+            onCpuModeChange = {},
+            onGpuModeChange = {},
+            onLatencyModeChange = {},
             databaseChanged = true,
             onApplyClick = {}
         )
