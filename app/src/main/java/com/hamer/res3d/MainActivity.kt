@@ -177,6 +177,10 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     val resources = context.resources
     val appUid = android.os.Process.myUid()
 
+    LaunchedEffect(Unit) {
+        checkAndEnableXposedScope(context.packageName)
+    }
+
     fun refreshValues() {
         scope.launch {
             val (values, error) = fetchCurrentValues(cacheDir, appUid, context)
@@ -1404,6 +1408,17 @@ private fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, Str
         } catch (ignore: Exception) {
         }
         process?.destroy()
+    }
+}
+
+suspend fun checkAndEnableXposedScope(packageName: String) = withContext(Dispatchers.IO) {
+    val checkCmd = "/data/adb/lspd/cli scope ls $packageName || /data/adb/modules/zygisk_vector/cli scope ls $packageName"
+    val (_, output) = runRootCommandWithOutput(checkCmd)
+
+    if (!output.contains("system_server")) {
+        val enableCmd = "/data/adb/lspd/cli modules enable $packageName || /data/adb/modules/zygisk_vector/cli modules enable $packageName"
+        val addScopeCmd = "/data/adb/lspd/cli scope add $packageName system_server || /data/adb/modules/zygisk_vector/cli scope add $packageName system_server"
+        runRootCommand(enableCmd, addScopeCmd)
     }
 }
 
