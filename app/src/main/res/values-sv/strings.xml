@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimum effekt</string>
     <string name="pwr_deep_idle">Energisparläge</string>
     <string name="tune_mode">Trimningsläge</string>
+    <string name="cpu_mode">CPU-läge</string>
+    <string name="gpu_mode">GPU-läge</string>
+    <string name="latency_mode">Latensläge</string>
     <string name="tune_stock">Standard</string>
     <string name="tune_performance">Prestanda</string>
     <string name="help_tune_mode_desc">Tillämpar systemomfattende kärn- och governor-optimeringer. Prestandaläge ställer in CPU/GPU på prestanda-governors och minskar schemaläggningslatens. Standard återställer systemets standardbeteende.</string>
+    <string name="help_cpu_mode_desc">Ställer in CPU-skalningsgovernor. Prestanda låser alla kärnor till maximal frekvens. Standard låter systemet balansera prestanda och strömförbrukning.</string>
+    <string name="help_gpu_mode_desc">Ställer in GPU-governor och effektgränser. Prestanda ställer in governor på prestanda och inaktiverar strypning. Standard återställer standardströmhanteringen.</string>
+    <string name="help_latency_mode_desc">Justerar parametrar för kärnschemaläggning. Prestanda minskar schemaläggningslatens för bättre responstid. Standard använder kärnans standardvärden.</string>
     <string name="close">Stäng</string>
 </resources>

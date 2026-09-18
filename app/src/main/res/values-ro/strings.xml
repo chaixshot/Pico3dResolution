@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Putere minimă</string>
     <string name="pwr_deep_idle">Economisire energie</string>
     <string name="tune_mode">Mod de reglare</string>
+    <string name="cpu_mode">Mod CPU</string>
+    <string name="gpu_mode">Mod GPU</string>
+    <string name="latency_mode">Mod Latență</string>
     <string name="tune_stock">Stoc</string>
     <string name="tune_performance">Performanță</string>
     <string name="help_tune_mode_desc">Aplică optimizări de kernel și guvernator la nivelul întregului sistem. Modul de performanță setează CPU/GPU pe guvernatori de performanță și reduce latența de programare. Stoc restabilește comportamentul implicit al sistemului.</string>
+    <string name="help_cpu_mode_desc">Setează guvernatorul de scalare a CPU. Performanță blochează toate nucleele la frecvența maximă. Stoc permite sistemului să echilibreze performanța și consumul.</string>
+    <string name="help_gpu_mode_desc">Setează guvernatorul și limitele de putere GPU. Performanță setează guvernatorul pe performanță și dezactivează limitarea. Stoc restabilește gestionarea implicită a energiei.</string>
+    <string name="help_latency_mode_desc">Ajustează parametrii de programare a kernelului. Performanță reduce latența de programare pentru o mai bună receptivitate. Stoc folosește valorile implicite ale kernelului.</string>
     <string name="close">Închide</string>
 </resources>

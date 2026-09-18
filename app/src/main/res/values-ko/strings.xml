@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">최소 전력</string>
     <string name="pwr_deep_idle">절전</string>
     <string name="tune_mode">튜닝 모드</string>
+    <string name="cpu_mode">CPU 모드</string>
+    <string name="gpu_mode">GPU 모드</string>
+    <string name="latency_mode">지연 시간 모드</string>
     <string name="tune_stock">순정</string>
     <string name="tune_performance">성능</string>
     <string name="help_tune_mode_desc">시스템 전반의 커널 및 거버너 최적화를 적용합니다. 성능 모드는 CPU/GPU를 성능 거버너로 설정하고 스케줄링 대기 시간을 줄입니다. 순정은 기본 시스템 동작을 복원합니다.</string>
+    <string name="help_cpu_mode_desc">CPU 스케일링 거버너를 설정합니다. 성능은 모든 코어를 최대 주파수로 고정합니다. 순정은 시스템이 성능과 전력의 균형을 맞추도록 허용합니다.</string>
+    <string name="help_gpu_mode_desc">GPU 거버너 및 전력 제한을 설정합니다. 성능은 거버너를 성능으로 설정하고 스로틀링을 비활성화합니다. 순정은 기본 전력 관리를 복원합니다.</string>
+    <string name="help_latency_mode_desc">커널 스케줄링 매개변수를 조정합니다. 성능은 더 나은 응답성을 위해 스케줄링 지연 시간을 줄입니다. 순정은 기본 커널 값을 사용합니다.</string>
     <string name="close">닫기</string>
 </resources>

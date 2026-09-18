@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Potência mínima</string>
     <string name="pwr_deep_idle">Economia de energia</string>
     <string name="tune_mode">Modo de ajuste</string>
+    <string name="cpu_mode">Modo CPU</string>
+    <string name="gpu_mode">Modo GPU</string>
+    <string name="latency_mode">Modo de Latência</string>
     <string name="tune_stock">Original</string>
     <string name="tune_performance">Desempenho</string>
     <string name="help_tune_mode_desc">Aplica otimizações de kernel e governor em todo o sistema. O modo de desempenho define a CPU/GPU para governors de desempenho e reduz a latência de agendamento. O modo Original restaura o comportamento padrão do sistema.</string>
+    <string name="help_cpu_mode_desc">Define o governor de frequência da CPU. Desempenho bloqueia todos os núcleos na frequência máxima. O modo Original permite que o sistema equilibre desempenho e energia.</string>
+    <string name="help_gpu_mode_desc">Define o governor da GPU e os limites de potência. Desempenho ajusta o governor para desempenho e desativa o throttling. O modo Original restaura o gerenciamento de energia padrão.</string>
+    <string name="help_latency_mode_desc">Ajusta os parâmetros de agendamento do kernel. Desempenho reduz a latência de agendamento para uma melhor resposta. O modo Original usa os valores padrão do kernel.</string>
     <string name="close">Fechar</string>
 </resources>

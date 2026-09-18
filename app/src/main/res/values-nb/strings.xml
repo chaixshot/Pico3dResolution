@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimum strømforbruk</string>
     <string name="pwr_deep_idle">Strømsparing</string>
     <string name="tune_mode">Tune-modus</string>
+    <string name="cpu_mode">CPU-modus</string>
+    <string name="gpu_mode">GPU-modus</string>
+    <string name="latency_mode">Forsinkelsesmodus</string>
     <string name="tune_stock">Standard</string>
     <string name="tune_performance">Ytelse</string>
     <string name="help_tune_mode_desc">Bruker systemomfattende kjerne- og governor-optimaliseringer. Ytelsesmodus setter CPU/GPU til ytelses-governors og reduserer planleggingsforsinkelse. Standard gjenoppretter standard systematferd.</string>
+    <string name="help_cpu_mode_desc">Angir CPU-skaleringsgovernor. Ytelse låser alle kjerner til maksimal frekvens. Standard lar systemet balansere ytelse og strømforbruk.</string>
+    <string name="help_gpu_mode_desc">Angir GPU-governor og strømgrenser. Ytelse setter governor til ytelse og deaktiverer ytelsesbegrensning. Standard gjenoppretter standard strømstyring.</string>
+    <string name="help_latency_mode_desc">Justerer parametere for kjerneplanlegging. Ytelse reduserer planleggingsforsinkelse for bedre respons. Standard bruker standard kjerneverdier.</string>
     <string name="close">Lukk</string>
 </resources>

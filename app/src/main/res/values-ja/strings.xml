@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">最小電力</string>
     <string name="pwr_deep_idle">省電力</string>
     <string name="tune_mode">チューニングモード</string>
+    <string name="cpu_mode">CPUモード</string>
+    <string name="gpu_mode">GPUモード</string>
+    <string name="latency_mode">レイテンシモード</string>
     <string name="tune_stock">ストック</string>
     <string name="tune_performance">パフォーマンス</string>
     <string name="help_tune_mode_desc">システム全体のカーネルとガバナーの最適化を適用します。パフォーマンスモードでは、CPU/GPUをパフォーマンスガバナーに設定し、スケジューリングの遅延を減らします。ストックはシステムのデフォルトの動作を復元します。 </string>
+    <string name="help_cpu_mode_desc">CPUスケーリングガバナーを設定します。パフォーマンスはすべてのコアを最大周波数に固定します。ストックはシステムがパフォーマンスと電力のバランスを取ることを許可します。</string>
+    <string name="help_gpu_mode_desc">GPUガバナーと電力制限を設定します。パフォーマンスはガバナーをパフォーマンスに設定し、スロットリングを無効にします。ストックはデフォルトの電力管理を復元します。</string>
+    <string name="help_latency_mode_desc">カーネルのスケジューリングパラメータを調整します。パフォーマンスはスケジューリングの遅延を減らし、応答性を向上させます。ストックはデフォルトのカーネル値を使用します。</string>
     <string name="close">閉じる</string>
 </resources>

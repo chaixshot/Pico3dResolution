@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Puissance minimale</string>
     <string name="pwr_deep_idle">Économie d\'énergie</string>
     <string name="tune_mode">Mode de réglage</string>
+    <string name="cpu_mode">Mode CPU</string>
+    <string name="gpu_mode">Mode GPU</string>
+    <string name="latency_mode">Mode de latence</string>
     <string name="tune_stock">D\'origine</string>
     <string name="tune_performance">Performance</string>
     <string name="help_tune_mode_desc">Applique des optimisations du noyau et du gouverneur à l\'échelle du système. Le mode Performance règle le CPU/GPU sur des gouverneurs de performance et réduit la latence de planification. Le mode D\'origine restaure le comportement par défaut du système.</string>
+    <string name="help_cpu_mode_desc">Définit le gouverneur de fréquence du CPU. Le mode Performance verrouille tous les cœurs à la fréquence maximale. Le mode D\'origine permet au système d\'équilibrer les performances et la consommation.</string>
+    <string name="help_gpu_mode_desc">Définit le gouverneur GPU et les limites de puissance. Le mode Performance règle le gouverneur sur performance et désactive le bridage. Le mode D\'origine restaure la gestion de l\'alimentation par défaut.</string>
+    <string name="help_latency_mode_desc">Ajuste les paramètres de planification du noyau. Le mode Performance réduit la latence de planification pour une meilleure réactivité. Le mode D\'origine utilise les valeurs par défaut du noyau.</string>
     <string name="close">Fermer</string>
 </resources>

@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">พลังงานขั้นต่ำ</string>
     <string name="pwr_deep_idle">ประหยัดพลังงาน</string>
     <string name="tune_mode">โหมดปรับแต่ง</string>
+    <string name="cpu_mode">โหมด CPU</string>
+    <string name="gpu_mode">โหมด GPU</string>
+    <string name="latency_mode">โหมดความหน่วง</string>
     <string name="tune_stock">มาตรฐาน</string>
     <string name="tune_performance">ประสิทธิภาพ</string>
     <string name="help_tune_mode_desc">ใช้การเพิ่มประสิทธิภาพเคอร์เนลและตัวควบคุมทั่วทั้งระบบ โหมดประสิทธิภาพจะตั้งค่า CPU/GPU ให้เป็นตัวควบคุมประสิทธิภาพและลดเวลาในการจัดตารางเวลา โหมดมาตรฐานจะคืนค่าพฤติกรรมเริ่มต้นของระบบ</string>
+    <string name="help_cpu_mode_desc">ตั้งค่าตัวควบคุมการสเกล CPU โหมดประสิทธิภาพจะล็อกคอร์ทั้งหมดไว้ที่ความถี่สูงสุด โหมดมาตรฐานจะช่วยให้ระบบรักษาสมดุลระหว่างประสิทธิภาพและพลังงาน</string>
+    <string name="help_gpu_mode_desc">ตั้งค่าตัวควบคุม GPU และขีดจำกัดพลังงาน โหมดประสิทธิภาพจะตั้งค่าตัวควบคุมเป็นประสิทธิภาพและปิดใช้งานการจำกัดความเร็ว โหมดมาตรฐานจะคืนค่าการจัดการพลังงานเริ่มต้น</string>
+    <string name="help_latency_mode_desc">ปรับพารามิเตอร์การจัดตารางเวลาของเคอร์เนล โหมดประสิทธิภาพจะลดความหน่วงในการจัดตารางเวลาเพื่อการตอบสนองที่ดีขึ้น โหมดมาตรฐานจะใช้ค่าเคอร์เนลเริ่มต้น</string>
     <string name="close">ปิด</string>
 </resources>

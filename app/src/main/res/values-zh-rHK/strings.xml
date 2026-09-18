@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">最低功耗</string>
     <string name="pwr_deep_idle">省電</string>
     <string name="tune_mode">調節模式</string>
+    <string name="cpu_mode">CPU 模式</string>
+    <string name="gpu_mode">GPU 模式</string>
+    <string name="latency_mode">延遲模式</string>
     <string name="tune_stock">原廠</string>
     <string name="tune_performance">性能</string>
     <string name="help_tune_mode_desc">套用系統範圍的內核和調節器優化。性能模式將 CPU/GPU 設置為性能調節器並減少調度延遲。原廠恢復默認系統行為。</string>
+    <string name="help_cpu_mode_desc">設置 CPU 調頻調節器。性能模式將所有核心鎖定至最大頻率。原廠模式允許系統平衡性能與功耗。</string>
+    <string name="help_gpu_mode_desc">設置 GPU 調節器和功率限制。性能模式將調節器設置為性能並禁用降頻。原廠模式恢復默認電源管理。</string>
+    <string name="help_latency_mode_desc">調整內核調度參數。性能模式減少調度延遲以提供更好的響應速度。原廠模式使用默認內核值。</string>
     <string name="close">關閉</string>
 </resources>

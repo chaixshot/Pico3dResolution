@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimiteho</string>
     <string name="pwr_deep_idle">Virransäästö</string>
     <string name="tune_mode">Viritystila</string>
+    <string name="cpu_mode">CPU-tila</string>
+    <string name="gpu_mode">GPU-tila</string>
+    <string name="latency_mode">Viivetila</string>
     <string name="tune_stock">Vakio</string>
     <string name="tune_performance">Suorituskyky</string>
     <string name="help_tune_mode_desc">Käyttää järjestelmänlaajuisia ydin- ja säädinoptimointeja. Suorituskykytila asettaa CPU:n/GPU:n suorituskykysäätimiin ja vähentää aikataulutusviivettä. Vakio palauttaa järjestelmän oletuskäyttäytymisen.</string>
+    <string name="help_cpu_mode_desc">Asettaa CPU:n taajuussäätimen. Suorituskyky lukitsee kaikki ytimet enimmäistaajuudelle. Vakio antaa järjestelmän tasapainottaa suorituskykyä ja virrankulutusta.</string>
+    <string name="help_gpu_mode_desc">Asettaa GPU-säätimen ja tehorajat. Suorituskyky asettaa säätimen suorituskykytilaan ja poistaa kuristuksen käytöstä. Vakio palauttaa virranhallinnan oletusasetukset.</string>
+    <string name="help_latency_mode_desc">Säätää ytimen aikataulutusparameters. Suorituskyky vähentää aikataulutusviivettä paremman reagoivuuden saavuttamiseksi. Vakio käyttää ytimen oletusarvoja.</string>
     <string name="close">Sulje</string>
 </resources>

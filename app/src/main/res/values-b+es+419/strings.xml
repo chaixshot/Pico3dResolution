@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Potencia mínima</string>
     <string name="pwr_deep_idle">Ahorro de energía</string>
     <string name="tune_mode">Modo de ajuste</string>
+    <string name="cpu_mode">Modo CPU</string>
+    <string name="gpu_mode">Modo GPU</string>
+    <string name="latency_mode">Modo de latencia</string>
     <string name="tune_stock">Stock</string>
     <string name="tune_performance">Rendimiento</string>
     <string name="help_tune_mode_desc">Aplica optimizaciones de kernel y gobernador en todo el sistema. El modo de rendimiento establece la CPU/GPU en gobernadores de rendimiento y reduce la latencia de programación. Stock restaura el comportamiento predeterminado del sistema.</string>
+    <string name="help_cpu_mode_desc">Establece el gobernador de frecuencia de la CPU. Rendimiento fija todos los núcleos a la frecuencia máxima. Stock permite que el sistema equilibre el rendimiento y el consumo.</string>
+    <string name="help_gpu_mode_desc">Establece el gobernador y los límites de potencia de la GPU. Rendimiento ajusta el gobernador a rendimiento y deshabilita la limitación térmica. Stock restaura la gestión de energía predeterminada.</string>
+    <string name="help_latency_mode_desc">Ajusta los parámetros de programación del kernel. Rendimiento reduce la latencia de programación para una mejor respuesta. Stock usa los valores predeterminados del kernel.</string>
     <string name="close">Cerrar</string>
 </resources>

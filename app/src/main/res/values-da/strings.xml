@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimum strømforbrug</string>
     <string name="pwr_deep_idle">Strømbesparelse</string>
     <string name="tune_mode">Tune-tilstand</string>
+    <string name="cpu_mode">CPU-tilstand</string>
+    <string name="gpu_mode">GPU-tilstand</string>
+    <string name="latency_mode">Latenstilstand</string>
     <string name="tune_stock">Standard</string>
     <string name="tune_performance">Ydeevne</string>
     <string name="help_tune_mode_desc">Anvender systemdækkende kerne- og governor-optimeringer. Ydeevne-tilstand sætter CPU/GPU til ydeevne-governors og reducerer planlægningsforsinkelse. Standard gendanner systemets standardadfærd.</string>
+    <string name="help_cpu_mode_desc">Indstiller CPU-frekvens-governor. Ydeevne låser alle kerner til maksimal frekvens. Standard lader systemet balancere ydeevne og strømforbrug.</string>
+    <string name="help_gpu_mode_desc">Indstiller GPU-governor og strømgrænser. Ydeevne sætter governor til ydeevne og deaktiverer drosling. Standard gendanner standard strømstyring.</string>
+    <string name="help_latency_mode_desc">Justerer parametre for kjerneplanlægning. Ydeevne reducerer planlægningsforsinkelse for bedre responstid. Standard bruger kerne-standardværdier.</string>
     <string name="close">Luk</string>
 </resources>

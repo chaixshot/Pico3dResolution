@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimum Power</string>
     <string name="pwr_deep_idle">Power Saving</string>
     <string name="tune_mode">Tune Mode</string>
+    <string name="cpu_mode">CPU Mode</string>
+    <string name="gpu_mode">GPU Mode</string>
+    <string name="latency_mode">Latency Mode</string>
     <string name="tune_stock">Stock</string>
     <string name="tune_performance">Performance</string>
     <string name="help_tune_mode_desc">Applies system-wide kernel and governor optimizations. Performance mode sets CPU/GPU to performance governors and reduces scheduling latency. Stock restores default system behavior.</string>
+    <string name="help_cpu_mode_desc">Sets the CPU scaling governor. Performance locks all cores to maximum frequency. Stock allows the system to balance performance and power.</string>
+    <string name="help_gpu_mode_desc">Sets the GPU governor and power limits. Performance sets the governor to performance and disables throttling. Stock restores default power management.</string>
+    <string name="help_latency_mode_desc">Adjusts kernel scheduling parameters. Performance reduces scheduling latency for better responsiveness. Stock uses default kernel values.</string>
     <string name="close">Close</string>
 </resources>

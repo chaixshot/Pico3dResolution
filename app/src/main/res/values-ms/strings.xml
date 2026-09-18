@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Kuasa Minimum</string>
     <string name="pwr_deep_idle">Penjimatan Kuasa</string>
     <string name="tune_mode">Mod Penalaan</string>
+    <string name="cpu_mode">Mod CPU</string>
+    <string name="gpu_mode">Mod GPU</string>
+    <string name="latency_mode">Mod Kependaman</string>
     <string name="tune_stock">Stok</string>
     <string name="tune_performance">Prestasi</string>
     <string name="help_tune_mode_desc">Menggunakan pengoptimuman kernel dan gabenor seluruh sistem. Mod prestasi menetapkan CPU/GPU kepada gabenor prestasi dan mengurangkan kependaman penjadualan. Stok memulihkan tingkah laku sistem lalai.</string>
+    <string name="help_cpu_mode_desc">Menetapkan gabenor skala CPU. Prestasi mengunci semua teras pada frekuensi maksimum. Stok membolehkan sistem mengimbangi prestasi dan kuasa.</string>
+    <string name="help_gpu_mode_desc">Menetapkan gabenor GPU dan had kuasa. Prestasi menetapkan gabenor kepada prestasi dan melumpuhkan pendikit. Stok memulihkan pengurusan kuasa lalai.</string>
+    <string name="help_latency_mode_desc">Melaraskan parameter penjadualan kernel. Prestasi mengurangkan kependaman penjadualan untuk tindak balas yang lebih baik. Stok menggunakan nilai kernel lalai.</string>
     <string name="close">Tutup</string>
 </resources>

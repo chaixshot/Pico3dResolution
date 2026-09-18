@@ -39,33 +39,30 @@ class GuardianService : Service() {
                                     val levels = content.split(":")
                                     val maxPwr = levels.getOrNull(0)?.trim() ?: ""
                                     val minPwr = levels.getOrNull(1)?.trim() ?: ""
-                                    val tuneMode = levels.getOrNull(2)?.trim() ?: ""
+                                    val cpuMode = levels.getOrNull(2)?.trim() ?: ""
+                                    val gpuMode = levels.getOrNull(3)?.trim() ?: ""
+                                    val latencyMode = levels.getOrNull(4)?.trim() ?: ""
 
                                     if (maxPwr.isNotBlank())
                                         execRoot("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
                                     if (minPwr.isNotBlank())
                                         execRoot("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
 
-                                    // Apply Tune Mode if selected
-                                    if (tuneMode == "1") { // Performance
-                                        // CPU 0 1 2 3
-                                        execRoot("echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-                                        execRoot("MAX=\$(awk '{print \$NF}' /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies) && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq")
+                                    // Apply CPU Mode
+                                    if (cpuMode == "1") { // Performance
+                                        execRoot("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
+                                        execRoot("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
+                                    }
 
-                                        // CPU 4 5 6
-                                        execRoot("echo performance > /sys/devices/system/cpu/cpufreq/policy4/scaling_governor")
-                                        execRoot("MAX=\$(awk '{print \$NF}' /sys/devices/system/cpu/cpufreq/policy4/scaling_available_frequencies) && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq")
-
-                                        // CPU 7
-                                        execRoot("echo performance > /sys/devices/system/cpu/cpufreq/policy7/scaling_governor")
-                                        execRoot("MAX=\$(awk '{print \$NF}' /sys/devices/system/cpu/cpufreq/policy7/scaling_available_frequencies) && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy7/scaling_max_freq && echo \$MAX > /sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq")
-
-                                        // GPU
+                                    // Apply GPU Mode
+                                    if (gpuMode == "1") { // Performance
                                         execRoot("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
                                         execRoot("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
                                         execRoot("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
+                                    }
 
-                                        //Latency
+                                    // Apply Latency Mode
+                                    if (latencyMode == "1") { // Performance
                                         execRoot("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
                                         execRoot("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
                                     }

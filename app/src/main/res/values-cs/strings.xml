@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimální výkon</string>
     <string name="pwr_deep_idle">Úspora energie</string>
     <string name="tune_mode">Režim ladění</string>
+    <string name="cpu_mode">Režim CPU</string>
+    <string name="gpu_mode">Režim GPU</string>
+    <string name="latency_mode">Režim latence</string>
     <string name="tune_stock">Výchozí (Stock)</string>
     <string name="tune_performance">Výkon</string>
     <string name="help_tune_mode_desc">Použije optimalizace jádra a regulátoru v celém systému. Režim výkonu nastaví CPU/GPU na regulátory výkonu a sníží latenci plánování. Výchozí (Stock) obnoví výchozí chování systému.</string>
+    <string name="help_cpu_mode_desc">Nastaví regulátor frekvence CPU. Výkon uzamkne všechna jádra na maximální frekvenci. Výchozí (Stock) umožňuje systému vyvážit výkon a spotřebu.</string>
+    <string name="help_gpu_mode_desc">Nastaví regulátor a limity výkonu GPU. Výkon nastaví regulátor na výkon a zakáže omezení výkonu (throttling). Výchozí (Stock) obnoví výchozí správu napájení.</string>
+    <string name="help_latency_mode_desc">Upravuje parametry plánování jádra. Výkon snižuje latenci plánování pro lepší odezvu. Výchozí (Stock) používá výchozí hodnoty jádra.</string>
     <string name="close">Zavřít</string>
 </resources>

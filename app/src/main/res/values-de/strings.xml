@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimale Leistung</string>
     <string name="pwr_deep_idle">Energiesparmodus</string>
     <string name="tune_mode">Tuning-Modus</string>
+    <string name="cpu_mode">CPU-Modus</string>
+    <string name="gpu_mode">GPU-Modus</string>
+    <string name="latency_mode">Latenz-Modus</string>
     <string name="tune_stock">Standard</string>
     <string name="tune_performance">Leistung</string>
     <string name="help_tune_mode_desc">Wende systemweite Kernel- und Governor-Optimierungen an. Der Leistungsmodus setzt CPU/GPU auf Leistungs-Governors und reduziert die Scheduling-Latenz. Standard stellt das Standardverhalten des Systems wieder her.</string>
+    <string name="help_cpu_mode_desc">Legt den CPU-Takt-Governor fest. Leistung sperrt alle Kerne auf die maximale Frequenz. Standard ermöglicht dem System, Leistung und Energie auszubalancieren.</string>
+    <string name="help_gpu_mode_desc">Legt den GPU-Governor und die Leistungsgrenzen fest. Leistung stellt den Governor auf Leistung ein und deaktiviert Throttling. Standard stellt die Standard-Energieverwaltung wieder her.</string>
+    <string name="help_latency_mode_desc">Passt die Kernel-Scheduling-Parameter an. Leistung reduziert die Scheduling-Latenz für eine bessere Reaktionsfähigkeit. Standard verwendet die Kernel-Standardwerte.</string>
     <string name="close">Schließen</string>
 </resources>

@@ -49,8 +49,14 @@
     <string name="pwr_minimum_power">Minimum Güç</string>
     <string name="pwr_deep_idle">Güç Tasarrufu</string>
     <string name="tune_mode">Ayar Modu</string>
+    <string name="cpu_mode">CPU Modu</string>
+    <string name="gpu_mode">GPU Modu</string>
+    <string name="latency_mode">Gecikme Modu</string>
     <string name="tune_stock">Stok</string>
     <string name="tune_performance">Performans</string>
     <string name="help_tune_mode_desc">Sistem genelinde çekirdek ve yönetici optimizasyonlarını uygular. Performans modu, CPU/GPU\'yu performans yöneticilerine ayarlar ve zamanlama gecikmesini azaltır. Stok, varsayılan sistem davranışını geri yükler.</string>
+    <string name="help_cpu_mode_desc">CPU ölçekleme yöneticisini ayarlar. Performans tüm çekirdekleri maksimum frekansa kilitler. Stok, sistemin performans ve güç dengesini kurmasına izin verir.</string>
+    <string name="help_gpu_mode_desc">GPU yöneticisini ve güç sınırlarını ayarlar. Performans, yöneticiyi performansa ayarlar ve kısıtlamayı devre dışı bırakır. Stok varsayılan güç yönetimini geri yükler.</string>
+    <string name="help_latency_mode_desc">Çekirdek zamanlama parametrelerini ayarlar. Performans, daha iyi yanıt verebilirlik için zamanlama gecikmesini azaltır. Stok varsayılan çekirdek değerlerini kullanır.</string>
     <string name="close">Kapat</string>
 </resources>
