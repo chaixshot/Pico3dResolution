@@ -13,7 +13,7 @@
 
 <image src="Resource/screenshot.jpeg" width="400"/>
 
-## 🌟 Key Features
+## 🌟 Key Features 
 
 * **🎯 Global Resolution Scaling:** Change the internal rendering resolution for all 3D VR applications.
 * **⚡ GPU Power Level Controls:** Manually set the GPU's `max_pwrlevel` and `min_pwrlevel` to lock performance states (ranging from Peak Performance to Power Saving).
