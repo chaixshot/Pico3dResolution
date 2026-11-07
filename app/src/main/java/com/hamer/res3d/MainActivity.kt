@@ -1637,17 +1637,8 @@ suspend fun applySettings(
                 val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
                 if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                    if (primaryWorked) {
-                        val timestampTrigger = "${System.currentTimeMillis()}1"
-                        runRootCommand(
-                            "settings put global sys_set_vrshell_eyebuffer '$res'",
-                            "settings put global scene_change_type '$timestampTrigger'",
-                        )
-                        return@withContext true to context.getString(R.string.status_applied_success)
-                    } else {
-                        runRootCommand("reboot")
-                        return@withContext true to context.getString(R.string.status_rebooting)
-                    }
+                    runRootCommand("reboot")
+                    return@withContext true to context.getString(R.string.status_rebooting)
                 } else {
                     return@withContext false to context.getString(R.string.status_verify_failed)
                 }
