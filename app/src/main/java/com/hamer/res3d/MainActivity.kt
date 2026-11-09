@@ -1,17 +1,11 @@
 package com.hamer.res3d
 
-import android.content.Context
-import android.content.Intent
-import android.database.sqlite.SQLiteDatabase
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -21,8 +15,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.DisplaySettings
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
@@ -58,14 +53,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.hamer.res3d.ui.theme.Pico3dResolutionTheme
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.DataOutputStream
-import java.io.File
-import java.io.InputStreamReader
 
 enum class NavTab {
     HOME,
@@ -120,7 +109,7 @@ fun rememberLauncherIcon(): ImageBitmap? {
                 it.intrinsicHeight.coerceAtLeast(1),
                 Bitmap.Config.ARGB_8888
             )
-            val canvas = Canvas(bitmap)
+            val canvas = android.graphics.Canvas(bitmap)
             it.setBounds(0, 0, canvas.width, canvas.height)
             it.draw(canvas)
             bitmap.asImageBitmap()
@@ -128,40 +117,25 @@ fun rememberLauncherIcon(): ImageBitmap? {
     }
 }
 
-const val DB_PATH = "/data/user_de/0/com.pvr.configuration/databases/config.db"
-const val TEMP_READ_DB = "config_temp.db"
-const val TEMP_APPLY_DB = "config_apply.db"
-
 @Composable
 fun Modifier.picoScrollbar(
     state: ScrollState,
     rightOffset: Dp = 4.dp
 ): Modifier {
-    val alpha = remember { Animatable(0f) }
-
-    LaunchedEffect(state.isScrollInProgress, state.value) {
-        if (state.maxValue > 0) {
-            alpha.animateTo(0.6f, animationSpec = tween(durationMillis = 150))
-            if (!state.isScrollInProgress) {
-                delay(1000L)
-                alpha.animateTo(0f, animationSpec = tween(durationMillis = 500))
-            }
-        } else {
-            alpha.snapTo(0f)
-        }
-    }
-
+    val scrollbarColor = colorResource(id = R.color.scrollbar)
     return this.drawWithContent {
         drawContent()
-        if (state.maxValue > 0 && alpha.value > 0f) {
+        if (state.maxValue > 0) {
             val verticalInset = 12.dp.toPx()
             val barWidth = 3.dp.toPx()
             val viewHeight = size.height
             val drawableHeight = viewHeight - (verticalInset * 2)
 
-            val minKnobHeight = 36.dp.toPx()
-            val knobHeight = (drawableHeight * (drawableHeight / (drawableHeight + state.maxValue)))
-                .coerceIn(minKnobHeight, drawableHeight)
+            val minKnobHeight = 16.dp.toPx()
+            val maxKnobHeight = 300.dp.toPx()
+            val contentRatio = drawableHeight / (drawableHeight + state.maxValue)
+            val knobHeight = (drawableHeight * contentRatio)
+                .coerceIn(minKnobHeight, maxKnobHeight)
 
             val scrollProgress = state.value.toFloat() / state.maxValue
             val topOffset = verticalInset + (scrollProgress * (drawableHeight - knobHeight))
@@ -169,7 +143,7 @@ fun Modifier.picoScrollbar(
             val xPos = size.width - rightOffset.toPx() - barWidth
 
             drawRoundRect(
-                color = Color.White.copy(alpha = alpha.value),
+                color = scrollbarColor,
                 topLeft = Offset(xPos, topOffset),
                 size = Size(barWidth, knobHeight),
                 cornerRadius = CornerRadius(barWidth / 2, barWidth / 2)
@@ -200,21 +174,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class ConfigValues(
-    val resolution: String = "Unknown",
-    val stencilMesh: String = "Unknown",
-    val ffr: String = "Unknown",
-    val textureFov: String = "Unknown",
-    val maxPwrLevel: String = "Unknown",
-    val minPwrLevel: String = "Unknown",
-    val cpuMode: String = "Unknown",
-    val gpuMode: String = "Unknown",
-    val latencyMode: String = "Unknown",
-    val cpuSet: String = "Unknown"
-)
-
 @Composable
-fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
+fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
     var selectedTab by remember { mutableStateOf(NavTab.HOME) }
     var resolution by remember { mutableStateOf("") }
     var stencilMesh by remember { mutableStateOf("") }
@@ -228,6 +189,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var cpuSet by remember { mutableStateOf("2") } // Default is Stock (2)
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
+    var liveStats by remember { mutableStateOf(LiveStats()) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val storageContext = context.createDeviceProtectedStorageContext()
@@ -236,6 +198,15 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
 
     LaunchedEffect(Unit) {
         checkAndEnableXposedScope(context.packageName)
+    }
+
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == NavTab.HOME) {
+            while (true) {
+                liveStats = fetchLiveStats()
+                delay(1500L)
+            }
+        }
     }
 
     fun refreshValues() {
@@ -304,6 +275,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         selectedTab = selectedTab,
         onTabSelected = { selectedTab = it },
         currentValues = currentValues,
+        liveStats = liveStats,
         resolution = resolution,
         stencilMesh = stencilMesh,
         ffr = ffr,
@@ -346,6 +318,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         databaseChanged = true
                     )
                     if (success) {
+                        refreshValues()
                         status = if (error == "Success. Rebooting...") {
                             resources.getString(R.string.status_rebooting)
                         } else {
@@ -382,6 +355,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         databaseChanged = false
                     )
                     if (success) {
+                        refreshValues()
                         status = resources.getString(R.string.status_applied_success)
                     } else {
                         status = resources.getString(R.string.status_error_prefix, error)
@@ -398,6 +372,7 @@ fun ResolutionControlContent(
     selectedTab: NavTab,
     onTabSelected: (NavTab) -> Unit,
     currentValues: ConfigValues,
+    liveStats: LiveStats,
     resolution: String,
     stencilMesh: String,
     ffr: String,
@@ -431,7 +406,6 @@ fun ResolutionControlContent(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
         ) {
             // Left Sidebar Navigation
             PicoSidebar(
@@ -440,6 +414,7 @@ fun ResolutionControlContent(
                 modifier = Modifier
                     .width(240.dp)
                     .fillMaxHeight()
+                    .padding(16.dp)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -450,7 +425,6 @@ fun ResolutionControlContent(
                     .weight(1f)
                     .fillMaxHeight(),
                 color = colorResource(id = R.color.content_bg),
-                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -483,7 +457,7 @@ fun ResolutionControlContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         when (selectedTab) {
-                            NavTab.HOME -> HomeTabContent(currentValues = currentValues)
+                            NavTab.HOME -> HomeTabContent(currentValues = currentValues, liveStats = liveStats)
                             NavTab.RENDERING -> RenderingTabContent(
                                 resolution = resolution,
                                 stencilMesh = stencilMesh,
@@ -494,6 +468,7 @@ fun ResolutionControlContent(
                                 onFfrChange = onFfrChange,
                                 onTextureFovChange = onTextureFovChange
                             )
+
                             NavTab.PERFORMANCE -> PerformanceTabContent(
                                 maxPwrLevel = maxPwrLevel,
                                 minPwrLevel = minPwrLevel,
@@ -508,6 +483,7 @@ fun ResolutionControlContent(
                                 onLatencyModeChange = onLatencyModeChange,
                                 onCpuSetChange = onCpuSetChange
                             )
+
                             NavTab.ABOUT -> AboutTabContent()
                         }
                     }
@@ -518,23 +494,12 @@ fun ResolutionControlContent(
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             // Status Feedback Box
                             if (status.isNotBlank()) {
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (status.contains("Error") || status.contains("Failed"))
-                                            colorResource(id = R.color.pico_red)
-                                        else colorResource(id = R.color.pico_green)
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = status,
-                                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
+                                Text(
+                                    text = status,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center
+                                )
                             }
 
                             // Action Buttons Row (Apply & Reset)
@@ -550,7 +515,7 @@ fun ResolutionControlContent(
                                         .height(48.dp),
                                     shape = RoundedCornerShape(6.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorResource(id = R.color.primary)
+                                        containerColor = colorResource(id = R.color.card_bg)
                                     )
                                 ) {
                                     Text(
@@ -616,7 +581,7 @@ fun PicoSidebar(
                 text = stringResource(id = R.string.app_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = Color.LightGray,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
@@ -788,6 +753,7 @@ fun PicoDropdownSelector(
             containerColor = colorResource(id = R.color.dropdown_item),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
+                .offset(y = 8.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .picoScrollbar(scrollState)
         ) {
@@ -798,15 +764,32 @@ fun PicoDropdownSelector(
                     .padding(6.dp)
             ) {
                 options.forEach { (key, label) ->
+                    val isSelected = (label == valueText)
                     DropdownMenuItem(
                         text = {
-                            Text(
-                                text = label,
-                                color = Color.LightGray,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = Color.LightGray,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
+                                )
+                                if (isSelected) {
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = "Selected",
+                                        tint = colorResource(id = R.color.primary),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
                         },
                         onClick = {
                             onOptionSelected(key)
@@ -822,7 +805,7 @@ fun PicoDropdownSelector(
 }
 
 @Composable
-fun HomeTabContent(currentValues: ConfigValues) {
+fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         // App Header Card
         Card(
@@ -871,7 +854,7 @@ fun HomeTabContent(currentValues: ConfigValues) {
                     Text(
                         text = "Pico VR 3D Resolution & Performance Utility",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.LightGray.copy(alpha = 0.7f)
+                        color = Color.LightGray
                     )
                 }
             }
@@ -888,15 +871,75 @@ fun HomeTabContent(currentValues: ConfigValues) {
                     text = "Description",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = Color.LightGray,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
                     text = stringResource(id = R.string.app_description),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.LightGray,
+                    color = Color.White,
                     lineHeight = 20.sp
                 )
+            }
+        }
+
+        // Live Hardware Monitor Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.card_bg)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    text = "Live Hardware Monitor",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.LightGray,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                GpuLoadCard(liveStats = liveStats)
+
+                HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 20.dp))
+
+                // CPU Cores Header
+                Text(
+                    text = "Core Usage",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.LightGray,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                val sortedCores = liveStats.cpuCores.sortedByDescending { it.coreId } // 7, 6, 5, 4, 3, 2, 1, 0
+                val row1 = sortedCores.filter { it.coreId >= 4 } // 7, 6, 5, 4
+                val row2 = sortedCores.filter { it.coreId < 4 }  // 3, 2, 1, 0
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        row1.forEach { core ->
+                            CoreUsageGauge(core = core)
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        row2.forEach { core ->
+                            CoreUsageGauge(core = core)
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 16.dp))
+
+                PhysicalRamCard(memory = liveStats.memory)
+
+                HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 16.dp))
+
+                SwapCard(memory = liveStats.memory)
             }
         }
 
@@ -951,6 +994,10 @@ fun HomeTabContent(currentValues: ConfigValues) {
                             label = stringResource(id = R.string.gpu_mode),
                             value = if (currentValues.gpuMode == "1") stringResource(id = R.string.tune_performance) else if (currentValues.gpuMode == "2") stringResource(id = R.string.tune_stock) else currentValues.gpuMode
                         )
+                        StatusRowItem(label = "Top App Cores", value = currentValues.topAppCpus)
+                        StatusRowItem(label = "Foreground App Cores", value = currentValues.foregroundCpus)
+                        StatusRowItem(label = "Background App Cores", value = currentValues.backgroundCpus)
+                        StatusRowItem(label = "System App Cores", value = currentValues.systemBackgroundCpus)
                     }
                 }
             }
@@ -967,7 +1014,7 @@ private fun StatusRowItem(label: String, value: String) {
         Text(
             text = "$label: ",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.LightGray.copy(alpha = 0.7f)
+            color = Color.LightGray
         )
         Text(
             text = value,
@@ -977,6 +1024,282 @@ private fun StatusRowItem(label: String, value: String) {
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.End
         )
+    }
+}
+
+@Composable
+fun GpuLoadCard(liveStats: LiveStats) {
+    val cleanUsageStr = liveStats.gpuUsage.replace("%", "").trim()
+    val usageNum = cleanUsageStr.toIntOrNull() ?: 0
+    val progress = (usageNum.toFloat() / 100f).coerceIn(0f, 1f)
+    val picoGreen = colorResource(id = R.color.pico_green)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Column {
+                Text(
+                    text = "GPU Load",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.LightGray,
+                )
+                Text(
+                    text = "$cleanUsageStr%",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Text(
+                text = liveStats.gpuClock,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+                color = Color.White,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Linear Progress Bar
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = picoGreen,
+            trackColor = Color.DarkGray.copy(alpha = 0.4f)
+        )
+    }
+}
+
+@Composable
+fun CoreUsageGauge(core: CpuCoreStat) {
+    val usageNum = core.usagePercent.removeSuffix("%").toIntOrNull() ?: 0
+    val sweepAngle = (usageNum / 100f) * 360f
+    val pico_green = colorResource(id = R.color.pico_green)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(68.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(52.dp)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val strokeWidth = 4.dp.toPx()
+                drawArc(
+                    color = Color.DarkGray.copy(alpha = 0.5f),
+                    startAngle = -90f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                )
+                drawArc(
+                    color = pico_green,
+                    startAngle = -90f,
+                    sweepAngle = sweepAngle,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                )
+            }
+            Text(
+                text = core.usagePercent,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "C${core.coreId}",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            color = pico_green
+        )
+        Text(
+            text = core.freqMHz,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.LightGray.copy(alpha = 0.7f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun PhysicalRamCard(memory: MemoryStats) {
+    val picoGreen = colorResource(id = R.color.pico_green)
+
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Physical RAM",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.LightGray
+            )
+            Text(
+                text = "${memory.ramPercent}%",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = picoGreen
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LinearProgressIndicator(
+            progress = { memory.ramPercent / 100f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = picoGreen,
+            trackColor = Color.DarkGray.copy(alpha = 0.4f)
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "Used",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.LightGray.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = memory.ramUsed,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Free",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.LightGray.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = memory.ramFree,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "Total",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.LightGray.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = memory.ramTotal,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SwapCard(memory: MemoryStats) {
+    val picoGreen = colorResource(id = R.color.pico_green)
+
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Swap / ZRAM",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.LightGray
+            )
+            Text(
+                text = "${memory.swapPercent}%",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = picoGreen
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LinearProgressIndicator(
+            progress = { memory.swapPercent / 100f },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = picoGreen,
+            trackColor = Color.DarkGray.copy(alpha = 0.4f)
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "Used",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.LightGray.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = memory.swapUsed,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Free",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.LightGray.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = memory.swapFree,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "Total",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.LightGray.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = memory.swapTotal,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
     }
 }
 
@@ -1195,8 +1518,17 @@ fun PerformanceTabContent(
 @Composable
 fun AboutTabContent() {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val versionName = remember {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "1.3.1"
+        } catch (_: Exception) {
+            "1.3.1"
+        }
+    }
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         // App Info Card
         Card(
             colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.card_bg)),
@@ -1213,13 +1545,13 @@ fun AboutTabContent() {
                         bitmap = launcherIcon,
                         contentDescription = stringResource(id = R.string.app_name),
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(52.dp)
                             .clip(RoundedCornerShape(14.dp))
                     )
                 } else {
                     Box(
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(52.dp)
                             .background(
                                 color = colorResource(id = R.color.primary),
                                 shape = RoundedCornerShape(14.dp)
@@ -1233,19 +1565,18 @@ fun AboutTabContent() {
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
                         text = stringResource(id = R.string.app_title),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Version 1.3.1",
+                        text = "Version $versionName",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.LightGray.copy(alpha = 0.7f)
+                        color = Color.LightGray
                     )
                 }
             }
@@ -1270,487 +1601,43 @@ fun AboutTabContent() {
                         text = "Repository",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = Color.LightGray
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = stringResource(id = R.string.github_link),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = colorResource(id = R.color.primary)
+                        color = Color.Gray
                     )
                 }
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                    imageVector = Icons.Rounded.ChevronRight,
                     contentDescription = "Open Link",
-                    tint = colorResource(id = R.color.primary)
+                    tint = Color.Gray
                 )
             }
         }
     }
 }
 
-private fun readSysfs(path: String): String {
-    val (success, output) = runRootCommandWithOutput("cat $path")
-    return if (success) output else "N/A"
-}
-
-suspend fun fetchCurrentValues(
-    cacheDir: File,
-    uid: Int,
-    context: Context
-): Pair<ConfigValues, String> =
-    withContext(Dispatchers.IO) {
-        var resVal = "N/A"
-        var smVal = "N/A"
-        var ffrVal = "N/A"
-        var tfVal = "N/A"
-        var maxPwr = "N/A"
-        var minPwr = "N/A"
-        var cpuVal = "N/A"
-        var gpuVal = "N/A"
-        var latVal = "N/A"
-        var cpuSetVal = "N/A"
-        var errorMsg = ""
-
-        try {
-            val apkPath = context.applicationInfo.publicSourceDir
-            val cmd =
-                "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater read \"$DB_PATH\""
-            val (success, output) = runRootCommandWithOutput(cmd)
-
-            if (success && output.contains("RES=")) {
-                val lines = output.split("\n")
-                for (line in lines) {
-                    if (line.startsWith("RES=")) resVal = line.substringAfter("RES=")
-                    if (line.startsWith("SM=")) smVal = line.substringAfter("SM=")
-                    if (line.startsWith("FFR=")) ffrVal = line.substringAfter("FFR=")
-                    if (line.startsWith("TF=")) tfVal = line.substringAfter("TF=")
-                }
-                maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-                minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-                val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                gpuVal = if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
-
-                val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-                cpuVal = if (cpuGov == "performance") "1" else if (cpuGov == "schedutil") "2" else "N/A"
-
-                val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
-                latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
-
-                val topAppCpus = readSysfs("/dev/cpuset/top-app/cpus")
-                cpuSetVal = if (topAppCpus.contains("0-7")) "1" else if (topAppCpus.contains("4-6")) "2" else "2"
-
-                return@withContext ConfigValues(
-                    resVal,
-                    smVal,
-                    ffrVal,
-                    tfVal,
-                    maxPwr,
-                    minPwr,
-                    cpuVal,
-                    gpuVal,
-                    latVal,
-                    cpuSetVal
-                ) to ""
-            }
-        } catch (e: Exception) {
-            // Silently fall through to fallback
-        }
-
-        val tempDb = File(cacheDir, TEMP_READ_DB)
-        try {
-            val (success, error) = runRootCommand(
-                "setenforce 0 || true",
-                "cp $DB_PATH ${tempDb.absolutePath}",
-                "chown $uid:$uid ${tempDb.absolutePath}",
-                "chmod 666 ${tempDb.absolutePath}"
-            )
-
-            if (success) {
-                if (tempDb.exists()) {
-                    val db = SQLiteDatabase.openDatabase(
-                        tempDb.absolutePath,
-                        null,
-                        SQLiteDatabase.OPEN_READONLY
-                    )
-
-                    fun queryValue(key: String): String {
-                        db.rawQuery(
-                            "SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE ? LIMIT 1",
-                            arrayOf("%$key%")
-                        ).use { cursor ->
-                            if (cursor.moveToFirst()) {
-                                return cursor.getString(0) ?: "null"
-                            }
-                        }
-                        return "N/A"
-                    }
-
-                    resVal = queryValue("sdk_eyebuffer")
-                    smVal = queryValue("sdk_enableFFRBySYS")
-                    ffrVal = queryValue("sdk_stencilMeshStatus")
-                    tfVal = queryValue("sdk_EyeTextureFov")
-
-                    db.close()
-                    tempDb.delete()
-                } else {
-                    errorMsg = "Temp file not created"
-                }
-            } else {
-                errorMsg = error
-            }
-
-            maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-            minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-            val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
-            gpuVal = if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
-
-            val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-            cpuVal = if (cpuGov == "performance") "1" else if (cpuGov == "schedutil") "2" else "N/A"
-
-            val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
-            latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
-
-            val topAppCpus = readSysfs("/dev/cpuset/top-app/cpus")
-            cpuSetVal = if (topAppCpus.contains("0-7")) "1" else if (topAppCpus.contains("4-6")) "2" else "2"
-
-        } catch (e: Exception) {
-            errorMsg = e.message ?: "Unknown error"
-        } finally {
-            if (tempDb.exists()) tempDb.delete()
-        }
-
-        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, cpuVal, gpuVal, latVal, cpuSetVal) to errorMsg
-    }
-
-suspend fun applySettings(
-    res: String,
-    sm: String,
-    ffr: String,
-    tf: String,
-    maxPwr: String,
-    minPwr: String,
-    cpuMode: String,
-    gpuMode: String,
-    latencyMode: String,
-    cpuSet: String,
-    cacheDir: File,
-    uid: Int,
-    context: Context,
-    databaseChanged: Boolean
-): Pair<Boolean, String> =
-    withContext(Dispatchers.IO) {
-        val tempDb = File(cacheDir, TEMP_APPLY_DB)
-        var db: SQLiteDatabase? = null
-
-        try {
-            val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
-            if (maxPwr.isNotBlank())
-                initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-            if (minPwr.isNotBlank())
-                initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-            if (cpuMode == "1") {
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
-            } else if (cpuMode == "2") {
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
-            }
-
-            if (gpuMode == "1") {
-                initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
-            } else if (gpuMode == "2") {
-                initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
-            }
-
-            if (latencyMode == "1") {
-                initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
-                initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
-            } else if (latencyMode == "2") {
-                initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
-                initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
-            }
-
-            if (cpuSet == "1") { // Performance
-                initialRootCmds.add("echo 0-7 > /dev/cpuset/top-app/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/foreground/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
-            } else if (cpuSet == "2") { // Stock
-                initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
-            }
-
-            runRootCommand(*initialRootCmds.toTypedArray())
-
-            val storageContext = context.createDeviceProtectedStorageContext()
-            val prefs = storageContext.getSharedPreferences(
-                "pwr_prefs",
-                Context.MODE_PRIVATE
-            )
-            prefs.edit().apply {
-                putString("max_pwrlevel", maxPwr)
-                putString("min_pwrlevel", minPwr)
-                commit()
-            }
-
-            try {
-                val dataDir = storageContext.dataDir
-                val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
-
-                if (prefFile.exists()) {
-                    prefFile.setReadable(true, false)
-                    prefFile.parentFile?.setReadable(true, false)
-                    prefFile.parentFile?.setExecutable(true, false)
-
-                    val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
-                    val relayPath = "/data/local/tmp/res3d_pwr.relay"
-                    val relayCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode:$cpuSet > $relayPath"
-
-                    runRootCommand(
-                        "chmod 664 ${prefFile.absolutePath}",
-                        "chmod 775 ${prefFile.parentFile?.absolutePath}",
-                        "cp ${prefFile.absolutePath} $targetSystemPrefsPath",
-                        "chmod 666 $targetSystemPrefsPath",
-                        "chown 1000:1000 $targetSystemPrefsPath",
-                        "chcon u:object_r:system_data_file:s0 $targetSystemPrefsPath",
-                        relayCmd,
-                        "chmod 666 $relayPath",
-                        "chown 1000:1000 $relayPath"
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("Res3D", "Failed to set pref file permissions", e)
-            }
-
-            try {
-                val serviceIntent = Intent(context, GuardianService::class.java)
-                context.startService(serviceIntent)
-            } catch (e: Exception) {
-                Log.e("Res3D", "Failed to start GuardianService", e)
-            }
-
-            if (databaseChanged) {
-                val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
-                var primaryWorked = false
-
-                if (hasParamUpdates) {
-                    try {
-                        val apkPath = context.applicationInfo.publicSourceDir
-                        val cmd =
-                            "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater write \"$DB_PATH\" '$res' '$sm' '$ffr' '$tf'"
-                        val (success, output) = runRootCommandWithOutput(cmd)
-                        if (success && output.contains("WRITE_SUCCESS")) {
-                            primaryWorked = true
-                        }
-                    } catch (e: Exception) {
-                        // Silently fall through to fallback
-                    }
-
-                    if (!primaryWorked) {
-                        val (cpSuccess, cpError) = runRootCommand(
-                            "cp $DB_PATH ${tempDb.absolutePath}",
-                            "chown $uid:$uid ${tempDb.absolutePath}",
-                            "chmod 666 ${tempDb.absolutePath}"
-                        )
-                        if (!cpSuccess) return@withContext false to context.getString(
-                            R.string.status_copy_failed,
-                            cpError
-                        )
-                        if (!tempDb.exists()) return@withContext false to context.getString(R.string.status_temp_missing)
-
-                        db = SQLiteDatabase.openDatabase(
-                            tempDb.absolutePath,
-                            null,
-                            SQLiteDatabase.OPEN_READWRITE
-                        )
-
-                        db.beginTransaction()
-                        try {
-                            if (res.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
-                                    arrayOf(res)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
-                                    arrayOf(res, res)
-                                )
-                            }
-                            if (sm.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
-                                    arrayOf(sm)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
-                                    arrayOf(sm, sm)
-                                )
-                            }
-                            if (ffr.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
-                                    arrayOf(ffr)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
-                                    arrayOf(ffr, ffr)
-                                )
-                            }
-                            if (tf.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
-                                    arrayOf(tf)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
-                                    arrayOf(tf, tf)
-                                )
-                            }
-                            db.setTransactionSuccessful()
-                        } finally {
-                            db.endTransaction()
-                            db.close()
-                            db = null
-                        }
-
-                        val (writeSuccess, writeError) = runRootCommand(
-                            "cat ${tempDb.absolutePath} > $DB_PATH",
-                            "sync"
-                        )
-
-                        if (!writeSuccess) {
-                            return@withContext false to context.getString(
-                                R.string.status_write_failed,
-                                writeError
-                            )
-                        }
-                    }
-                }
-
-                val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid, context)
-
-                val isResVerified = res.isBlank() || verifiedValues.resolution == res
-                val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
-                val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
-                val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
-
-                if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                    runRootCommand("reboot")
-                    return@withContext true to context.getString(R.string.status_rebooting)
-                } else {
-                    return@withContext false to context.getString(R.string.status_verify_failed)
-                }
-            } else {
-                return@withContext true to context.getString(R.string.status_applied_success)
-            }
-        } catch (e: Exception) {
-            return@withContext false to (e.message
-                ?: context.getString(R.string.status_error_prefix, "Unknown"))
-        } finally {
-            db?.takeIf { it.isOpen }?.close()
-            if (tempDb.exists()) tempDb.delete()
-        }
-    }
-
-private fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
-    var process: Process? = null
-    var os: DataOutputStream? = null
-    var errorReader: BufferedReader? = null
-    try {
-        process = Runtime.getRuntime().exec("su")
-        os = DataOutputStream(process.outputStream)
-        for (cmd in commands) {
-            os.writeBytes("$cmd\n")
-        }
-        os.writeBytes("exit\n")
-        os.flush()
-        val errors = StringBuilder()
-        errorReader = BufferedReader(InputStreamReader(process.errorStream))
-        var line: String?
-        while (errorReader.readLine().also { line = it } != null) {
-            errors.append(line).append(" ")
-        }
-        val exitValue = process.waitFor()
-        return (exitValue == 0) to errors.toString().trim()
-    } catch (e: Exception) {
-        return false to (e.message ?: "su execution failed")
-    } finally {
-        try {
-            os?.close()
-        } catch (ignore: Exception) {
-        }
-        try {
-            errorReader?.close()
-        } catch (ignore: Exception) {
-        }
-        process?.destroy()
-    }
-}
-
-private fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, String> {
-    var process: Process? = null
-    var os: DataOutputStream? = null
-    var inputReader: BufferedReader? = null
-    try {
-        process = Runtime.getRuntime().exec("su")
-        os = DataOutputStream(process.outputStream)
-        for (cmd in commands) {
-            os.writeBytes("$cmd\n")
-        }
-        os.writeBytes("exit\n")
-        os.flush()
-        val output = StringBuilder()
-        inputReader = BufferedReader(InputStreamReader(process.inputStream))
-        var line: String?
-        while (inputReader.readLine().also { line = it } != null) {
-            output.append(line).append("\n")
-        }
-        val exitValue = process.waitFor()
-        return (exitValue == 0) to output.toString().trim()
-    } catch (e: Exception) {
-        return false to (e.message ?: "su execution failed")
-    } finally {
-        try {
-            os?.close()
-        } catch (ignore: Exception) {
-        }
-        try {
-            inputReader?.close()
-        } catch (ignore: Exception) {
-        }
-        process?.destroy()
-    }
-}
-
-suspend fun checkAndEnableXposedScope(packageName: String) = withContext(Dispatchers.IO) {
-    val checkCmd = "/data/adb/lspd/cli scope ls $packageName || /data/adb/modules/zygisk_vector/cli scope ls $packageName"
-    val (_, output) = runRootCommandWithOutput(checkCmd)
-
-    if (!output.contains("system_server")) {
-        val enableCmd = "/data/adb/lspd/cli modules enable $packageName || /data/adb/modules/zygisk_vector/cli modules enable $packageName"
-        val addScopeCmd = "/data/adb/lspd/cli scope add $packageName system_server || /data/adb/modules/zygisk_vector/cli scope add $packageName system_server"
-        runRootCommand(enableCmd, addScopeCmd)
-    }
-}
-
-@Preview(showBackground = true, widthDp = 900, heightDp = 800)
+@Preview(showBackground = true, widthDp = 900, heightDp = 1200)
 @Composable
 fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
             selectedTab = NavTab.HOME,
             onTabSelected = {},
-            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2", "2"),
+            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2", "2", "0-7", "0-1", "0-1", "0-1"),
+            liveStats = LiveStats("585 MHz", "45%", listOf(
+                CpuCoreStat(0, "1800 MHz", "12%"),
+                CpuCoreStat(1, "1800 MHz", "10%"),
+                CpuCoreStat(2, "1800 MHz", "15%"),
+                CpuCoreStat(3, "1800 MHz", "8%"),
+                CpuCoreStat(4, "2400 MHz", "45%"),
+                CpuCoreStat(5, "2400 MHz", "40%"),
+                CpuCoreStat(6, "2400 MHz", "50%"),
+                CpuCoreStat(7, "2800 MHz", "75%")
+            )),
             resolution = "2160",
             stencilMesh = "1",
             ffr = "1",
@@ -1761,7 +1648,7 @@ fun ResolutionControlPreview() {
             gpuMode = "2",
             latencyMode = "2",
             cpuSet = "2",
-            status = "",
+            status = "test",
             onResolutionChange = {},
             onStencilMeshChange = {},
             onFfrChange = {},
