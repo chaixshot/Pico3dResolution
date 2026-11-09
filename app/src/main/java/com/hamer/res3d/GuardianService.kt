@@ -42,6 +42,7 @@ class GuardianService : Service() {
                                     val cpuMode = levels.getOrNull(2)?.trim() ?: ""
                                     val gpuMode = levels.getOrNull(3)?.trim() ?: ""
                                     val latencyMode = levels.getOrNull(4)?.trim() ?: ""
+                                    val cpuSet = levels.getOrNull(5)?.trim() ?: ""
 
                                     if (maxPwr.isNotBlank())
                                         execRoot("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
@@ -65,6 +66,14 @@ class GuardianService : Service() {
                                     if (latencyMode == "1") { // Performance
                                         execRoot("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
                                         execRoot("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
+                                    }
+
+                                    // Apply CPU Set
+                                    if (cpuSet == "1") { // Performance
+                                        execRoot("echo 0-7 > /dev/cpuset/top-app/cpus || true")
+                                        execRoot("echo 0-1 > /dev/cpuset/foreground/cpus || true")
+                                        execRoot("echo 0-1 > /dev/cpuset/background/cpus || true")
+                                        execRoot("echo 0-1 > /dev/cpuset/system-background/cpus || true")
                                     }
                                 }
                             } catch (e: Exception) {

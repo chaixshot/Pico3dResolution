@@ -209,7 +209,8 @@ data class ConfigValues(
     val minPwrLevel: String = "Unknown",
     val cpuMode: String = "Unknown",
     val gpuMode: String = "Unknown",
-    val latencyMode: String = "Unknown"
+    val latencyMode: String = "Unknown",
+    val cpuSet: String = "Unknown"
 )
 
 @Composable
@@ -224,6 +225,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
     var cpuMode by remember { mutableStateOf("") }
     var gpuMode by remember { mutableStateOf("") }
     var latencyMode by remember { mutableStateOf("") }
+    var cpuSet by remember { mutableStateOf("2") } // Default is Stock (2)
     var status by remember { mutableStateOf("") }
     var currentValues by remember { mutableStateOf(ConfigValues()) }
     val scope = rememberCoroutineScope()
@@ -267,6 +269,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             if (values.latencyMode != "Unknown" && values.latencyMode != "N/A") {
                 latencyMode = values.latencyMode
             }
+            if (values.cpuSet != "Unknown" && values.cpuSet != "N/A") {
+                cpuSet = values.cpuSet
+            }
             if (error.isNotBlank() && status.isBlank()) {
                 status = resources.getString(R.string.status_read_error_prefix, error)
             }
@@ -308,6 +313,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         cpuMode = cpuMode,
         gpuMode = gpuMode,
         latencyMode = latencyMode,
+        cpuSet = cpuSet,
         status = status,
         onResolutionChange = { resolution = it },
         onStencilMeshChange = { stencilMesh = it },
@@ -318,6 +324,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
         onCpuModeChange = { cpuMode = it },
         onGpuModeChange = { gpuMode = it },
         onLatencyModeChange = { latencyMode = it },
+        onCpuSetChange = { cpuSet = it },
         onApplyRenderingClick = {
             if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank()) {
                 scope.launch {
@@ -332,6 +339,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         cpuMode = cpuMode,
                         gpuMode = gpuMode,
                         latencyMode = latencyMode,
+                        cpuSet = cpuSet,
                         cacheDir = cacheDir,
                         uid = appUid,
                         context = storageContext,
@@ -354,7 +362,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
             }
         },
         onApplyPerformanceClick = {
-            if (maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank() || cpuMode.isNotBlank() || gpuMode.isNotBlank() || latencyMode.isNotBlank()) {
+            if (maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank() || cpuMode.isNotBlank() || gpuMode.isNotBlank() || latencyMode.isNotBlank() || cpuSet.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
                     val (success, error) = applySettings(
@@ -367,6 +375,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: File) {
                         cpuMode = cpuMode,
                         gpuMode = gpuMode,
                         latencyMode = latencyMode,
+                        cpuSet = cpuSet,
                         cacheDir = cacheDir,
                         uid = appUid,
                         context = storageContext,
@@ -398,6 +407,7 @@ fun ResolutionControlContent(
     cpuMode: String,
     gpuMode: String,
     latencyMode: String,
+    cpuSet: String,
     status: String,
     onResolutionChange: (String) -> Unit,
     onStencilMeshChange: (String) -> Unit,
@@ -408,6 +418,7 @@ fun ResolutionControlContent(
     onCpuModeChange: (String) -> Unit,
     onGpuModeChange: (String) -> Unit,
     onLatencyModeChange: (String) -> Unit,
+    onCpuSetChange: (String) -> Unit,
     onApplyRenderingClick: () -> Unit,
     onApplyPerformanceClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -489,11 +500,13 @@ fun ResolutionControlContent(
                                 cpuMode = cpuMode,
                                 gpuMode = gpuMode,
                                 latencyMode = latencyMode,
+                                cpuSet = cpuSet,
                                 onMaxPwrLevelChange = onMaxPwrLevelChange,
                                 onMinPwrLevelChange = onMinPwrLevelChange,
                                 onCpuModeChange = onCpuModeChange,
                                 onGpuModeChange = onGpuModeChange,
-                                onLatencyModeChange = onLatencyModeChange
+                                onLatencyModeChange = onLatencyModeChange,
+                                onCpuSetChange = onCpuSetChange
                             )
                             NavTab.ABOUT -> AboutTabContent()
                         }
@@ -561,6 +574,7 @@ fun ResolutionControlContent(
                                             onCpuModeChange("2")
                                             onGpuModeChange("2")
                                             onLatencyModeChange("2")
+                                            onCpuSetChange("2") // Default Stock
                                         }
                                     },
                                     modifier = Modifier.size(48.dp),
@@ -1064,11 +1078,13 @@ fun PerformanceTabContent(
     cpuMode: String,
     gpuMode: String,
     latencyMode: String,
+    cpuSet: String,
     onMaxPwrLevelChange: (String) -> Unit,
     onMinPwrLevelChange: (String) -> Unit,
     onCpuModeChange: (String) -> Unit,
     onGpuModeChange: (String) -> Unit,
-    onLatencyModeChange: (String) -> Unit
+    onLatencyModeChange: (String) -> Unit,
+    onCpuSetChange: (String) -> Unit
 ) {
     val pwrOptions = listOf(
         "0" to stringResource(id = R.string.pwr_peak_performance),
@@ -1155,6 +1171,21 @@ fun PerformanceTabContent(
                 valueText = selectedText,
                 options = tuneOptions,
                 onOptionSelected = onLatencyModeChange,
+                dropdownWidth = 240.dp
+            )
+        }
+
+        // CPU Set
+        SettingCard(
+            title = stringResource(id = R.string.cpu_set),
+            helpTitle = stringResource(id = R.string.cpu_set),
+            helpMessage = stringResource(id = R.string.help_cpu_set_desc)
+        ) {
+            val selectedText = tuneOptions.find { it.first == cpuSet }?.second ?: cpuSet
+            PicoDropdownSelector(
+                valueText = selectedText,
+                options = tuneOptions,
+                onOptionSelected = onCpuSetChange,
                 dropdownWidth = 240.dp
             )
         }
@@ -1278,6 +1309,7 @@ suspend fun fetchCurrentValues(
         var cpuVal = "N/A"
         var gpuVal = "N/A"
         var latVal = "N/A"
+        var cpuSetVal = "N/A"
         var errorMsg = ""
 
         try {
@@ -1306,6 +1338,9 @@ suspend fun fetchCurrentValues(
                 val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
                 latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
 
+                val topAppCpus = readSysfs("/dev/cpuset/top-app/cpus")
+                cpuSetVal = if (topAppCpus.contains("0-7")) "1" else if (topAppCpus.contains("4-6")) "2" else "2"
+
                 return@withContext ConfigValues(
                     resVal,
                     smVal,
@@ -1315,7 +1350,8 @@ suspend fun fetchCurrentValues(
                     minPwr,
                     cpuVal,
                     gpuVal,
-                    latVal
+                    latVal,
+                    cpuSetVal
                 ) to ""
             }
         } catch (e: Exception) {
@@ -1377,13 +1413,16 @@ suspend fun fetchCurrentValues(
             val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
             latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
 
+            val topAppCpus = readSysfs("/dev/cpuset/top-app/cpus")
+            cpuSetVal = if (topAppCpus.contains("0-7")) "1" else if (topAppCpus.contains("4-6")) "2" else "2"
+
         } catch (e: Exception) {
             errorMsg = e.message ?: "Unknown error"
         } finally {
             if (tempDb.exists()) tempDb.delete()
         }
 
-        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, cpuVal, gpuVal, latVal) to errorMsg
+        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, cpuVal, gpuVal, latVal, cpuSetVal) to errorMsg
     }
 
 suspend fun applySettings(
@@ -1396,6 +1435,7 @@ suspend fun applySettings(
     cpuMode: String,
     gpuMode: String,
     latencyMode: String,
+    cpuSet: String,
     cacheDir: File,
     uid: Int,
     context: Context,
@@ -1438,6 +1478,18 @@ suspend fun applySettings(
                 initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
             }
 
+            if (cpuSet == "1") { // Performance
+                initialRootCmds.add("echo 0-7 > /dev/cpuset/top-app/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/foreground/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+            } else if (cpuSet == "2") { // Stock
+                initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
+                initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+            }
+
             runRootCommand(*initialRootCmds.toTypedArray())
 
             val storageContext = context.createDeviceProtectedStorageContext()
@@ -1462,7 +1514,7 @@ suspend fun applySettings(
 
                     val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
                     val relayPath = "/data/local/tmp/res3d_pwr.relay"
-                    val relayCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode > $relayPath"
+                    val relayCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode:$cpuSet > $relayPath"
 
                     runRootCommand(
                         "chmod 664 ${prefFile.absolutePath}",
@@ -1691,14 +1743,14 @@ suspend fun checkAndEnableXposedScope(packageName: String) = withContext(Dispatc
     }
 }
 
-@Preview(showBackground = true, widthDp = 900, heightDp = 500)
+@Preview(showBackground = true, widthDp = 900, heightDp = 800)
 @Composable
 fun ResolutionControlPreview() {
     Pico3dResolutionTheme {
         ResolutionControlContent(
             selectedTab = NavTab.HOME,
             onTabSelected = {},
-            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2"),
+            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2", "2"),
             resolution = "2160",
             stencilMesh = "1",
             ffr = "1",
@@ -1708,6 +1760,7 @@ fun ResolutionControlPreview() {
             cpuMode = "2",
             gpuMode = "2",
             latencyMode = "2",
+            cpuSet = "2",
             status = "",
             onResolutionChange = {},
             onStencilMeshChange = {},
@@ -1718,6 +1771,7 @@ fun ResolutionControlPreview() {
             onCpuModeChange = {},
             onGpuModeChange = {},
             onLatencyModeChange = {},
+            onCpuSetChange = {},
             onApplyRenderingClick = {},
             onApplyPerformanceClick = {}
         )

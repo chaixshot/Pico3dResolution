@@ -62,5 +62,7 @@
     <string name="help_cpu_mode_desc">Sets the CPU scaling governor. Performance locks all cores to maximum frequency. Stock allows the system to balance performance and power.</string>
     <string name="help_gpu_mode_desc">Sets the GPU governor and power limits. Performance sets the governor to performance and disables throttling. Stock restores default power management.</string>
     <string name="help_latency_mode_desc">Adjusts kernel scheduling parameters. Performance reduces scheduling latency for better responsiveness. Stock uses default kernel values.</string>
+    <string name="cpu_set" tools:ignore="MissingTranslation">CPU Set</string>
+    <string name="help_cpu_set_desc" tools:ignore="MissingTranslation">Configures CPU core affinity (cpuset) groups. Performance assigns all available cores (0-7) to top app to reduce stutter and improve smoothness, at the cost of higher battery usage.</string>
     <string name="close">Close</string>
 </resources>
