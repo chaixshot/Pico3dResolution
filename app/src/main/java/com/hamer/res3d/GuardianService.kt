@@ -70,10 +70,18 @@ class GuardianService : Service() {
 
                                     // Apply CPU Set
                                     if (cpuSet == "1") { // Performance
-                                        execRoot("echo 0-7 > /dev/cpuset/top-app/cpus || true")
+                                        execRoot("echo 2-7 > /dev/cpuset/top-app/cpus || true")
+                                        execRoot("echo 2-7 > /dev/cpuset/vrforeground/cpus || true")
+                                        execRoot("echo 0-3 > /dev/cpuset/compositor/cpus || true")
+                                        execRoot("echo 0-2 > /dev/cpuset/audio-app/cpus || true")
+                                        execRoot("echo 0-2 > /dev/cpuset/pico-system/cpus || true")
+                                        execRoot("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
+                                        execRoot("echo 0-2 > /dev/cpuset/dex2oat/cpus || true")
+                                        execRoot("echo 0-2 > /dev/cpuset/tracking/cpus || true")
                                         execRoot("echo 0-1 > /dev/cpuset/foreground/cpus || true")
-                                        execRoot("echo 0-1 > /dev/cpuset/background/cpus || true")
-                                        execRoot("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+                                        execRoot("echo 0-1 > /dev/cpuset/bg_3rd_app/cpus || true")
+                                        execRoot("echo 0-1 > /dev/cpuset/app-inshell/cpus || true")
+                                        execRoot("echo 0-1 > /dev/cpuset/shell-app/cpus || true")
                                     }
                                 }
                             } catch (e: Exception) {
