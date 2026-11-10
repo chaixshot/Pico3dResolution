@@ -5,121 +5,66 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import java.io.DataOutputStream
-import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.thread
 
+/**
+ * GuardianService acts as the lightweight manager service for Pico3dResolution.
+ * Its core responsibilities are:
+ * 1. Protecting the app process from system kills and background restrictions (OOM score -1000, deviceidle whitelist).
+ * 2. Spawning and maintaining the standalone root performance daemon [GuardianDaemon] via app_process.
+ */
 class GuardianService : Service() {
-    companion object {
-        private val isRunning = AtomicBoolean(false)
-    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
-        Log.i("Res3D", "GuardianService: onCreate called")
+        Log.i("[Res3D]", "GuardianService: onCreate called")
+        protectFromSystemKill()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.i("Res3D", "GuardianService: onStartCommand triggered")
-
-        if (isRunning.compareAndSet(false, true)) {
-            thread {
-                Log.i("Res3D", "GuardianService: Starting infinite loop")
-                try {
-                    val relayPath = "/data/local/tmp/res3d_pwr.relay"
-                    val relayFile = File(relayPath)
-
-                    while (true) {
-                        if (relayFile.exists()) {
-                            try {
-                                val content = relayFile.readText().trim()
-                                if (content.contains(":")) {
-                                    val levels = content.split(":")
-                                    val maxPwr = levels.getOrNull(0)?.trim() ?: ""
-                                    val minPwr = levels.getOrNull(1)?.trim() ?: ""
-                                    val cpuMode = levels.getOrNull(2)?.trim() ?: ""
-                                    val gpuMode = levels.getOrNull(3)?.trim() ?: ""
-                                    val latencyMode = levels.getOrNull(4)?.trim() ?: ""
-                                    val cpuSet = levels.getOrNull(5)?.trim() ?: ""
-
-                                    if (maxPwr.isNotBlank())
-                                        execRoot("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-                                    if (minPwr.isNotBlank())
-                                        execRoot("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-                                    // Apply CPU Mode
-                                    if (cpuMode == "1") { // Performance
-                                        execRoot("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
-                                        execRoot("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
-                                    }
-
-                                    // Apply GPU Mode
-                                    if (gpuMode == "1") { // Performance
-                                        execRoot("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                                        execRoot("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                                        execRoot("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
-                                    }
-
-                                    // Apply Latency Mode
-                                    if (latencyMode == "1") { // Performance
-                                        execRoot("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
-                                        execRoot("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
-                                    }
-
-                                    // Apply CPU Set
-                                    if (cpuSet == "1") { // Performance
-                                        execRoot("echo 2-7 > /dev/cpuset/top-app/cpus || true")
-                                        execRoot("echo 2-7 > /dev/cpuset/vrforeground/cpus || true")
-                                        execRoot("echo 0-3 > /dev/cpuset/compositor/cpus || true")
-                                        execRoot("echo 0-2 > /dev/cpuset/audio-app/cpus || true")
-                                        execRoot("echo 0-2 > /dev/cpuset/pico-system/cpus || true")
-                                        execRoot("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
-                                        execRoot("echo 0-2 > /dev/cpuset/dex2oat/cpus || true")
-                                        execRoot("echo 0-2 > /dev/cpuset/tracking/cpus || true")
-                                        execRoot("echo 0-1 > /dev/cpuset/foreground/cpus || true")
-                                        execRoot("echo 0-1 > /dev/cpuset/bg_3rd_app/cpus || true")
-                                        execRoot("echo 0-1 > /dev/cpuset/app-inshell/cpus || true")
-                                        execRoot("echo 0-1 > /dev/cpuset/shell-app/cpus || true")
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                Log.e("Res3D", "GuardianService: Error reading relay: ${e.message}")
-                            }
-                        } else {
-                            Log.e("Res3D", "GuardianService: Relay file missing at $relayPath")
-                        }
-
-                        Thread.sleep(3000)
-                    }
-                } catch (e: InterruptedException) {
-                    Log.i("Res3D", "GuardianService: Loop interrupted")
-                } catch (e: Exception) {
-                    Log.e("Res3D", "GuardianService: Error in loop: ${e.message}")
-                } finally {
-                    isRunning.set(false)
-                }
-            }
-        } else {
-            Log.i("Res3D", "GuardianService: Loop already running")
-        }
-
+        Log.i("[Res3D]", "GuardianService: onStartCommand triggered")
+        protectFromSystemKill()
         return START_STICKY
     }
 
-    private fun execRoot(command: String) {
+    private fun protectFromSystemKill() {
+        startRootDaemon()
         try {
+            val pid = android.os.Process.myPid()
             val process = Runtime.getRuntime().exec("su")
             DataOutputStream(process.outputStream).use { os ->
-                os.writeBytes("$command\n")
+                os.writeBytes("echo -1000 > /proc/$pid/oom_score_adj || true\n")
+                os.writeBytes("dumpsys deviceidle whitelist +com.hamer.res3d || true\n")
+                os.writeBytes("am set-standby-bucket com.hamer.res3d active || true\n")
+                os.writeBytes("cmd appops set com.hamer.res3d RUN_IN_BACKGROUND allow || true\n")
+                os.writeBytes("cmd appops set com.hamer.res3d RUN_ANY_IN_BACKGROUND allow || true\n")
                 os.writeBytes("exit\n")
                 os.flush()
             }
             process.waitFor()
-            // Log.i("Res3D", "execRoot executed: $command")
+            Log.i("[Res3D]", "GuardianService: Protected from system kill (OOM adj -1000 & whitelisted)")
         } catch (e: Exception) {
-            Log.e("Res3D", "execRoot failed: ${e.message}")
+            Log.e("[Res3D]", "Failed to protect from system kill: ${e.message}")
+        }
+    }
+
+    private fun startRootDaemon() {
+        try {
+            val apkPath = applicationInfo.publicSourceDir
+            // Terminate any stale GuardianDaemon instances and launch the fresh root daemon process
+            val cmd = "pkill -f 'com.hamer.res3d.GuardianDaemon' 2>/dev/null || true; sleep 0.3; export CLASSPATH=\"$apkPath\" && exec app_process /system/bin com.hamer.res3d.GuardianDaemon &"
+
+            val process = Runtime.getRuntime().exec("su")
+            DataOutputStream(process.outputStream).use { os ->
+                os.writeBytes("$cmd\n")
+                os.writeBytes("exit\n")
+                os.flush()
+            }
+            process.waitFor()
+            Log.i("[Res3D]", "GuardianService: Stale root daemon terminated & fresh GuardianDaemon launched")
+        } catch (e: Exception) {
+            Log.e("[Res3D]", "Failed to launch Root daemon: ${e.message}")
         }
     }
 }

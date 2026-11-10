@@ -5,17 +5,25 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
+/**
+ * GuardianReceiver acts as an explicit broadcast receiver entry point.
+ * It allows manually or externally triggering the GuardianService via ADB
+ * by specifying the component name (bypassing Pico OS ProcessIntercept restrictions).
+ *
+ * Test via ADB command:
+ * adb shell am broadcast -a com.hamer.res3d.ACTION_START_GUARDIAN -n com.hamer.res3d/.GuardianReceiver --include-stopped-packages
+ */
 class GuardianReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == "com.hamer.res3d.ACTION_START_GUARDIAN") {
-            Log.d("Res3D", "GuardianReceiver: Received broadcast trigger")
+            Log.i("[Res3D]", "GuardianReceiver: Received broadcast trigger")
             
             try {
                 val serviceIntent = Intent(context, GuardianService::class.java)
                 context.startService(serviceIntent)
-                Log.d("Res3D", "GuardianReceiver: Successfully called startService")
+                Log.i("[Res3D]", "GuardianReceiver: Successfully called startService")
             } catch (e: Exception) {
-                Log.e("Res3D", "GuardianReceiver: Failed to start service: ${e.message}")
+                Log.e("[Res3D]", "GuardianReceiver: Failed to start service: ${e.message}")
             }
         }
     }
