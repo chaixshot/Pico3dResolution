@@ -9,12 +9,12 @@ import android.content.Intent
 
 class GuardianProvider : ContentProvider() {
     override fun onCreate(): Boolean {
-        Log.i("Res3D", "GuardianProvider: onCreate called, starting service")
+        Log.i("[Res3D]", "GuardianProvider: onCreate called, starting service")
         try {
             val intent = Intent(context, GuardianService::class.java)
             context?.startService(intent)
         } catch (e: Exception) {
-            Log.e("Res3D", "GuardianProvider: Failed to start service: ${e.message}")
+            Log.e("[Res3D]", "GuardianProvider: Failed to start service: ${e.message}")
         }
         return true
     }
