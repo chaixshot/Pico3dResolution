@@ -458,26 +458,7 @@ suspend fun applySettings(
                 initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
             }
 
-            if (cpuSet == "1") { // Performance
-                // Give top-app and vrforeground all high-performance & prime cores
-                initialRootCmds.add("echo 2-7 > /dev/cpuset/top-app/cpus || true") // Active foreground app default allocation
-                initialRootCmds.add("echo 2-7 > /dev/cpuset/vrforeground/cpus || true") // Active VR application stereo rendering
-
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/compositor/cpus || true")
-                initialRootCmds.add("echo 0-2 > /dev/cpuset/audio-app/cpus || true")
-
-                // System services
-                initialRootCmds.add("echo 0-2 > /dev/cpuset/pico-system/cpus || true")
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
-                initialRootCmds.add("echo 0-2 > /dev/cpuset/dex2oat/cpus || true")
-                initialRootCmds.add("echo 0-2 > /dev/cpuset/tracking/cpus || true")
-
-                // Starve background tasks, confining them strictly to efficiency cores
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/foreground/cpus || true") // Standard foreground tasks
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/bg_3rd_app/cpus || true") // Background third-party apps
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/app-inshell/cpus || true") // Shell app cgroups
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/shell-app/cpus || true") // ADB / shell app execution
-            } else if (cpuSet == "2") { // Stock
+            if (cpuSet == "2") { // Stock
                 initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
                 initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
 
