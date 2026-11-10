@@ -868,7 +868,7 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "Description",
+                    text = stringResource(id = R.string.section_description),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.LightGray,
@@ -891,7 +891,7 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "Live Hardware Monitor",
+                    text = stringResource(id = R.string.live_hardware_monitor),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.LightGray,
@@ -904,7 +904,7 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
 
                 // CPU Cores Header
                 Text(
-                    text = "Core Usage",
+                    text = stringResource(id = R.string.core_usage),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.LightGray,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -997,18 +997,18 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
 
                         HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 20.dp))
 
-                        StatusRowItem(label = "Top App Cores", value = currentValues.topAppCpus)
-                        StatusRowItem(label = "VR Foreground Cores", value = currentValues.vrForegroundCpus)
-                        StatusRowItem(label = "Compositor Cores", value = currentValues.compositorCpus)
-                        StatusRowItem(label = "Audio App Cores", value = currentValues.audioAppCpus)
-                        StatusRowItem(label = "Pico System Cores", value = currentValues.picoSystemCpus)
-                        StatusRowItem(label = "Camera Daemon Cores", value = currentValues.cameraDaemonCpus)
-                        StatusRowItem(label = "Dex2oat Cores", value = currentValues.dex2oatCpus)
-                        StatusRowItem(label = "Tracking Cores", value = currentValues.trackingCpus)
-                        StatusRowItem(label = "Foreground Cores", value = currentValues.foregroundCpus)
-                        StatusRowItem(label = "Background Cores", value = currentValues.bg3rdAppCpus)
-                        StatusRowItem(label = "App Inshell Cores", value = currentValues.appInshellCpus)
-                        StatusRowItem(label = "Shell App Cores", value = currentValues.shellAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.top_app_cores), value = currentValues.topAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.vr_foreground_cores), value = currentValues.vrForegroundCpus)
+                        StatusRowItem(label = stringResource(id = R.string.compositor_cores), value = currentValues.compositorCpus)
+                        StatusRowItem(label = stringResource(id = R.string.audio_app_cores), value = currentValues.audioAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.pico_system_cores), value = currentValues.picoSystemCpus)
+                        StatusRowItem(label = stringResource(id = R.string.camera_daemon_cores), value = currentValues.cameraDaemonCpus)
+                        StatusRowItem(label = stringResource(id = R.string.dex2oat_cores), value = currentValues.dex2oatCpus)
+                        StatusRowItem(label = stringResource(id = R.string.tracking_cores), value = currentValues.trackingCpus)
+                        StatusRowItem(label = stringResource(id = R.string.foreground_cores), value = currentValues.foregroundCpus)
+                        StatusRowItem(label = stringResource(id = R.string.background_cores), value = currentValues.bg3rdAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.app_inshell_cores), value = currentValues.appInshellCpus)
+                        StatusRowItem(label = stringResource(id = R.string.shell_app_cores), value = currentValues.shellAppCpus)
                     }
                 }
             }
@@ -1057,12 +1057,13 @@ fun GpuLoadCard(liveStats: LiveStats) {
         ) {
             Column {
                 Text(
-                    text = "GPU Load",
+                    text = stringResource(id = R.string.gpu_load),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.LightGray,
                 )
                 Text(
                     text = "$cleanUsageStr%",
+                    style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
@@ -1157,7 +1158,7 @@ fun PhysicalRamCard(memory: MemoryStats) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Physical RAM",
+                text = stringResource(id = R.string.physical_ram),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.LightGray
             )
@@ -1189,7 +1190,7 @@ fun PhysicalRamCard(memory: MemoryStats) {
         ) {
             Column {
                 Text(
-                    text = "Used",
+                    text = stringResource(id = R.string.label_used),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.LightGray.copy(alpha = 0.6f)
                 )
@@ -1202,7 +1203,7 @@ fun PhysicalRamCard(memory: MemoryStats) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Free",
+                    text = stringResource(id = R.string.label_free),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.LightGray.copy(alpha = 0.6f)
                 )
@@ -1215,7 +1216,7 @@ fun PhysicalRamCard(memory: MemoryStats) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Total",
+                    text = stringResource(id = R.string.label_total),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.LightGray.copy(alpha = 0.6f)
                 )
@@ -1241,7 +1242,7 @@ fun SwapCard(memory: MemoryStats) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Swap / ZRAM",
+                text = stringResource(id = R.string.swap_zram),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.LightGray
             )
@@ -1273,7 +1274,7 @@ fun SwapCard(memory: MemoryStats) {
         ) {
             Column {
                 Text(
-                    text = "Used",
+                    text = stringResource(id = R.string.label_used),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.LightGray.copy(alpha = 0.6f)
                 )
@@ -1286,7 +1287,7 @@ fun SwapCard(memory: MemoryStats) {
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Free",
+                    text = stringResource(id = R.string.label_free),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.LightGray.copy(alpha = 0.6f)
                 )
@@ -1299,7 +1300,7 @@ fun SwapCard(memory: MemoryStats) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Total",
+                    text = stringResource(id = R.string.label_total),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.LightGray.copy(alpha = 0.6f)
                 )
