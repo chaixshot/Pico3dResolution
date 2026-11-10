@@ -994,10 +994,21 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
                             label = stringResource(id = R.string.gpu_mode),
                             value = if (currentValues.gpuMode == "1") stringResource(id = R.string.tune_performance) else if (currentValues.gpuMode == "2") stringResource(id = R.string.tune_stock) else currentValues.gpuMode
                         )
+
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 20.dp))
+
                         StatusRowItem(label = "Top App Cores", value = currentValues.topAppCpus)
-                        StatusRowItem(label = "Foreground App Cores", value = currentValues.foregroundCpus)
-                        StatusRowItem(label = "Background App Cores", value = currentValues.backgroundCpus)
-                        StatusRowItem(label = "System App Cores", value = currentValues.systemBackgroundCpus)
+                        StatusRowItem(label = "VR Foreground Cores", value = currentValues.vrForegroundCpus)
+                        StatusRowItem(label = "Compositor Cores", value = currentValues.compositorCpus)
+                        StatusRowItem(label = "Audio App Cores", value = currentValues.audioAppCpus)
+                        StatusRowItem(label = "Pico System Cores", value = currentValues.picoSystemCpus)
+                        StatusRowItem(label = "Camera Daemon Cores", value = currentValues.cameraDaemonCpus)
+                        StatusRowItem(label = "Dex2oat Cores", value = currentValues.dex2oatCpus)
+                        StatusRowItem(label = "Tracking Cores", value = currentValues.trackingCpus)
+                        StatusRowItem(label = "Foreground Cores", value = currentValues.foregroundCpus)
+                        StatusRowItem(label = "Background Cores", value = currentValues.bg3rdAppCpus)
+                        StatusRowItem(label = "App Inshell Cores", value = currentValues.appInshellCpus)
+                        StatusRowItem(label = "Shell App Cores", value = currentValues.shellAppCpus)
                     }
                 }
             }
@@ -1620,7 +1631,7 @@ fun AboutTabContent() {
     }
 }
 
-@Preview(showBackground = true, widthDp = 900, heightDp = 1200)
+@Preview(showBackground = true, widthDp = 900, heightDp = 1600)
 @Composable
 fun ResolutionControlPreview() {
     Pico3dResolutionTheme {

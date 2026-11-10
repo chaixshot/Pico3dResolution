@@ -28,9 +28,17 @@ data class ConfigValues(
     val latencyMode: String = "Unknown",
     val cpuSet: String = "Unknown",
     val topAppCpus: String = "N/A",
+    val vrForegroundCpus: String = "N/A",
+    val compositorCpus: String = "N/A",
+    val audioAppCpus: String = "N/A",
+    val picoSystemCpus: String = "N/A",
+    val cameraDaemonCpus: String = "N/A",
+    val dex2oatCpus: String = "N/A",
+    val trackingCpus: String = "N/A",
     val foregroundCpus: String = "N/A",
-    val backgroundCpus: String = "N/A",
-    val systemBackgroundCpus: String = "N/A"
+    val bg3rdAppCpus: String = "N/A",
+    val appInshellCpus: String = "N/A",
+    val shellAppCpus: String = "N/A"
 )
 
 data class CpuCoreStat(
@@ -212,9 +220,17 @@ suspend fun fetchCurrentValues(
         var latVal = "N/A"
         var cpuSetVal = "N/A"
         var topAppCpusVal = "N/A"
-        var fgCpusVal = "N/A"
-        var bgCpusVal = "N/A"
-        var sysBgCpusVal = "N/A"
+        var vrForegroundCpusVal = "N/A"
+        var compositorCpusVal = "N/A"
+        var audioAppCpusVal = "N/A"
+        var picoSystemCpusVal = "N/A"
+        var cameraDaemonCpusVal = "N/A"
+        var dex2oatCpusVal = "N/A"
+        var trackingCpusVal = "N/A"
+        var foregroundCpusVal = "N/A"
+        var bg3rdAppCpusVal = "N/A"
+        var appInshellCpusVal = "N/A"
+        var shellAppCpusVal = "N/A"
         var errorMsg = ""
 
         try {
@@ -244,11 +260,19 @@ suspend fun fetchCurrentValues(
                 latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
 
                 topAppCpusVal = readSysfs("/dev/cpuset/top-app/cpus")
-                fgCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
-                bgCpusVal = readSysfs("/dev/cpuset/background/cpus")
-                sysBgCpusVal = readSysfs("/dev/cpuset/system-background/cpus")
+                vrForegroundCpusVal = readSysfs("/dev/cpuset/vrforeground/cpus")
+                compositorCpusVal = readSysfs("/dev/cpuset/compositor/cpus")
+                audioAppCpusVal = readSysfs("/dev/cpuset/audio-app/cpus")
+                picoSystemCpusVal = readSysfs("/dev/cpuset/pico-system/cpus")
+                cameraDaemonCpusVal = readSysfs("/dev/cpuset/camera-daemon/cpus")
+                dex2oatCpusVal = readSysfs("/dev/cpuset/dex2oat/cpus")
+                trackingCpusVal = readSysfs("/dev/cpuset/tracking/cpus")
+                foregroundCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
+                bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
+                appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
+                shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
 
-                cpuSetVal = if (topAppCpusVal.contains("0-7")) "1" else if (topAppCpusVal.contains("4-6")) "2" else "2"
+                cpuSetVal = if (topAppCpusVal.contains("2-7") || topAppCpusVal.contains("0-7")) "1" else "2"
 
                 return@withContext ConfigValues(
                     resVal,
@@ -262,9 +286,17 @@ suspend fun fetchCurrentValues(
                     latVal,
                     cpuSetVal,
                     topAppCpusVal,
-                    fgCpusVal,
-                    bgCpusVal,
-                    sysBgCpusVal
+                    vrForegroundCpusVal,
+                    compositorCpusVal,
+                    audioAppCpusVal,
+                    picoSystemCpusVal,
+                    cameraDaemonCpusVal,
+                    dex2oatCpusVal,
+                    trackingCpusVal,
+                    foregroundCpusVal,
+                    bg3rdAppCpusVal,
+                    appInshellCpusVal,
+                    shellAppCpusVal
                 ) to ""
             }
         } catch (e: Exception) {
@@ -327,11 +359,19 @@ suspend fun fetchCurrentValues(
             latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
 
             topAppCpusVal = readSysfs("/dev/cpuset/top-app/cpus")
-            fgCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
-            bgCpusVal = readSysfs("/dev/cpuset/background/cpus")
-            sysBgCpusVal = readSysfs("/dev/cpuset/system-background/cpus")
+            vrForegroundCpusVal = readSysfs("/dev/cpuset/vrforeground/cpus")
+            compositorCpusVal = readSysfs("/dev/cpuset/compositor/cpus")
+            audioAppCpusVal = readSysfs("/dev/cpuset/audio-app/cpus")
+            picoSystemCpusVal = readSysfs("/dev/cpuset/pico-system/cpus")
+            cameraDaemonCpusVal = readSysfs("/dev/cpuset/camera-daemon/cpus")
+            dex2oatCpusVal = readSysfs("/dev/cpuset/dex2oat/cpus")
+            trackingCpusVal = readSysfs("/dev/cpuset/tracking/cpus")
+            foregroundCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
+            bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
+            appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
+            shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
 
-            cpuSetVal = if (topAppCpusVal.contains("0-7")) "1" else if (topAppCpusVal.contains("4-6")) "2" else "2"
+            cpuSetVal = if (topAppCpusVal.contains("2-7") || topAppCpusVal.contains("0-7")) "1" else "2"
 
         } catch (e: Exception) {
             errorMsg = e.message ?: "Unknown error"
@@ -339,7 +379,30 @@ suspend fun fetchCurrentValues(
             if (tempDb.exists()) tempDb.delete()
         }
 
-        ConfigValues(resVal, smVal, ffrVal, tfVal, maxPwr, minPwr, cpuVal, gpuVal, latVal, cpuSetVal, topAppCpusVal, fgCpusVal, bgCpusVal, sysBgCpusVal) to errorMsg
+        ConfigValues(
+            resVal,
+            smVal,
+            ffrVal,
+            tfVal,
+            maxPwr,
+            minPwr,
+            cpuVal,
+            gpuVal,
+            latVal,
+            cpuSetVal,
+            topAppCpusVal,
+            vrForegroundCpusVal,
+            compositorCpusVal,
+            audioAppCpusVal,
+            picoSystemCpusVal,
+            cameraDaemonCpusVal,
+            dex2oatCpusVal,
+            trackingCpusVal,
+            foregroundCpusVal,
+            bg3rdAppCpusVal,
+            appInshellCpusVal,
+            shellAppCpusVal
+        ) to errorMsg
     }
 
 suspend fun applySettings(
@@ -396,15 +459,39 @@ suspend fun applySettings(
             }
 
             if (cpuSet == "1") { // Performance
-                initialRootCmds.add("echo 0-7 > /dev/cpuset/top-app/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/foreground/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+                // Give top-app and vrforeground all high-performance & prime cores
+                initialRootCmds.add("echo 2-7 > /dev/cpuset/top-app/cpus || true") // Active foreground app default allocation
+                initialRootCmds.add("echo 2-7 > /dev/cpuset/vrforeground/cpus || true") // Active VR application stereo rendering
+
+                initialRootCmds.add("echo 0-3 > /dev/cpuset/compositor/cpus || true")
+                initialRootCmds.add("echo 0-2 > /dev/cpuset/audio-app/cpus || true")
+
+                // System services
+                initialRootCmds.add("echo 0-2 > /dev/cpuset/pico-system/cpus || true")
+                initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
+                initialRootCmds.add("echo 0-2 > /dev/cpuset/dex2oat/cpus || true")
+                initialRootCmds.add("echo 0-2 > /dev/cpuset/tracking/cpus || true")
+
+                // Starve background tasks, confining them strictly to efficiency cores
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/foreground/cpus || true") // Standard foreground tasks
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/bg_3rd_app/cpus || true") // Background third-party apps
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/app-inshell/cpus || true") // Shell app cgroups
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/shell-app/cpus || true") // ADB / shell app execution
             } else if (cpuSet == "2") { // Stock
                 initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
+                initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
+
+                initialRootCmds.add("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
+                initialRootCmds.add("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
+                initialRootCmds.add("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
+                initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
+                initialRootCmds.add("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
+                initialRootCmds.add("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
+
                 initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+                initialRootCmds.add("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
+                initialRootCmds.add("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
+                initialRootCmds.add("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
             }
 
             runRootCommand(*initialRootCmds.toTypedArray())
