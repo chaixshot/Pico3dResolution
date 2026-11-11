@@ -345,11 +345,16 @@ suspend fun applySettings(
                 initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
                 initialRootCmds.add("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
                 initialRootCmds.add("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
+                initialRootCmds.add("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
 
                 initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
                 initialRootCmds.add("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
                 initialRootCmds.add("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
                 initialRootCmds.add("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
+                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+                initialRootCmds.add("echo 7 > /dev/cpuset/cluster-super/cpus || true")
+                initialRootCmds.add("echo 0-7 > /dev/cpuset/restricted/cpus || true")
             }
 
             runRootCommand(*initialRootCmds.toTypedArray())
