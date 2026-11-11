@@ -5,6 +5,8 @@ import java.io.File
 
 class GuardianDaemon {
     companion object {
+        const val CONFIG_PATH = "/data/local/tmp/config.cfg"
+
         fun getSystemProperty(key: String, default: String = ""): String {
             val getSystemPropertyMethod by lazy {
                 try {
@@ -119,13 +121,12 @@ class GuardianDaemon {
             // Kill any stale instances running from older executions
             execCmd("for p in \$(pgrep -f 'com.hamer.res3d.GuardianDaemon'); do if [ \"\$p\" != \"$myPid\" ]; then kill -9 \$p; fi; done || true")
 
-            val relayPath = "/data/local/tmp/res3d_pwr.relay"
-            val relayFile = File(relayPath)
+            val config = File(CONFIG_PATH)
 
             while (true) {
                 try {
-                    if (relayFile.exists()) {
-                        val content = relayFile.readText().trim()
+                    if (config.exists()) {
+                        val content = config.readText().trim()
                         if (content.contains(":")) {
                             val levels = content.split(":")
                             val maxPwr = levels.getOrNull(0)?.trim() ?: ""
