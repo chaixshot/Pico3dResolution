@@ -209,9 +209,9 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
         }
     }
 
-    fun refreshValues() {
+    fun refreshConfigValues() {
         scope.launch {
-            val (values, error) = fetchCurrentValues(cacheDir, appUid, context)
+            val (values, error) = fetchConfigValues(cacheDir, appUid, context)
             currentValues = values
             if (values.resolution != "Unknown" && values.resolution != "N/A") {
                 resolution = values.resolution
@@ -253,7 +253,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                refreshValues()
+                refreshConfigValues()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -318,7 +318,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
                         databaseChanged = true
                     )
                     if (success) {
-                        refreshValues()
+                        refreshConfigValues()
                         status = if (error == "Success. Rebooting...") {
                             resources.getString(R.string.status_rebooting)
                         } else {
@@ -355,7 +355,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
                         databaseChanged = false
                     )
                     if (success) {
-                        refreshValues()
+                        refreshConfigValues()
                         status = resources.getString(R.string.status_applied_success)
                     } else {
                         status = resources.getString(R.string.status_error_prefix, error)
@@ -997,18 +997,18 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
 
                         HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 20.dp))
 
-                        StatusRowItem(label = stringResource(id = R.string.top_app_cores), value = currentValues.topAppCpus)
-                        StatusRowItem(label = stringResource(id = R.string.vr_foreground_cores), value = currentValues.vrForegroundCpus)
-                        StatusRowItem(label = stringResource(id = R.string.compositor_cores), value = currentValues.compositorCpus)
-                        StatusRowItem(label = stringResource(id = R.string.audio_app_cores), value = currentValues.audioAppCpus)
-                        StatusRowItem(label = stringResource(id = R.string.pico_system_cores), value = currentValues.picoSystemCpus)
-                        StatusRowItem(label = stringResource(id = R.string.camera_daemon_cores), value = currentValues.cameraDaemonCpus)
-                        StatusRowItem(label = stringResource(id = R.string.dex2oat_cores), value = currentValues.dex2oatCpus)
-                        StatusRowItem(label = stringResource(id = R.string.tracking_cores), value = currentValues.trackingCpus)
-                        StatusRowItem(label = stringResource(id = R.string.foreground_cores), value = currentValues.foregroundCpus)
-                        StatusRowItem(label = stringResource(id = R.string.background_cores), value = currentValues.bg3rdAppCpus)
-                        StatusRowItem(label = stringResource(id = R.string.app_inshell_cores), value = currentValues.appInshellCpus)
-                        StatusRowItem(label = stringResource(id = R.string.shell_app_cores), value = currentValues.shellAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.top_app_cores), value = liveStats.topAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.vr_foreground_cores), value = liveStats.vrForegroundCpus)
+                        StatusRowItem(label = stringResource(id = R.string.compositor_cores), value = liveStats.compositorCpus)
+                        StatusRowItem(label = stringResource(id = R.string.audio_app_cores), value = liveStats.audioAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.pico_system_cores), value = liveStats.picoSystemCpus)
+                        StatusRowItem(label = stringResource(id = R.string.camera_daemon_cores), value = liveStats.cameraDaemonCpus)
+                        StatusRowItem(label = stringResource(id = R.string.dex2oat_cores), value = liveStats.dex2oatCpus)
+                        StatusRowItem(label = stringResource(id = R.string.tracking_cores), value = liveStats.trackingCpus)
+                        StatusRowItem(label = stringResource(id = R.string.foreground_cores), value = liveStats.foregroundCpus)
+                        StatusRowItem(label = stringResource(id = R.string.background_cores), value = liveStats.bg3rdAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.app_inshell_cores), value = liveStats.appInshellCpus)
+                        StatusRowItem(label = stringResource(id = R.string.shell_app_cores), value = liveStats.shellAppCpus)
                     }
                 }
             }
@@ -1639,7 +1639,7 @@ fun ResolutionControlPreview() {
         ResolutionControlContent(
             selectedTab = NavTab.HOME,
             onTabSelected = {},
-            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2", "2", "0-7", "0-1", "0-1", "0-1"),
+            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2", "2"),
             liveStats = LiveStats("585 MHz", "45%", listOf(
                 CpuCoreStat(0, "1800 MHz", "12%"),
                 CpuCoreStat(1, "1800 MHz", "10%"),
