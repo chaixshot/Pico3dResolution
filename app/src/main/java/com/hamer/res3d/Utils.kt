@@ -12,21 +12,22 @@ import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStreamReader
 
+const val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
+const val CONFIG_PATH = "/data/local/tmp/config.cfg"
 const val DB_PATH = "/data/user_de/0/com.pvr.configuration/databases/config.db"
-const val TEMP_READ_DB = "config_temp.db"
 const val TEMP_APPLY_DB = "config_apply.db"
 
 data class ConfigValues(
-    val resolution: String = "Unknown",
-    val stencilMesh: String = "Unknown",
-    val ffr: String = "Unknown",
-    val textureFov: String = "Unknown",
-    val maxPwrLevel: String = "Unknown",
-    val minPwrLevel: String = "Unknown",
-    val cpuMode: String = "Unknown",
-    val gpuMode: String = "Unknown",
-    val latencyMode: String = "Unknown",
-    val cpuSet: String = "Unknown",
+    val resolution: String = "1504",
+    val stencilMesh: String = "1",
+    val ffr: String = "1",
+    val textureFov: String = "95",
+    val maxPwrLevel: String = "0",
+    val minPwrLevel: String = "6",
+    val cpuMode: String = "2",
+    val gpuMode: String = "2",
+    val latencyMode: String = "2",
+    val cpuSet: String = "2",
     val topAppCpus: String = "N/A",
     val vrForegroundCpus: String = "N/A",
     val compositorCpus: String = "N/A",
@@ -203,206 +204,46 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
     LiveStats(gpuFreq, gpuUsage, cpuCores, memoryStats)
 }
 
+@Suppress("UNUSED_PARAMETER")
 suspend fun fetchCurrentValues(
     cacheDir: File,
     uid: Int,
     context: Context
 ): Pair<ConfigValues, String> =
     withContext(Dispatchers.IO) {
-        var resVal = "N/A"
-        var smVal = "N/A"
-        var ffrVal = "N/A"
-        var tfVal = "N/A"
-        var maxPwr = "N/A"
-        var minPwr = "N/A"
-        var cpuVal = "N/A"
-        var gpuVal = "N/A"
-        var latVal = "N/A"
-        var cpuSetVal = "N/A"
-        var topAppCpusVal = "N/A"
-        var vrForegroundCpusVal = "N/A"
-        var compositorCpusVal = "N/A"
-        var audioAppCpusVal = "N/A"
-        var picoSystemCpusVal = "N/A"
-        var cameraDaemonCpusVal = "N/A"
-        var dex2oatCpusVal = "N/A"
-        var trackingCpusVal = "N/A"
-        var foregroundCpusVal = "N/A"
-        var bg3rdAppCpusVal = "N/A"
-        var appInshellCpusVal = "N/A"
-        var shellAppCpusVal = "N/A"
-        var errorMsg = ""
-
+        val config = File(CONFIG_PATH)
         try {
-            val apkPath = context.applicationInfo.publicSourceDir
-            val cmd =
-                "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater read \"$DB_PATH\""
-            val (success, output) = runRootCommandWithOutput(cmd)
+            if (config.exists()) {
+                val content = config.readText().trim()
+                if (content.contains(":")) {
+                    val parts = content.split(":")
+                    val maxPwr = parts.getOrNull(0)?.trim() ?: "0"
+                    val minPwr = parts.getOrNull(1)?.trim() ?: "6"
+                    val cpuMode = parts.getOrNull(2)?.trim() ?: "2"
+                    val gpuMode = parts.getOrNull(3)?.trim() ?: "2"
+                    val latencyMode = parts.getOrNull(4)?.trim() ?: "2"
+                    val cpuSet = parts.getOrNull(5)?.trim() ?: "2"
+                    val res = parts.getOrNull(6)?.trim() ?: "1504"
+                    val sm = parts.getOrNull(7)?.trim() ?: "1"
+                    val ffr = parts.getOrNull(8)?.trim() ?: "1"
+                    val tf = parts.getOrNull(9)?.trim() ?: "95"
 
-            if (success && output.contains("RES=")) {
-                val lines = output.split("\n")
-                for (line in lines) {
-                    if (line.startsWith("RES=")) resVal = line.substringAfter("RES=")
-                    if (line.startsWith("SM=")) smVal = line.substringAfter("SM=")
-                    if (line.startsWith("FFR=")) ffrVal = line.substringAfter("FFR=")
-                    if (line.startsWith("TF=")) tfVal = line.substringAfter("TF=")
+                    return@withContext ConfigValues(
+                        resolution = res,
+                        stencilMesh = sm,
+                        ffr = ffr,
+                        textureFov = tf,
+                        maxPwrLevel = maxPwr,
+                        minPwrLevel = minPwr,
+                        cpuMode = cpuMode,
+                        gpuMode = gpuMode,
+                        latencyMode = latencyMode,
+                        cpuSet = cpuSet
+                    ) to ""
                 }
-                maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-                minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-                val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                gpuVal = if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
-
-                val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-                cpuVal = if (cpuGov == "performance") "1" else if (cpuGov == "schedutil") "2" else "N/A"
-
-                val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
-                latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
-
-                topAppCpusVal = readSysfs("/dev/cpuset/top-app/cpus")
-                vrForegroundCpusVal = readSysfs("/dev/cpuset/vrforeground/cpus")
-                compositorCpusVal = readSysfs("/dev/cpuset/compositor/cpus")
-                audioAppCpusVal = readSysfs("/dev/cpuset/audio-app/cpus")
-                picoSystemCpusVal = readSysfs("/dev/cpuset/pico-system/cpus")
-                cameraDaemonCpusVal = readSysfs("/dev/cpuset/camera-daemon/cpus")
-                dex2oatCpusVal = readSysfs("/dev/cpuset/dex2oat/cpus")
-                trackingCpusVal = readSysfs("/dev/cpuset/tracking/cpus")
-                foregroundCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
-                bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
-                appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
-                shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
-
-                cpuSetVal = if (topAppCpusVal.contains("2-7") || topAppCpusVal.contains("0-7")) "1" else "2"
-
-                return@withContext ConfigValues(
-                    resVal,
-                    smVal,
-                    ffrVal,
-                    tfVal,
-                    maxPwr,
-                    minPwr,
-                    cpuVal,
-                    gpuVal,
-                    latVal,
-                    cpuSetVal,
-                    topAppCpusVal,
-                    vrForegroundCpusVal,
-                    compositorCpusVal,
-                    audioAppCpusVal,
-                    picoSystemCpusVal,
-                    cameraDaemonCpusVal,
-                    dex2oatCpusVal,
-                    trackingCpusVal,
-                    foregroundCpusVal,
-                    bg3rdAppCpusVal,
-                    appInshellCpusVal,
-                    shellAppCpusVal
-                ) to ""
             }
-        } catch (e: Exception) {
-            // Silently fall through to fallback
-        }
-
-        val tempDb = File(cacheDir, TEMP_READ_DB)
-        try {
-            val (success, error) = runRootCommand(
-                "setenforce 0 || true",
-                "cp $DB_PATH ${tempDb.absolutePath}",
-                "chown $uid:$uid ${tempDb.absolutePath}",
-                "chmod 666 ${tempDb.absolutePath}"
-            )
-
-            if (success) {
-                if (tempDb.exists()) {
-                    val db = SQLiteDatabase.openDatabase(
-                        tempDb.absolutePath,
-                        null,
-                        SQLiteDatabase.OPEN_READONLY
-                    )
-
-                    fun queryValue(key: String): String {
-                        db.rawQuery(
-                            "SELECT LINKAGE_VALUE FROM RuleBean WHERE LINKAGE_KEY LIKE ? LIMIT 1",
-                            arrayOf("%$key%")
-                        ).use { cursor ->
-                            if (cursor.moveToFirst()) {
-                                return cursor.getString(0) ?: "null"
-                            }
-                        }
-                        return "N/A"
-                    }
-
-                    resVal = queryValue("sdk_eyebuffer")
-                    smVal = queryValue("sdk_enableFFRBySYS")
-                    ffrVal = queryValue("sdk_stencilMeshStatus")
-                    tfVal = queryValue("sdk_EyeTextureFov")
-
-                    db.close()
-                    tempDb.delete()
-                } else {
-                    errorMsg = "Temp file not created"
-                }
-            } else {
-                errorMsg = error
-            }
-
-            maxPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-            minPwr = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-            val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
-            gpuVal = if (gpuGov == "performance") "1" else if (gpuGov == "msm-adreno-tz") "2" else "N/A"
-
-            val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
-            cpuVal = if (cpuGov == "performance") "1" else if (cpuGov == "schedutil") "2" else "N/A"
-
-            val schedLatency = readSysfs("/proc/sys/kernel/sched_latency_ns")
-            latVal = if (schedLatency == "5000000") "1" else if (schedLatency == "10000000") "2" else "N/A"
-
-            topAppCpusVal = readSysfs("/dev/cpuset/top-app/cpus")
-            vrForegroundCpusVal = readSysfs("/dev/cpuset/vrforeground/cpus")
-            compositorCpusVal = readSysfs("/dev/cpuset/compositor/cpus")
-            audioAppCpusVal = readSysfs("/dev/cpuset/audio-app/cpus")
-            picoSystemCpusVal = readSysfs("/dev/cpuset/pico-system/cpus")
-            cameraDaemonCpusVal = readSysfs("/dev/cpuset/camera-daemon/cpus")
-            dex2oatCpusVal = readSysfs("/dev/cpuset/dex2oat/cpus")
-            trackingCpusVal = readSysfs("/dev/cpuset/tracking/cpus")
-            foregroundCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
-            bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
-            appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
-            shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
-
-            cpuSetVal = if (topAppCpusVal.contains("2-7") || topAppCpusVal.contains("0-7")) "1" else "2"
-
-        } catch (e: Exception) {
-            errorMsg = e.message ?: "Unknown error"
-        } finally {
-            if (tempDb.exists()) tempDb.delete()
-        }
-
-        ConfigValues(
-            resVal,
-            smVal,
-            ffrVal,
-            tfVal,
-            maxPwr,
-            minPwr,
-            cpuVal,
-            gpuVal,
-            latVal,
-            cpuSetVal,
-            topAppCpusVal,
-            vrForegroundCpusVal,
-            compositorCpusVal,
-            audioAppCpusVal,
-            picoSystemCpusVal,
-            cameraDaemonCpusVal,
-            dex2oatCpusVal,
-            trackingCpusVal,
-            foregroundCpusVal,
-            bg3rdAppCpusVal,
-            appInshellCpusVal,
-            shellAppCpusVal
-        ) to errorMsg
+        } catch (_: Exception) {}
+        ConfigValues() to ""
     }
 
 suspend fun applySettings(
@@ -489,6 +330,17 @@ suspend fun applySettings(
             }
 
             try {
+                val configCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode:$cpuSet:$res:$sm:$ffr:$tf > $CONFIG_PATH"
+                runRootCommand(
+                    configCmd,
+                    "chmod 666 $CONFIG_PATH",
+                    "chown 1000:1000 $CONFIG_PATH"
+                )
+            } catch (e: Exception) {
+                Log.e("Res3D", "Failed to write config file", e)
+            }
+
+            try {
                 val dataDir = storageContext.dataDir
                 val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
 
@@ -497,20 +349,13 @@ suspend fun applySettings(
                     prefFile.parentFile?.setReadable(true, false)
                     prefFile.parentFile?.setExecutable(true, false)
 
-                    val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
-                    val relayPath = "/data/local/tmp/res3d_pwr.relay"
-                    val relayCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode:$cpuSet > $relayPath"
-
                     runRootCommand(
                         "chmod 664 ${prefFile.absolutePath}",
                         "chmod 775 ${prefFile.parentFile?.absolutePath}",
                         "cp ${prefFile.absolutePath} $targetSystemPrefsPath",
                         "chmod 666 $targetSystemPrefsPath",
                         "chown 1000:1000 $targetSystemPrefsPath",
-                        "chcon u:object_r:system_data_file:s0 $targetSystemPrefsPath",
-                        relayCmd,
-                        "chmod 666 $relayPath",
-                        "chown 1000:1000 $relayPath"
+                        "chcon u:object_r:system_data_file:s0 $targetSystemPrefsPath"
                     )
                 }
             } catch (e: Exception) {
