@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,10 +67,14 @@ enum class NavTab {
 @Composable
 fun HelpButton(title: String, message: String) {
     var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val view = LocalView.current
 
     IconButton(
         onClick = { showDialog = true },
-        modifier = Modifier.size(18.dp)
+        modifier = Modifier
+            .size(18.dp)
+            .picoHapticHover(context, view)
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
@@ -84,7 +89,10 @@ fun HelpButton(title: String, message: String) {
             title = { Text(text = title, style = MaterialTheme.typography.titleMedium) },
             text = { Text(text = message, style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(
+                    onClick = { showDialog = false },
+                    modifier = Modifier.picoHapticHover(context, view)
+                ) {
                     Text(
                         stringResource(id = R.string.close),
                         color = colorResource(id = R.color.toggle_button)
@@ -490,6 +498,8 @@ fun ResolutionControlContent(
 
                     // Pinned Bottom Action Bar for Rendering & Performance Tabs
                     if (selectedTab == NavTab.RENDERING || selectedTab == NavTab.PERFORMANCE) {
+                        val context = LocalContext.current
+                        val view = LocalView.current
                         Spacer(modifier = Modifier.height(12.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             // Status Feedback Box
@@ -509,10 +519,13 @@ fun ResolutionControlContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Button(
-                                    onClick = if (selectedTab == NavTab.RENDERING) onApplyRenderingClick else onApplyPerformanceClick,
+                                    onClick = {
+                                        if (selectedTab == NavTab.RENDERING) onApplyRenderingClick() else onApplyPerformanceClick()
+                                    },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(48.dp),
+                                        .height(48.dp)
+                                        .picoHapticHover(context, view),
                                     shape = RoundedCornerShape(6.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = colorResource(id = R.color.card_bg)
@@ -542,7 +555,9 @@ fun ResolutionControlContent(
                                             onCpuSetChange("2") // Default Stock
                                         }
                                     },
-                                    modifier = Modifier.size(48.dp),
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .picoHapticHover(context, view),
                                     shape = RoundedCornerShape(6.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = colorResource(id = R.color.card_bg)
@@ -627,12 +642,16 @@ fun NavTabItem(
     val backgroundColor = if (isSelected) colorResource(id = R.color.card_bg) else Color.Transparent
     val contentColor = if (isSelected) Color.LightGray else Color.Gray
     val fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+    val context = LocalContext.current
+    val view = LocalView.current
 
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(6.dp),
         color = backgroundColor,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .picoHapticHover(context, view)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -708,10 +727,14 @@ fun PicoDropdownSelector(
     dropdownWidth: Dp = 240.dp
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val view = LocalView.current
 
     ExposedDropdownMenuBox(
         expanded = isExpanded,
-        onExpandedChange = { isExpanded = it },
+        onExpandedChange = {
+            isExpanded = it
+        },
         modifier = modifier.width(dropdownWidth)
     ) {
         Row(
@@ -726,6 +749,7 @@ fun PicoDropdownSelector(
                     shape = RoundedCornerShape(6.dp)
                 )
                 .padding(horizontal = 16.dp)
+                .picoHapticHover(context, view)
         ) {
             Text(
                 text = valueText,
@@ -796,7 +820,9 @@ fun PicoDropdownSelector(
                             isExpanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .picoHapticHover(context, view)
                     )
                 }
             }
@@ -1531,6 +1557,7 @@ fun PerformanceTabContent(
 fun AboutTabContent() {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
+    val view = LocalView.current
     val versionName = remember {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -1596,10 +1623,14 @@ fun AboutTabContent() {
 
         // GitHub Repository Link Card (@github_link)
         Card(
-            onClick = { uriHandler.openUri("https://github.com/chaixshot/Pico3dResolution") },
+            onClick = {
+                uriHandler.openUri("https://github.com/chaixshot/Pico3dResolution")
+            },
             colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.card_bg)),
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .picoHapticHover(context, view)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
