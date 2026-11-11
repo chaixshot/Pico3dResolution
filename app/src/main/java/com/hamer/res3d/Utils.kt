@@ -28,18 +28,6 @@ data class ConfigValues(
     val gpuMode: String = "2",
     val latencyMode: String = "2",
     val cpuSet: String = "2",
-    val topAppCpus: String = "N/A",
-    val vrForegroundCpus: String = "N/A",
-    val compositorCpus: String = "N/A",
-    val audioAppCpus: String = "N/A",
-    val picoSystemCpus: String = "N/A",
-    val cameraDaemonCpus: String = "N/A",
-    val dex2oatCpus: String = "N/A",
-    val trackingCpus: String = "N/A",
-    val foregroundCpus: String = "N/A",
-    val bg3rdAppCpus: String = "N/A",
-    val appInshellCpus: String = "N/A",
-    val shellAppCpus: String = "N/A"
 )
 
 data class CpuCoreStat(
@@ -63,7 +51,19 @@ data class LiveStats(
     val gpuClock: String = "N/A",
     val gpuUsage: String = "N/A",
     val cpuCores: List<CpuCoreStat> = emptyList(),
-    val memory: MemoryStats = MemoryStats()
+    val memory: MemoryStats = MemoryStats(),
+    val topAppCpus: String = "N/A",
+    val vrForegroundCpus: String = "N/A",
+    val compositorCpus: String = "N/A",
+    val audioAppCpus: String = "N/A",
+    val picoSystemCpus: String = "N/A",
+    val cameraDaemonCpus: String = "N/A",
+    val dex2oatCpus: String = "N/A",
+    val trackingCpus: String = "N/A",
+    val foregroundCpus: String = "N/A",
+    val bg3rdAppCpus: String = "N/A",
+    val appInshellCpus: String = "N/A",
+    val shellAppCpus: String = "N/A"
 )
 
 data class CpuTick(val total: Long, val idle: Long)
@@ -201,11 +201,42 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
     }
 
     val memoryStats = fetchMemoryStats()
-    LiveStats(gpuFreq, gpuUsage, cpuCores, memoryStats)
+
+    val topAppCpusVal = readSysfs("/dev/cpuset/top-app/cpus")
+    val vrForegroundCpusVal = readSysfs("/dev/cpuset/vrforeground/cpus")
+    val compositorCpusVal = readSysfs("/dev/cpuset/compositor/cpus")
+    val audioAppCpusVal = readSysfs("/dev/cpuset/audio-app/cpus")
+    val picoSystemCpusVal = readSysfs("/dev/cpuset/pico-system/cpus")
+    val cameraDaemonCpusVal = readSysfs("/dev/cpuset/camera-daemon/cpus")
+    val dex2oatCpusVal = readSysfs("/dev/cpuset/dex2oat/cpus")
+    val trackingCpusVal = readSysfs("/dev/cpuset/tracking/cpus")
+    val foregroundCpusVal = readSysfs("/dev/cpuset/foreground/cpus")
+    val bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
+    val appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
+    val shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
+
+    LiveStats(
+        gpuClock = gpuFreq,
+        gpuUsage = gpuUsage,
+        cpuCores = cpuCores,
+        memory = memoryStats,
+        topAppCpus = topAppCpusVal,
+        vrForegroundCpus = vrForegroundCpusVal,
+        compositorCpus = compositorCpusVal,
+        audioAppCpus = audioAppCpusVal,
+        picoSystemCpus = picoSystemCpusVal,
+        cameraDaemonCpus = cameraDaemonCpusVal,
+        dex2oatCpus = dex2oatCpusVal,
+        trackingCpus = trackingCpusVal,
+        foregroundCpus = foregroundCpusVal,
+        bg3rdAppCpus = bg3rdAppCpusVal,
+        appInshellCpus = appInshellCpusVal,
+        shellAppCpus = shellAppCpusVal
+    )
 }
 
 @Suppress("UNUSED_PARAMETER")
-suspend fun fetchCurrentValues(
+suspend fun fetchConfigValues(
     cacheDir: File,
     uid: Int,
     context: Context
@@ -337,7 +368,7 @@ suspend fun applySettings(
                     "chown 1000:1000 $CONFIG_PATH"
                 )
             } catch (e: Exception) {
-                Log.e("Res3D", "Failed to write config file", e)
+                Log.e("[Res3D]", "Failed to write config file", e)
             }
 
             try {
@@ -359,14 +390,14 @@ suspend fun applySettings(
                     )
                 }
             } catch (e: Exception) {
-                Log.e("Res3D", "Failed to set pref file permissions", e)
+                Log.e("[Res3D]", "Failed to set pref file permissions", e)
             }
 
             try {
                 val serviceIntent = Intent(context, GuardianService::class.java)
                 context.startService(serviceIntent)
             } catch (e: Exception) {
-                Log.e("Res3D", "Failed to start GuardianService", e)
+                Log.e("[Res3D]", "Failed to start GuardianService", e)
             }
 
             if (databaseChanged) {
@@ -467,7 +498,7 @@ suspend fun applySettings(
                     }
                 }
 
-                val (verifiedValues, _) = fetchCurrentValues(cacheDir, uid, context)
+                val (verifiedValues, _) = fetchConfigValues(cacheDir, uid, context)
 
                 val isResVerified = res.isBlank() || verifiedValues.resolution == res
                 val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
