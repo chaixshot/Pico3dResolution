@@ -1020,19 +1020,29 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
                             label = stringResource(id = R.string.gpu_mode),
                             value = if (currentValues.gpuMode == "1") stringResource(id = R.string.tune_performance) else if (currentValues.gpuMode == "2") stringResource(id = R.string.tune_stock) else currentValues.gpuMode
                         )
-
-                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 20.dp))
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
 
                         StatusRowItem(label = stringResource(id = R.string.top_app_cores), value = liveStats.topAppCpus)
                         StatusRowItem(label = stringResource(id = R.string.vr_foreground_cores), value = liveStats.vrForegroundCpus)
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
+
                         StatusRowItem(label = stringResource(id = R.string.compositor_cores), value = liveStats.compositorCpus)
-                        StatusRowItem(label = stringResource(id = R.string.audio_app_cores), value = liveStats.audioAppCpus)
                         StatusRowItem(label = stringResource(id = R.string.pico_system_cores), value = liveStats.picoSystemCpus)
-                        StatusRowItem(label = stringResource(id = R.string.camera_daemon_cores), value = liveStats.cameraDaemonCpus)
-                        StatusRowItem(label = stringResource(id = R.string.dex2oat_cores), value = liveStats.dex2oatCpus)
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
+
                         StatusRowItem(label = stringResource(id = R.string.tracking_cores), value = liveStats.trackingCpus)
+                        StatusRowItem(label = stringResource(id = R.string.camera_daemon_cores), value = liveStats.cameraDaemonCpus)
+                        StatusRowItem(label = stringResource(id = R.string.quick_camera_cores), value = liveStats.quickCameraCpus)
+                        StatusRowItem(label = stringResource(id = R.string.audio_app_cores), value = liveStats.audioAppCpus)
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
+
                         StatusRowItem(label = stringResource(id = R.string.foreground_cores), value = liveStats.foregroundCpus)
-                        StatusRowItem(label = stringResource(id = R.string.background_cores), value = liveStats.bg3rdAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.system_background_cores), value = liveStats.systemBackgroundCpus)
+                        StatusRowItem(label = stringResource(id = R.string.background_cores), value = liveStats.backgroundCpus)
+                        StatusRowItem(label = stringResource(id = R.string.bg3rdApp_cores), value = liveStats.bg3rdAppCpus)
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
+
+                        StatusRowItem(label = stringResource(id = R.string.dex2oat_cores), value = liveStats.dex2oatCpus)
                         StatusRowItem(label = stringResource(id = R.string.app_inshell_cores), value = liveStats.appInshellCpus)
                         StatusRowItem(label = stringResource(id = R.string.shell_app_cores), value = liveStats.shellAppCpus)
                     }
@@ -1465,6 +1475,12 @@ fun PerformanceTabContent(
         "2" to stringResource(id = R.string.tune_stock)
     )
 
+    val coresOptions = listOf(
+        "1" to stringResource(id = R.string.tune_performance),
+        "2" to stringResource(id = R.string.pwr_balanced),
+        "3" to stringResource(id = R.string.tune_stock),
+    )
+
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         // Max Power Level
         SettingCard(
@@ -1545,10 +1561,10 @@ fun PerformanceTabContent(
             helpTitle = stringResource(id = R.string.cpu_set),
             helpMessage = stringResource(id = R.string.help_cpu_set_desc)
         ) {
-            val selectedText = tuneOptions.find { it.first == cpuSet }?.second ?: cpuSet
+            val selectedText = coresOptions.find { it.first == cpuSet }?.second ?: cpuSet
             PicoDropdownSelector(
                 valueText = selectedText,
-                options = tuneOptions,
+                options = coresOptions,
                 onOptionSelected = onCpuSetChange,
                 dropdownWidth = 240.dp
             )
@@ -1660,6 +1676,56 @@ fun AboutTabContent() {
                     imageVector = Icons.Rounded.ChevronRight,
                     contentDescription = "Open Link",
                     tint = Color.Gray
+                )
+            }
+        }
+
+        // Developer Mode Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.card_bg)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            var developerMode by remember {
+                mutableStateOf(GuardianDaemon.getSystemProperty("hamer.3dres.developermode", "0") == "1")
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(id = R.string.developer_mode),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(id = R.string.developer_mode_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+                Switch(
+                    checked = developerMode,
+                    onCheckedChange = { checked ->
+                        developerMode = checked
+                        val valStr = if (checked) "1" else "0"
+                        kotlin.concurrent.thread {
+                            runRootCommand("setprop hamer.3dres.developermode '$valStr'")
+                        }
+                    },
+                    modifier = Modifier.picoHapticHover(context, view),
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = colorResource(id = R.color.primary),
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = Color(0xFF3A3A3C)
+                    )
                 )
             }
         }

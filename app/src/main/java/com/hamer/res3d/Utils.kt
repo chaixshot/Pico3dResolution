@@ -32,7 +32,7 @@ data class ConfigValues(
     val cpuMode: String = "2",
     val gpuMode: String = "2",
     val latencyMode: String = "2",
-    val cpuSet: String = "2",
+    val cpuSet: String = "3",
 )
 
 data class CpuCoreStat(
@@ -61,6 +61,9 @@ data class LiveStats(
     val vrForegroundCpus: String = "N/A",
     val compositorCpus: String = "N/A",
     val audioAppCpus: String = "N/A",
+    val quickCameraCpus: String = "N/A",
+    val backgroundCpus: String = "N/A",
+    val systemBackgroundCpus: String = "N/A",
     val picoSystemCpus: String = "N/A",
     val cameraDaemonCpus: String = "N/A",
     val dex2oatCpus: String = "N/A",
@@ -219,6 +222,9 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
     val bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
     val appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
     val shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
+    val quickCameraCpusVal = readSysfs("/dev/cpuset/quickcamera/cpus")
+    val backgroundCpusVal = readSysfs("/dev/cpuset/background/cpus")
+    val systemBackgroundCpusVal = readSysfs("/dev/cpuset/system-background/cpus")
 
     LiveStats(
         gpuClock = gpuFreq,
@@ -236,7 +242,10 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
         foregroundCpus = foregroundCpusVal,
         bg3rdAppCpus = bg3rdAppCpusVal,
         appInshellCpus = appInshellCpusVal,
-        shellAppCpus = shellAppCpusVal
+        shellAppCpus = shellAppCpusVal,
+        quickCameraCpus = quickCameraCpusVal,
+        backgroundCpus = backgroundCpusVal,
+        systemBackgroundCpus = systemBackgroundCpusVal,
     )
 }
 
@@ -247,39 +256,7 @@ suspend fun fetchConfigValues(
     context: Context
 ): Pair<ConfigValues, String> =
     withContext(Dispatchers.IO) {
-        val config = File(CONFIG_PATH)
-        try {
-            if (config.exists()) {
-                val content = config.readText().trim()
-                if (content.contains(":")) {
-                    val parts = content.split(":")
-                    val maxPwr = parts.getOrNull(0)?.trim() ?: "0"
-                    val minPwr = parts.getOrNull(1)?.trim() ?: "6"
-                    val cpuMode = parts.getOrNull(2)?.trim() ?: "2"
-                    val gpuMode = parts.getOrNull(3)?.trim() ?: "2"
-                    val latencyMode = parts.getOrNull(4)?.trim() ?: "2"
-                    val cpuSet = parts.getOrNull(5)?.trim() ?: "2"
-                    val res = parts.getOrNull(6)?.trim() ?: "1504"
-                    val sm = parts.getOrNull(7)?.trim() ?: "1"
-                    val ffr = parts.getOrNull(8)?.trim() ?: "1"
-                    val tf = parts.getOrNull(9)?.trim() ?: "95"
-
-                    return@withContext ConfigValues(
-                        resolution = res,
-                        stencilMesh = sm,
-                        ffr = ffr,
-                        textureFov = tf,
-                        maxPwrLevel = maxPwr,
-                        minPwrLevel = minPwr,
-                        cpuMode = cpuMode,
-                        gpuMode = gpuMode,
-                        latencyMode = latencyMode,
-                        cpuSet = cpuSet
-                    ) to ""
-                }
-            }
-        } catch (_: Exception) {}
-        ConfigValues() to ""
+        getConfigs() to ""
     }
 
 suspend fun applySettings(
@@ -303,73 +280,7 @@ suspend fun applySettings(
         var db: SQLiteDatabase? = null
 
         try {
-            val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
-            if (maxPwr.isNotBlank())
-                initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-            if (minPwr.isNotBlank())
-                initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
-
-            if (cpuMode == "1") {
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
-            } else if (cpuMode == "2") {
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
-                initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
-            }
-
-            if (gpuMode == "1") {
-                initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
-            } else if (gpuMode == "2") {
-                initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
-            }
-
-            if (latencyMode == "1") {
-                initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
-                initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
-            } else if (latencyMode == "2") {
-                initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
-                initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
-            }
-
-            if (cpuSet == "2") { // Stock
-                initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
-                initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
-
-                initialRootCmds.add("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
-                initialRootCmds.add("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
-                initialRootCmds.add("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
-                initialRootCmds.add("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
-
-                initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
-                initialRootCmds.add("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
-                initialRootCmds.add("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
-                initialRootCmds.add("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
-                initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
-                initialRootCmds.add("echo 7 > /dev/cpuset/cluster-super/cpus || true")
-                initialRootCmds.add("echo 0-7 > /dev/cpuset/restricted/cpus || true")
-            }
-
-            runRootCommand(*initialRootCmds.toTypedArray())
-
-            val storageContext = context.createDeviceProtectedStorageContext()
-            val prefs = storageContext.getSharedPreferences(
-                "pwr_prefs",
-                Context.MODE_PRIVATE
-            )
-            prefs.edit().apply {
-                putString("max_pwrlevel", maxPwr)
-                putString("min_pwrlevel", minPwr)
-                commit()
-            }
-
+            // Save config
             try {
                 val configCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode:$cpuSet:$res:$sm:$ffr:$tf > $CONFIG_PATH"
                 runRootCommand(
@@ -381,7 +292,78 @@ suspend fun applySettings(
                 Log.e("[Res3D]", "Failed to write config file", e)
             }
 
+            // Apply system config
             try {
+                val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
+                if (maxPwr.isNotBlank())
+                    initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+                if (minPwr.isNotBlank())
+                    initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+
+                if (cpuMode == "1") {
+                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
+                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
+                } else if (cpuMode == "2") { // Stock
+                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
+                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
+                }
+
+                if (gpuMode == "1") {
+                    initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
+                    initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
+                    initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
+                } else if (gpuMode == "2") { // Stock
+                    initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
+                    initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
+                    initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
+                }
+
+                if (latencyMode == "1") {
+                    initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
+                    initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
+                } else if (latencyMode == "2") { // Stock
+                    initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
+                    initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
+                }
+
+                if (cpuSet == "3") { // Stock
+                    initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
+                    initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
+
+                    initialRootCmds.add("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
+                    initialRootCmds.add("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
+                    initialRootCmds.add("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
+                    initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
+                    initialRootCmds.add("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
+                    initialRootCmds.add("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
+                    initialRootCmds.add("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
+
+                    initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
+                    initialRootCmds.add("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
+                    initialRootCmds.add("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
+                    initialRootCmds.add("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
+                    initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
+                    initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+                    initialRootCmds.add("echo 7 > /dev/cpuset/cluster-super/cpus || true")
+                    initialRootCmds.add("echo 0-7 > /dev/cpuset/restricted/cpus || true")
+                }
+
+                runRootCommand(*initialRootCmds.toTypedArray())
+            } catch (e: Exception) {}
+
+            // Apply system power level
+            try {
+                val storageContext = context.createDeviceProtectedStorageContext()
+                val prefs = storageContext.getSharedPreferences(
+                    "pwr_prefs",
+                    Context.MODE_PRIVATE
+                )
+                prefs.edit().apply {
+                    putString("max_pwrlevel", maxPwr)
+                    putString("min_pwrlevel", minPwr)
+                    commit()
+                }
+
                 val dataDir = storageContext.dataDir
                 val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
 
@@ -403,6 +385,7 @@ suspend fun applySettings(
                 Log.e("[Res3D]", "Failed to set pref file permissions", e)
             }
 
+            // Start GuardianService => GuardianDaemon
             try {
                 val serviceIntent = Intent(context, GuardianService::class.java)
                 context.startService(serviceIntent)
@@ -410,6 +393,7 @@ suspend fun applySettings(
                 Log.e("[Res3D]", "Failed to start GuardianService", e)
             }
 
+            // Modify com.pvr.configuration config.db
             if (databaseChanged) {
                 val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
                 var primaryWorked = false
@@ -423,9 +407,7 @@ suspend fun applySettings(
                         if (success && output.contains("WRITE_SUCCESS")) {
                             primaryWorked = true
                         }
-                    } catch (e: Exception) {
-                        // Silently fall through to fallback
-                    }
+                    } catch (e: Exception) {}
 
                     if (!primaryWorked) {
                         val (cpSuccess, cpError) = runRootCommand(
@@ -657,4 +639,34 @@ suspend fun checkAndEnableXposedScope(packageName: String) = withContext(Dispatc
         val addScopeCmd = "/data/adb/lspd/cli scope add $packageName system_server || /data/adb/modules/zygisk_vector/cli scope add $packageName system_server"
         runRootCommand(enableCmd, addScopeCmd)
     }
+}
+
+fun getConfigs(): ConfigValues {
+    val defaults = ConfigValues()
+    val configFile = File(CONFIG_PATH)
+
+    if (configFile.exists()) {
+        try {
+            val content = configFile.readText().trim()
+            if (content.contains(":")) {
+                val levels = content.split(":")
+                return ConfigValues(
+                    maxPwrLevel = levels.getOrNull(0)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.maxPwrLevel,
+                    minPwrLevel = levels.getOrNull(1)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.minPwrLevel,
+                    cpuMode = levels.getOrNull(2)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.cpuMode,
+                    gpuMode = levels.getOrNull(3)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.gpuMode,
+                    latencyMode = levels.getOrNull(4)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.latencyMode,
+                    cpuSet = levels.getOrNull(5)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.cpuSet,
+                    resolution = levels.getOrNull(6)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.resolution,
+                    stencilMesh = levels.getOrNull(7)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.stencilMesh,
+                    ffr = levels.getOrNull(8)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.ffr,
+                    textureFov = levels.getOrNull(9)?.trim().takeIf { !it.isNullOrBlank() } ?: defaults.textureFov
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("[Res3D]", "Failed to read config file", e)
+        }
+    }
+
+    return defaults
 }

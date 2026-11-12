@@ -90,5 +90,7 @@
     <string name="quick_camera_cores">Quick Camera Cores</string>
     <string name="background_cores">Background Cores</string>
     <string name="system_background_cores">System Background Cores</string>
+    <string name="developer_mode" tools:ignore="MissingTranslation">Developer Mode</string>
+    <string name="developer_mode_desc" tools:ignore="MissingTranslation">Spoof that the headset is worn and the dock is hidden</string>
     <string name="close">Close</string>
 </resources>
