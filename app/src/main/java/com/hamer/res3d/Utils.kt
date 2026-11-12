@@ -61,6 +61,9 @@ data class LiveStats(
     val vrForegroundCpus: String = "N/A",
     val compositorCpus: String = "N/A",
     val audioAppCpus: String = "N/A",
+    val quickCameraCpus: String = "N/A",
+    val backgroundCpus: String = "N/A",
+    val systemBackgroundCpus: String = "N/A",
     val picoSystemCpus: String = "N/A",
     val cameraDaemonCpus: String = "N/A",
     val dex2oatCpus: String = "N/A",
@@ -219,6 +222,9 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
     val bg3rdAppCpusVal = readSysfs("/dev/cpuset/bg_3rd_app/cpus")
     val appInshellCpusVal = readSysfs("/dev/cpuset/app-inshell/cpus")
     val shellAppCpusVal = readSysfs("/dev/cpuset/shell-app/cpus")
+    val quickCameraCpusVal = readSysfs("/dev/cpuset/quickcamera/cpus")
+    val backgroundCpusVal = readSysfs("/dev/cpuset/background/cpus")
+    val systemBackgroundCpusVal = readSysfs("/dev/cpuset/system-background/cpus")
 
     LiveStats(
         gpuClock = gpuFreq,
@@ -236,7 +242,10 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
         foregroundCpus = foregroundCpusVal,
         bg3rdAppCpus = bg3rdAppCpusVal,
         appInshellCpus = appInshellCpusVal,
-        shellAppCpus = shellAppCpusVal
+        shellAppCpus = shellAppCpusVal,
+        quickCameraCpus = quickCameraCpusVal,
+        backgroundCpus = backgroundCpusVal,
+        systemBackgroundCpus = systemBackgroundCpusVal,
     )
 }
 
@@ -312,7 +321,7 @@ suspend fun applySettings(
             if (cpuMode == "1") {
                 initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
                 initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
-            } else if (cpuMode == "2") {
+            } else if (cpuMode == "2") { // Stock
                 initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
                 initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
             }
@@ -321,7 +330,7 @@ suspend fun applySettings(
                 initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
                 initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
                 initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
-            } else if (gpuMode == "2") {
+            } else if (gpuMode == "2") { // Stock
                 initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
                 initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
                 initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
@@ -330,12 +339,12 @@ suspend fun applySettings(
             if (latencyMode == "1") {
                 initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
                 initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
-            } else if (latencyMode == "2") {
+            } else if (latencyMode == "2") { // Stock
                 initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
                 initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
             }
 
-            if (cpuSet == "2") { // Stock
+            if (cpuSet == "3") { // Stock
                 initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
                 initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
 

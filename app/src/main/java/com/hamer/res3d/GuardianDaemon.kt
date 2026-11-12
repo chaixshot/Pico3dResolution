@@ -122,15 +122,34 @@ class GuardianDaemon {
             execCmd("for p in \$(pgrep -f 'com.hamer.res3d.GuardianDaemon'); do if [ \"\$p\" != \"$myPid\" ]; then kill -9 \$p; fi; done || true")
 
             val config = File(CONFIG_PATH)
-            var afterWearing = true;
+            var afterWearing = true
+            var wasVrMode = false
 
             while (true) {
+
                 try {
                     if (config.exists()) {
                         val content = config.readText().trim()
 
-                        if(content.contains(":")) {
-                            val isWearing = isWearing()
+                        if (content.contains(":")) {
+                            var isWearing = isWearing()
+                            var isWearingJustTransitioned = false
+
+                            if (!afterWearing && isWearing) {
+                                Log.i("[Res3D]", "Headset put back on: waiting 10s...")
+                                Thread.sleep(10000)
+                                isWearing = isWearing()
+                                isWearingJustTransitioned = true
+                            }
+
+                            var isVrMode = isWearing && isVrAppRunning() && !isPicoDockVisible()
+
+                            if (!isWearingJustTransitioned && !wasVrMode && isVrMode) {
+                                Log.i("[Res3D]", "Going back into VR app: waiting 10s...")
+                                Thread.sleep(10000)
+                                isWearing = isWearing()
+                                isVrMode = isWearing && isVrAppRunning() && !isPicoDockVisible()
+                            }
 
                             if (isWearing || afterWearing) {
                                 val levels = content.split(":")
@@ -181,69 +200,94 @@ class GuardianDaemon {
                                 }
 
                                 // Apply CPU Set
-                                if (cpuSet == "1" && isWearing) { // Performance
-                                    if (isVrAppRunning() && !isPicoDockVisible()) {
-                                        // When a 3D VR app is active and the home dock/menu is hidden:
-                                        // Restrict top-level apps and VR foreground to performance cores
-                                        execCmd("echo 2-7 > /dev/cpuset/top-app/cpus || true") // Active foreground app
-                                        execCmd("echo 2-7 > /dev/cpuset/vrforeground/cpus || true") // Active VR application
+                                when (cpuSet) {
+                                    "1" if isWearing -> { // Performance
+                                        if (isVrMode) { // Restrict system components to efficiency cores to save thermal budget for VR
+                                            execCmd("echo 0-1 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+                                        } else {
+                                            execCmd("echo 2-7 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+                                        }
 
-                                        // Restrict system components to efficiency cores to save thermal budget for VR
-                                        execCmd("echo 0-1 > /dev/cpuset/compositor/cpus || true") // Display compositor (SurfaceFlinger)
-                                        execCmd("echo 0-1 > /dev/cpuset/pico-system/cpus || true") // Pico OS core system services
-                                        execCmd("echo 0-3 > /dev/cpuset/tracking/cpus || true") // Head and controller tracking (needs dedicated responsive cores)
-                                    } else {
-                                        // When no VR app is running or the Pico dock is visible (2D UI mode):
-                                        // Allow apps and system services to use all available cores
-                                        execCmd("echo 0-7 > /dev/cpuset/top-app/cpus || true")
-                                        execCmd("echo 5-6 > /dev/cpuset/vrforeground/cpus || true")
+                                        // Active foreground app
+                                        execCmd("echo 4-7 > /dev/cpuset/top-app/cpus || true") // Focused App, hwservicemanager, servicemanager
+                                        execCmd("echo 2-7 > /dev/cpuset/vrforeground/cpus || true") // pxrseethroughservice, pxrmrsystemservice
 
-                                        execCmd("echo 0-7 > /dev/cpuset/compositor/cpus || true")
-                                        execCmd("echo 0-7 > /dev/cpuset/pico-system/cpus || true")
-                                        execCmd("echo 0-3 > /dev/cpuset/tracking/cpus || true")
+                                        // Head and controller tracking (needs dedicated responsive cores)
+                                        execCmd("echo 0-3 > /dev/cpuset/tracking/cpus || true") // pvrtrackingservice
+
+                                        // Restrict to efficiency cores
+                                        execCmd("echo 0-1 > /dev/cpuset/compositor/cpus || true") // com.pico.xr.openxr_runtime
+                                        execCmd("echo 0-1 > /dev/cpuset/audio-app/cpus || true") // Audio playback/recording threads
+
+                                        // Confine low-priority background daemons strictly
+                                        execCmd("echo 0 > /dev/cpuset/quickcamera/cpus || true") // Camera start speed
+
+                                        // Starve general background tasks, confining them strictly
+                                        execCmd("echo 0-1 > /dev/cpuset/foreground/cpus || true") // Standard foreground tasks running in background state
+                                        execCmd("echo 0-1 > /dev/cpuset/bg_3rd_app/cpus || true") // Background third-party apps, killed all by OS
+                                        execCmd("echo 0-1 > /dev/cpuset/app-inshell/cpus || true") // Apps running inside shell environments, empty by default OS
+                                    }
+                                    "2" if isWearing -> { // Balanced
+                                        if (isVrMode) {
+                                            execCmd("echo 0-2 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+                                        } else {
+                                            execCmd("echo 0-6 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+                                        }
+
+                                        // Active foreground app (mid/big cores, avoiding prime core to save power)
+                                        execCmd("echo 4-6 > /dev/cpuset/top-app/cpus || true") // Focused App, hwservicemanager, servicemanager
+                                        execCmd("echo 4-6 > /dev/cpuset/vrforeground/cpus || true") // pxrseethroughservice, pxrmrsystemservice
+
+                                        // Head and controller tracking (efficient tracking cores)
+                                        execCmd("echo 0-3 > /dev/cpuset/tracking/cpus || true") // pvrtrackingservice
+
+                                        // Restrict to efficiency cores
+                                        execCmd("echo 0-2 > /dev/cpuset/audio-app/cpus || true") // Audio playback/recording threads
+                                        execCmd("echo 0-2 > /dev/cpuset/compositor/cpus || true") // com.pico.xr.openxr_runtime
+
+                                        // Confine low-priority background daemons strictly
+                                        execCmd("echo 0 > /dev/cpuset/quickcamera/cpus || true") // Camera start speed
+
+                                        // Starve general background tasks, confining them strictly
+                                        execCmd("echo 0-3 > /dev/cpuset/foreground/cpus || true") // Standard foreground tasks running in background state
+                                        execCmd("echo 0-3 > /dev/cpuset/bg_3rd_app/cpus || true") // Background third-party apps, killed all by OS
+                                        execCmd("echo 0-3 > /dev/cpuset/app-inshell/cpus || true") // Apps running inside shell environments, empty by default OS
+                                    }
+                                    else -> { // Stock
+                                        execCmd("echo 4-6 > /dev/cpuset/top-app/cpus || true")
+                                        execCmd("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
+
+                                        execCmd("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
+                                        execCmd("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
+                                        execCmd("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
+                                        execCmd("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
+                                        execCmd("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
+                                        execCmd("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
+                                        execCmd("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
+
+                                        execCmd("echo 0-3 > /dev/cpuset/foreground/cpus || true")
+                                        execCmd("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
+                                        execCmd("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
+                                        execCmd("echo 5-6 > /dev/cpuset/shell-app/cpus || true") // com.pvr.vrshell, com.pico.mrservice, Home, Mixed Reality (Camera with UI)
                                     }
 
-                                    // Limit camera daemon to lower/mid-cores to prevent stuttering
-                                    execCmd("echo 0-2 > /dev/cpuset/camera-daemon/cpus || true") // Camera hardware service
+                                    /* Test command
+                                        pids=$(tr '\n' ',' < /dev/cpuset/quickcamera/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
 
-                                    // Restrict audio processing and DEX compilation to efficiency cores
-                                    execCmd("echo 0-1 > /dev/cpuset/audio-app/cpus || true") // Audio playback/recording threads
-                                    execCmd("echo 0-1 > /dev/cpuset/dex2oat/cpus || true") // Background app compiler
-
-                                    // Confine low-priority background daemons strictly
-                                    execCmd("echo 0 > /dev/cpuset/quickcamera/cpus || true") // Fast camera capture tasks
-                                    execCmd("echo 0 > /dev/cpuset/background/cpus || true") // Low-priority background tasks
-                                    execCmd("echo 0 > /dev/cpuset/system-background/cpus || true") // System background maintenance tasks
-
-                                    // Starve general background tasks, confining them strictly
-                                    execCmd("echo 0-1 > /dev/cpuset/foreground/cpus || true") // Standard foreground tasks running in background state
-                                    execCmd("echo 0-1 > /dev/cpuset/bg_3rd_app/cpus || true") // Background third-party apps
-                                    execCmd("echo 0-1 > /dev/cpuset/app-inshell/cpus || true") // Apps running inside shell environments
-                                    execCmd("echo 0-1 > /dev/cpuset/shell-app/cpus || true") // ADB shell and terminal execution tasks
-                                } else { // Stock
-                                    execCmd("echo 4-6 > /dev/cpuset/top-app/cpus || true")
-                                    execCmd("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
-
-                                    execCmd("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
-                                    execCmd("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
-                                    execCmd("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
-                                    execCmd("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
-                                    execCmd("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
-                                    execCmd("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
-                                    execCmd("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
-
-                                    execCmd("echo 0-3 > /dev/cpuset/foreground/cpus || true")
-                                    execCmd("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
-                                    execCmd("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
-                                    execCmd("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
-                                    execCmd("echo 0-1 > /dev/cpuset/background/cpus || true")
-                                    execCmd("echo 0-1 > /dev/cpuset/system-background/cpus || true")
-                                    execCmd("echo 7 > /dev/cpuset/cluster-super/cpus || true")
-                                    execCmd("echo 0-7 > /dev/cpuset/restricted/cpus || true")
+                                        PIDS=$(pidof pvrtrackingservice | tr ' ' ',')
+                                        [ -n "$PIDS" ] && top -b -H -n 1 -p "$PIDS" -o CPU,%CPU | awk '
+                                        $1 ~ /^[0-9]+$/ { core[$1] += $2 }
+                                            END {
+                                                printf "%-8s %s\n", "CORE", "%CPU_USAGE"
+                                                print "-------------------"
+                                                for (c=0; c<=7; c++) printf "Core %-3d %.1f%%\n", c, core[c]+0
+                                            }' || echo "Target is not running."
+                                    */
                                 }
                             }
 
-                            afterWearing = isWearing;
+                            afterWearing = isWearing
+                            wasVrMode = isVrMode
                         }
                     }
                 } catch (e: Exception) {
