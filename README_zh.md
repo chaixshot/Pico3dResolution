@@ -11,12 +11,17 @@
 
 ## 👓 截图
 
-<image src="Resource/screenshot.jpeg" width="400"/>
+<image src="Resource/screenshot1.png" width="400"/> <image src="Resource/screenshot2.png" width="400"/> <image src="Resource/screenshot3.png" width="400"/>
 
 ## 🌟 核心功能
 
 * **🎯 全局分辨率缩放：** 更改所有 3D VR 应用程序的内部渲染分辨率。
 * **⚡ GPU 性能档位控制：** 手动设置 GPU 的 `max_pwrlevel` 和 `min_pwrlevel` 来锁定性能状态（从极致性能到节能模式）。
+* **🛡️ Root 性能守护进程 (`GuardianDaemon`)：** 独立的后台 Root 守护进程，确保持续运行并防止系统杀死服务。
+* **🎯 动态 CPU 核心集管理：** 针对性能和平衡模式的智能 CPU 集调优，根据当前活动是 3D VR 应用还是 2D UI / Pico 桌面模式动态分配核心。
+* **🔄 自动恢复默认状态：** 当摘下头显时，自动将硬件状态（CPU/GPU 调度器、延迟和 CPU 集）恢复为默认值。
+* **📊 实时硬件监视器：** 实时硬件监控面板，显示 CPU/GPU 负载、核心使用率、内存/交换空间以及当前活动核心集。
+* **📳 UI 重构与触觉反馈：** 全新改版的 Jetpack Compose VR 界面，集成了触觉振动反馈。
 * **📐 高级渲染控制：**
   * **Stencil Mesh：** 通过阻止渲染隐藏像素来优化 GPU 资源。
   * **Foveated Rendering（注视点渲染）：** 通过将分辨率集中在中心视野区域来优化性能。
@@ -71,6 +76,11 @@
 * **分辨率与渲染：** 本应用使用 Root 权限修改系统 PVR 配置数据库（`/data/user_de/0/com.pvr.configuration/databases/config.db`）。主要修改 `RuleBean` 和 `ConfigBean` 表中的 `sdk_eyebuffer`、`sdk_enableFFRBySYS`、`sdk_stencilMeshStatus` 和 `sdk_EyeTextureFov` 等参数。
 * **GPU 性能：** 通过修改内核 sysfs 节点 `/sys/class/kgsl/kgsl-3d0/max_pwrlevel` 和 `min_pwrlevel` 来锁定指定的 GPU 频率档位。
 * **开机恢复：** 内置 LSPosed 模块挂载至 `system_server` 进程，在开机引导完成后立即通过 `ContentProvider` 查询触发应用的恢复服务。
+
+## 🔗 相关配套项目
+
+* **[PICO-4-GPU-Overclocking](https://github.com/hhhbwc/PICO-4-GPU-Overclocking)：** 解锁 GPU 频率，从 650MHz 超频至最高 950MHz。
+* **[pico4-aggressive-fan](https://github.com/hhhbwc/pico4-aggressive-fan)：** 积极的风扇温控管理，有效降低设备温度。
 
 ## 🙏 特别鸣谢
 
