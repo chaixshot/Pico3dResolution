@@ -11,12 +11,17 @@
 
 ## 👓 Screenshot
 
-<image src="Resource/screenshot.jpeg" width="400"/>
+<image src="Resource/screenshot1.png" width="400"/> <image src="Resource/screenshot2.png" width="400"/> <image src="Resource/screenshot3.png" width="400"/>
 
 ## 🌟 Key Features 
 
 * **🎯 Global Resolution Scaling:** Change the internal rendering resolution for all 3D VR applications.
 * **⚡ GPU Power Level Controls:** Manually set the GPU's `max_pwrlevel` and `min_pwrlevel` to lock performance states (ranging from Peak Performance to Power Saving).
+* **🛡️ Root Performance Daemon (`GuardianDaemon`):** Standalone background root daemon process to maintain system stability and prevent service kills.
+* **🎯 Dynamic CPU Core Set Management:** Intelligent CPU set tuning for Performance and Balanced modes that dynamically allocates cores based on active 3D VR app vs. 2D UI / Pico Dock mode.
+* **🔄 Automatic Stock Fallback:** Automatically reverts hardware states (CPU/GPU governors, latency, and cpusets) to stock when the headset is removed.
+* **📊 Live Hardware Monitor:** Real-time hardware monitoring panel displaying CPU/GPU load, core usage, RAM/swap memory, and active core sets.
+* **📳 UI Rework & Haptic Feedback:** Refreshed Jetpack Compose VR UI layout integrated with tactile haptic feedback.
 * **📐 Advanced Rendering Controls:**
   * **Stencil Mesh:** Optimize GPU resources by preventing rendering of hidden pixels.
   * **Foveated Rendering:** Optimize performance by concentrating resolution in the central focus area.
@@ -71,6 +76,11 @@
 * **Resolution & Rendering:** This app uses root access to modify the system's PVR configuration database (`/data/user_de/0/com.pvr.configuration/databases/config.db`). It targets parameters like `sdk_eyebuffer`, `sdk_enableFFRBySYS`, `sdk_stencilMeshStatus`, and `sdk_EyeTextureFov` in the `RuleBean` and `ConfigBean` tables.
 * **GPU Performance:** It modifies the kernel sysfs nodes located at `/sys/class/kgsl/kgsl-3d0/max_pwrlevel` and `min_pwrlevel` to force specific GPU frequency states.
 * **Boot Restoration:** An integrated LSPosed module hooks into the `system_server` process to trigger the app's restoration service via a `ContentProvider` query immediately after boot completion.
+
+## 🔗 Companion Projects
+
+* **[PICO-4-GPU-Overclocking](https://github.com/hhhbwc/PICO-4-GPU-Overclocking):** Unlock GPU clock over 650MHz up to 950MHz.
+* **[pico4-aggressive-fan](https://github.com/hhhbwc/pico4-aggressive-fan):** Aggressive fan management for effective temperature control.
 
 ## 🙏 Special thanks to
 
