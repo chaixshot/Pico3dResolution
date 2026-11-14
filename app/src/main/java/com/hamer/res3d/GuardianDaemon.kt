@@ -35,7 +35,7 @@ class GuardianDaemon {
             return wearing
         }
 
-        private fun isVrAppRunning(): Boolean {
+        private fun getVrAppPackage(): String {
             val systemPrefixes = listOf(
                 "com.pvr.vrshell",
                 "com.pico.",
@@ -50,45 +50,23 @@ class GuardianDaemon {
                 return pkg.startsWith("/") || systemPrefixes.any { pkg.startsWith(it) }
             }
 
-            // Fast Path 1: Pico Native System Property (Microsecond direct memory read)
             val mrUser = getSystemProperty("sys.pxr.mrserivce.user").ifBlank {
                 getSystemProperty("sys.pxr.mrservice.user")
             }
 
             if (mrUser.isNotBlank() && !isSystemPackage(mrUser)) {
-                Log.i("[Res3D]", "VR Detection [Fast Path 1 - SystemProperty]: Immersive VR App active: $mrUser")
-                return true
+                Log.i("[Res3D]", "VR Detection: $mrUser")
+                return mrUser
             }
 
-            // Fast Path 2: Direct Kernel Cgroup procfs read (Sub-millisecond file I/O, no shell spawn)
-            try {
-                val vrCgroupFile = File("/dev/cpuset/vrforeground/cgroup.procs")
-                if (vrCgroupFile.exists()) {
-                    val pids = vrCgroupFile.readLines().mapNotNull { it.trim().toIntOrNull() }
-                    for (pid in pids) {
-                        val cmdlineFile = File("/proc/$pid/cmdline")
-                        if (cmdlineFile.exists()) {
-                            val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
-                            val pkg = cmdline.split(" ").firstOrNull()?.trim()
-                            if (!pkg.isNullOrEmpty() && !isSystemPackage(pkg)) {
-                                Log.i("[Res3D]", "VR Detection [Fast Path 2 - Cgroup procfs]: Immersive VR App process active: $pkg (PID $pid)")
-                                return true
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("[Res3D]", "Fast Path 2 Cgroup check error: ${e.message}")
-            }
-
-            Log.i("[Res3D]", "VR Detection: No 3D Immersive VR App active")
-            return false
+            Log.i("[Res3D]", "VR Detection: none")
+            return ""
         }
 
         private fun isPicoDockVisible(): Boolean {
             return try {
                 val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "dumpsys window windows | grep -A 8 'package=com.pvr.shortcut'"))
-                val output = process.inputStream.bufferedReader().use { it.readText() }
+                val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
                 process.waitFor()
 
                 val isVisible = output.contains("mViewVisibility=0x0")
@@ -113,6 +91,64 @@ class GuardianDaemon {
             } catch (_: Exception) {}
         }
 
+        private fun movePackageCpuset(pkgName: String, topapp: Boolean) {
+            if (pkgName.isNotBlank()) {
+                val pidsToMove = getAllPidsForPackage(pkgName)
+
+                val topAppFile = File("/dev/cpuset/top-app/cgroup.procs")
+                val bgFile = File("/dev/cpuset/background/cgroup.procs")
+
+                val topAppPids = try {
+                    if (topAppFile.exists()) topAppFile.readLines().mapNotNull { it.trim().toIntOrNull() } else emptyList()
+                } catch (_: Exception) { emptyList() }
+
+                val bgPids = try {
+                    if (bgFile.exists()) bgFile.readLines().mapNotNull { it.trim().toIntOrNull() } else emptyList()
+                } catch (_: Exception) { emptyList() }
+
+                val targetPath = if (topapp) "/dev/cpuset/top-app/cgroup.procs" else "/dev/cpuset/background/cgroup.procs"
+
+                for (pid in pidsToMove) {
+                    if (!topapp && !topAppPids.contains(pid)) continue // false: check pid is in top-app to move to background
+                    if (topapp && !bgPids.contains(pid)) continue    // true: check pid is in background to move to top-app
+
+                    Log.i("[Res3D]", "Move PID $pid ($pkgName) to ${if (topapp) "top-app" else "background"}")
+                    try {
+                        execCmd("echo $pid > $targetPath || true")
+                        execCmd("echo $pid > $targetPath || true")
+                    } catch (e: Exception) {
+                        Log.e("[Res3D]", "Failed to move PID $pid: ${e.message}")
+                    }
+                }
+            }
+        }
+
+        private fun getAllPidsForPackage(pkgName: String): List<Int> {
+            val pids = mutableListOf<Int>()
+            try {
+                val procDir = File("/proc")
+                procDir.listFiles()?.forEach { file ->
+                    if (file.isDirectory) {
+                        val p = file.name.toIntOrNull()
+                        if (p != null && p > 0) {
+                            val cmdlineFile = File(file, "cmdline")
+                            if (cmdlineFile.exists()) {
+                                val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
+                                if (cmdline == pkgName || cmdline.startsWith("$pkgName:") || cmdline.contains(" $pkgName") || cmdline.contains("/$pkgName")) {
+                                    if (!pids.contains(p)) {
+                                        pids.add(p)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // ignore
+            }
+            return pids
+        }
+
         @JvmStatic
         fun main(args: Array<String>) {
             val myPid = android.os.Process.myPid()
@@ -123,35 +159,25 @@ class GuardianDaemon {
 
             val config = File(CONFIG_PATH)
             var afterWearing = true
-            var wasVrMode = false
 
             while (true) {
-
                 try {
                     if (config.exists()) {
                         val content = config.readText().trim()
 
                         if (content.contains(":")) {
                             var isWearing = isWearing()
-                            var isWearingJustTransitioned = false
 
                             if (!afterWearing && isWearing) {
                                 Log.i("[Res3D]", "Headset put back on: waiting 10s...")
                                 Thread.sleep(10000)
                                 isWearing = isWearing()
-                                isWearingJustTransitioned = true
-                            }
-
-                            var isVrMode = isWearing && isVrAppRunning() && !isPicoDockVisible()
-
-                            if (!isWearingJustTransitioned && !wasVrMode && isVrMode) {
-                                Log.i("[Res3D]", "Going back into VR app: waiting 10s...")
-                                Thread.sleep(10000)
-                                isWearing = isWearing()
-                                isVrMode = isWearing && isVrAppRunning() && !isPicoDockVisible()
                             }
 
                             if (isWearing || afterWearing) {
+                                val vrPkg = getVrAppPackage()
+                                val isVrMode = isWearing && vrPkg.isNotBlank() && !isPicoDockVisible()
+
                                 val levels = content.split(":")
                                 val maxPwr = levels.getOrNull(0)?.trim() ?: ""
                                 val minPwr = levels.getOrNull(1)?.trim() ?: ""
@@ -204,8 +230,12 @@ class GuardianDaemon {
                                     "1" if isWearing -> { // Performance
                                         if (isVrMode) { // Restrict system components to efficiency cores to save thermal budget for VR
                                             execCmd("echo 0-1 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+
+                                            movePackageCpuset(vrPkg, true)
                                         } else {
                                             execCmd("echo 2-7 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+
+                                            movePackageCpuset(vrPkg, false)
                                         }
 
                                         // Active foreground app
@@ -230,8 +260,12 @@ class GuardianDaemon {
                                     "2" if isWearing -> { // Balanced
                                         if (isVrMode) {
                                             execCmd("echo 0-2 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+
+                                            movePackageCpuset(vrPkg, true)
                                         } else {
                                             execCmd("echo 0-6 > /dev/cpuset/pico-system/cpus || true") // surfaceflinger, system_server, drm
+
+                                            movePackageCpuset(vrPkg, false)
                                         }
 
                                         // Active foreground app (mid/big cores, avoiding prime core to save power)
@@ -272,9 +306,9 @@ class GuardianDaemon {
                                     }
 
                                     /* Test command
-                                        pids=$(tr '\n' ',' < /dev/cpuset/quickcamera/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
+                                        pids=$(tr '\n' ',' < /dev/cpuset/top-app/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
 
-                                        PIDS=$(pidof pvrtrackingservice | tr ' ' ',')
+                                        PIDS=$(pidof com.maniscat2.sm64coopdx | tr ' ' ',')
                                         [ -n "$PIDS" ] && top -b -H -n 1 -p "$PIDS" -o CPU,%CPU | awk '
                                         $1 ~ /^[0-9]+$/ { core[$1] += $2 }
                                             END {
@@ -287,13 +321,13 @@ class GuardianDaemon {
                             }
 
                             afterWearing = isWearing
-                            wasVrMode = isVrMode
                         }
                     }
                 } catch (e: Exception) {
                     Log.e("[Res3D]", "GuardianDaemon loop error: ${e.message}")
                 }
 
+                Log.i("[Res3D]", "-----")
                 Thread.sleep(3000)
             }
         }
