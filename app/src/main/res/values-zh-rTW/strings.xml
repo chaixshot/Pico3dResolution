@@ -72,6 +72,7 @@
     <string name="label_free">可用</string>
     <string name="label_total">總計</string>
     <string name="top_app_cores">頂層應用程式核心</string>
+    <string name="immersive_app_cores">沉浸式應用程式核心</string>
     <string name="foreground_cores">前景核心</string>
     <string name="bg3rdApp_cores">背景核心</string>
     <string name="pico_system_cores">Pico 系統核心</string>
@@ -87,4 +88,9 @@
     <string name="background_cores">背景核心</string>
     <string name="system_background_cores">系統背景核心</string>
     <string name="close">關閉</string>
+    <string name="developer_mode">開發人員模式</string>
+    <string name="developer_mode_desc">模擬已配戴頭戴式裝置且隱藏 Dock 狀態</string>
+    <string name="immersive_app">沉浸式應用程式</string>
+    <string name="codec_app">轉碼器應用程式</string>
+    <string name="codec_app_cores">轉碼器核心</string>
 </resources>

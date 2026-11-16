@@ -72,6 +72,7 @@
     <string name="label_free">여유</string>
     <string name="label_total">합계</string>
     <string name="top_app_cores">최상위 앱 코어</string>
+    <string name="immersive_app_cores">몰입형 앱 코어</string>
     <string name="foreground_cores">포그라운드 코어</string>
     <string name="bg3rdApp_cores">백그라운드 코어</string>
     <string name="pico_system_cores">Pico 시스템 코어</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">퀵 카메라 코어</string>
     <string name="background_cores">백그라운드 코어</string>
     <string name="system_background_cores">시스템 백그라운드 코어</string>
+    <string name="developer_mode">개발자 모드</string>
+    <string name="developer_mode_desc">헤드셋을 착용하고 독이 숨겨져 있는 것으로 위장</string>
+    <string name="immersive_app">몰입형 앱</string>
+    <string name="codec_app">코덱 앱</string>
+    <string name="codec_app_cores">코덱 코어</string>
     <string name="close">닫기</string>
 </resources>

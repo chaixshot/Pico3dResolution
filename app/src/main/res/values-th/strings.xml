@@ -72,6 +72,7 @@
     <string name="label_free">ว่าง</string>
     <string name="label_total">ทั้งหมด</string>
     <string name="top_app_cores">Core ของแอปหลัก</string>
+    <string name="immersive_app_cores">Core ของแอป immersive</string>
     <string name="foreground_cores">Core เบื้องหน้า</string>
     <string name="bg3rdApp_cores">Core เบื้องหลัง</string>
     <string name="pico_system_cores">Core ระบบ Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Core กล้องด่วน</string>
     <string name="background_cores">Core เบื้องหลัง</string>
     <string name="system_background_cores">Core ระบบเบื้องหลัง</string>
+    <string name="developer_mode">โหมดนักพัฒนาซอฟต์แวร์</string>
+    <string name="developer_mode_desc">จำลองว่าสวมใส่เฮดเซ็ตอยู่และซ่อนด็อกแล้ว</string>
+    <string name="immersive_app">แอปพลิเคชันแบบดื่มด่ำ</string>
+    <string name="codec_app">แอปโคเดก</string>
+    <string name="codec_app_cores">คอร์โคเดก</string>
     <string name="close">ปิด</string>
 </resources>

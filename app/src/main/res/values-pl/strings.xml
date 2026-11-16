@@ -72,6 +72,7 @@
     <string name="label_free">Wolne</string>
     <string name="label_total">Łącznie</string>
     <string name="top_app_cores">Rdzenie głównej aplikacji</string>
+    <string name="immersive_app_cores">Rdzenie aplikacji immersyjnej</string>
     <string name="foreground_cores">Rdzenie na pierwszym planie</string>
     <string name="bg3rdApp_cores">Rdzenie w tle</string>
     <string name="pico_system_cores">Rdzenie systemu Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Rdzenie szybkiej kamery</string>
     <string name="background_cores">Rdzenie w tle</string>
     <string name="system_background_cores">Rdzenie systemu w tle</string>
+    <string name="developer_mode">Tryb deweloperski</string>
+    <string name="developer_mode_desc">Symuluj, że gogle są założone, a dok jest ukryty</string>
+    <string name="immersive_app">Aplikacja immersyjna</string>
+    <string name="codec_app">Aplikacja kodeka</string>
+    <string name="codec_app_cores">Rdzenie kodeka</string>
     <string name="close">Zamknij</string>
 </resources>

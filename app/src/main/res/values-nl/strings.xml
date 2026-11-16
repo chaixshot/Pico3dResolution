@@ -72,6 +72,7 @@
     <string name="label_free">Vrij</string>
     <string name="label_total">Totaal</string>
     <string name="top_app_cores">Top-appkernen</string>
+    <string name="immersive_app_cores">Immersive app-kernen</string>
     <string name="foreground_cores">Voorgrondkernen</string>
     <string name="bg3rdApp_cores">Achtergrondkernen</string>
     <string name="pico_system_cores">Pico-systeemkernen</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Snelle camera-kernen</string>
     <string name="background_cores">Achtergrondkernen</string>
     <string name="system_background_cores">Systeem-achtergrondkernen</string>
+    <string name="developer_mode">Ontwikkelaarsmodus</string>
+    <string name="developer_mode_desc">Simuleer dat de headset wordt gedragen en het dock verborgen is</string>
+    <string name="immersive_app">Immersive app</string>
+    <string name="codec_app">Codec-app</string>
+    <string name="codec_app_cores">Codec-kernen</string>
     <string name="close">Sluiten</string>
 </resources>

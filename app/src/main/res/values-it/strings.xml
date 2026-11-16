@@ -72,6 +72,7 @@
     <string name="label_free">Libero</string>
     <string name="label_total">Totale</string>
     <string name="top_app_cores">Core app in primo piano</string>
+    <string name="immersive_app_cores">Core app immersiva</string>
     <string name="foreground_cores">Core in primo piano</string>
     <string name="bg3rdApp_cores">Core in background</string>
     <string name="pico_system_cores">Core sistema Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Core fotocamera rapida</string>
     <string name="background_cores">Core in background</string>
     <string name="system_background_cores">Core sistema in background</string>
+    <string name="developer_mode">Modalità sviluppatore</string>
+    <string name="developer_mode_desc">Simula che il visore sia indossato e il dock sia nascosto</string>
+    <string name="immersive_app">Applicazione immersiva</string>
+    <string name="codec_app">Applicazione codec</string>
+    <string name="codec_app_cores">Core codec</string>
     <string name="close">Chiudi</string>
 </resources>

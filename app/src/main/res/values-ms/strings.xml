@@ -72,6 +72,7 @@
     <string name="label_free">Kosong</string>
     <string name="label_total">Jumlah</string>
     <string name="top_app_cores">Teras Apl Teratas</string>
+    <string name="immersive_app_cores">Teras Aplikasi Imersif</string>
     <string name="foreground_cores">Teras Latar Depan</string>
     <string name="bg3rdApp_cores">Teras Latar Belakang</string>
     <string name="pico_system_cores">Teras Sistem Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Teras Kamera Pantas</string>
     <string name="background_cores">Teras Latar Belakang</string>
     <string name="system_background_cores">Teras Latar Belakang Sistem</string>
+    <string name="developer_mode">Mod Pembangun</string>
+    <string name="developer_mode_desc">Palsukan bahawa set kepala dipakai dan dok disembunyikan</string>
+    <string name="immersive_app">Apl Imersif</string>
+    <string name="codec_app">Apl Kodek</string>
+    <string name="codec_app_cores">Teras Kodek</string>
     <string name="close">Tutup</string>
 </resources>

@@ -72,6 +72,7 @@
     <string name="label_free">Boş</string>
     <string name="label_total">Toplam</string>
     <string name="top_app_cores">En Üst Uygulama Çekirdekleri</string>
+    <string name="immersive_app_cores">Sürükleyici Uygulama Çekirdekleri</string>
     <string name="foreground_cores">Ön Plan Çekirdekleri</string>
     <string name="bg3rdApp_cores">Arka Plan Çekirdekleri</string>
     <string name="pico_system_cores">Pico Sistem Çekirdekleri</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Hızlı Kamera Çekirdekleri</string>
     <string name="background_cores">Arka Plan Çekirdekleri</string>
     <string name="system_background_cores">Sistem Arka Plan Çekirdekleri</string>
+    <string name="developer_mode">Geliştirici Modu</string>
+    <string name="developer_mode_desc">Başlığın takıldığını ve dock\'un gizlendiğini simüle edin</string>
+    <string name="immersive_app">Sürükleyici Uygulama</string>
+    <string name="codec_app">Codec Uygulaması</string>
+    <string name="codec_app_cores">Codec Çekirdekleri</string>
     <string name="close">Kapat</string>
 </resources>

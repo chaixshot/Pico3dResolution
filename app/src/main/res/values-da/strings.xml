@@ -72,6 +72,7 @@
     <string name="label_free">Ledig</string>
     <string name="label_total">I alt</string>
     <string name="top_app_cores">Top-appkerner</string>
+    <string name="immersive_app_cores">Immersive app-kerner</string>
     <string name="foreground_cores">Forgrundskerner</string>
     <string name="bg3rdApp_cores">Baggrundskerner</string>
     <string name="pico_system_cores">Pico-systemkerner</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Hurtigkamera-kerner</string>
     <string name="background_cores">Baggrundskerner</string>
     <string name="system_background_cores">Systembaggrundskerner</string>
+    <string name="developer_mode">Udviklertilstand</string>
+    <string name="developer_mode_desc">Simuler, at headsettet er på, og docken er skjult</string>
+    <string name="immersive_app">Immersiv app</string>
+    <string name="codec_app">Kodek-app</string>
+    <string name="codec_app_cores">Kodek-kerner</string>
     <string name="close">Luk</string>
 </resources>

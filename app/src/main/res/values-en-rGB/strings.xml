@@ -72,6 +72,7 @@
     <string name="label_free">Free</string>
     <string name="label_total">Total</string>
     <string name="top_app_cores">Top App Cores</string>
+    <string name="immersive_app_cores">Immersive App Cores</string>
     <string name="foreground_cores">Foreground Cores</string>
     <string name="bg3rdApp_cores">Background Cores</string>
     <string name="pico_system_cores">Pico System Cores</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Quick Camera Cores</string>
     <string name="background_cores">Background Cores</string>
     <string name="system_background_cores">System Background Cores</string>
+    <string name="developer_mode">Developer Mode</string>
+    <string name="developer_mode_desc">Spoof that the headset is worn and the dock is hidden</string>
+    <string name="immersive_app">Immersive App</string>
+    <string name="codec_app">Codec App</string>
+    <string name="codec_app_cores">Codec Cores</string>
     <string name="close">Close</string>
 </resources>

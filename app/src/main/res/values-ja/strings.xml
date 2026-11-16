@@ -72,6 +72,7 @@
     <string name="label_free">空き</string>
     <string name="label_total">合計</string>
     <string name="top_app_cores">トップアプリコア</string>
+    <string name="immersive_app_cores">イマーシブアプリコア</string>
     <string name="foreground_cores">フォアグラウンドコア</string>
     <string name="bg3rdApp_cores">バックグラウンドコア</string>
     <string name="pico_system_cores">Pico システムコア</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">クイックカメラコア</string>
     <string name="background_cores">バックグラウンドコア</string>
     <string name="system_background_cores">システムバックグラウンドコア</string>
+    <string name="developer_mode">開発者モード</string>
+    <string name="developer_mode_desc">ヘッドセットが装着されておりドックが非表示であると偽装する</string>
+    <string name="immersive_app">イマーシブアプリ</string>
+    <string name="codec_app">コーデックアプリ</string>
+    <string name="codec_app_cores">コーデックコア</string>
     <string name="close">閉じる</string>
 </resources>

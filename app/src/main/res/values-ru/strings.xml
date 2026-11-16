@@ -72,6 +72,7 @@
     <string name="label_free">Свободно</string>
     <string name="label_total">Всего</string>
     <string name="top_app_cores">Ядра верхнего приложения</string>
+    <string name="immersive_app_cores">Ядра иммерсивного приложения</string>
     <string name="foreground_cores">Ядра переднего плана</string>
     <string name="bg3rdApp_cores">Ядра фонового режима</string>
     <string name="pico_system_cores">Системные ядра Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Ядра быстрой камеры</string>
     <string name="background_cores">Ядра фонового режима</string>
     <string name="system_background_cores">Системные ядра фонового режима</string>
+    <string name="developer_mode">Режим разработчика</string>
+    <string name="developer_mode_desc">Симулировать, что гарнитура надета, а док-станция скрыта</string>
+    <string name="immersive_app">Иммерсивное приложение</string>
+    <string name="codec_app">Кодек-приложение</string>
+    <string name="codec_app_cores">Ядра кодека</string>
     <string name="close">Закрыть</string>
 </resources>

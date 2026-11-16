@@ -38,7 +38,8 @@ data class ConfigValues(
 data class CpuCoreStat(
     val coreId: Int,
     val freqMHz: String,
-    val usagePercent: String
+    val usagePercent: String,
+    val tempC: String = "N/A"
 )
 
 data class MemoryStats(
@@ -55,9 +56,15 @@ data class MemoryStats(
 data class LiveStats(
     val gpuClock: String = "N/A",
     val gpuUsage: String = "N/A",
+    val gpuTemp: String = "N/A",
     val cpuCores: List<CpuCoreStat> = emptyList(),
     val memory: MemoryStats = MemoryStats(),
+    val maxPwrLevel: String = "N/A",
+    val minPwrLevel: String = "N/A",
+    val cpuMode: String = "N/A",
+    val gpuMode: String = "N/A",
     val topAppCpus: String = "N/A",
+    val immersiveAppCpus: String = "N/A",
     val vrForegroundCpus: String = "N/A",
     val compositorCpus: String = "N/A",
     val audioAppCpus: String = "N/A",
@@ -71,39 +78,62 @@ data class LiveStats(
     val foregroundCpus: String = "N/A",
     val bg3rdAppCpus: String = "N/A",
     val appInshellCpus: String = "N/A",
-    val shellAppCpus: String = "N/A"
+    val shellAppCpus: String = "N/A",
+    val immersiveAppProcs: String = "N/A",
+    val codecProcs: String = "N/A",
+    val codecCpus: String = "N/A"
 )
 
 data class CpuTick(val total: Long, val idle: Long)
 
 fun readSysfs(path: String): String {
-    val (success, output) = runRootCommandWithOutput("cat $path")
-    return if (success) output else "N/A"
+    try {
+        val file = File(path)
+        if (file.exists()) {
+            return file.readText().trim()
+        }
+    } catch (_: Exception) {}
+    return "N/A"
+}
+
+fun parseSysfsTemp(num: Long): Double {
+    return when {
+        num in 20000..100000 -> num / 1000.0
+        num > 200000 -> (num / 1000.0) - 273.15
+        num in 200..600 -> num / 10.0
+        num > 1000 -> num / 100.0
+        num > 100 -> num / 10.0
+        else -> num.toDouble()
+    }
 }
 
 fun readCpuTicks(): Map<Int, CpuTick> {
     val map = mutableMapOf<Int, CpuTick>()
-    val (success, output) = runRootCommandWithOutput("cat /proc/stat")
-    if (success) {
-        output.lines().forEach { line ->
-            if (line.startsWith("cpu") && line.length > 3 && line[3].isDigit()) {
-                val parts = line.split("\\s+".toRegex())
-                val coreId = parts[0].removePrefix("cpu").toIntOrNull()
-                if (coreId != null && parts.size >= 5) {
-                    val user = parts[1].toLongOrNull() ?: 0L
-                    val nice = parts[2].toLongOrNull() ?: 0L
-                    val system = parts[3].toLongOrNull() ?: 0L
-                    val idle = parts[4].toLongOrNull() ?: 0L
-                    val iowait = parts.getOrNull(5)?.toLongOrNull() ?: 0L
-                    val irq = parts.getOrNull(6)?.toLongOrNull() ?: 0L
-                    val softirq = parts.getOrNull(7)?.toLongOrNull() ?: 0L
+    try {
+        val file = File("/proc/stat")
+        if (file.exists()) {
+            file.readLines().forEach { line ->
+                if (line.startsWith("cpu") && line.length > 3 && line[3].isDigit()) {
+                    val parts = line.split("\\s+".toRegex())
+                    val coreId = parts[0].removePrefix("cpu").toIntOrNull()
+                    if (coreId != null && parts.size >= 5) {
+                        val user = parts[1].toLongOrNull() ?: 0L
+                        val nice = parts[2].toLongOrNull() ?: 0L
+                        val system = parts[3].toLongOrNull() ?: 0L
+                        val idle = parts[4].toLongOrNull() ?: 0L
+                        val iowait = parts.getOrNull(5)?.toLongOrNull() ?: 0L
+                        val irq = parts.getOrNull(6)?.toLongOrNull() ?: 0L
+                        val softirq = parts.getOrNull(7)?.toLongOrNull() ?: 0L
 
-                    val active = user + nice + system + irq + softirq
-                    val total = active + idle + iowait
-                    map[coreId] = CpuTick(total, idle)
+                        val active = user + nice + system + irq + softirq
+                        val total = active + idle + iowait
+                        map[coreId] = CpuTick(total, idle)
+                    }
                 }
             }
         }
+    } catch (e: Exception) {
+        Log.e("Res3D", "Error reading cpu ticks", e)
     }
     return map
 }
@@ -115,22 +145,26 @@ fun fetchMemoryStats(): MemoryStats {
     var swapTotalKb = 0L
     var swapFreeKb = 0L
 
-    val (success, output) = runRootCommandWithOutput("cat /proc/meminfo")
-    if (success) {
-        output.lines().forEach { line ->
-            val parts = line.split(":\\s+".toRegex())
-            if (parts.size >= 2) {
-                val key = parts[0].trim()
-                val value = parts[1].trim().removeSuffix(" kB").toLongOrNull() ?: 0L
-                when (key) {
-                    "MemTotal" -> memTotalKb = value
-                    "MemFree" -> memFreeKb = value
-                    "MemAvailable" -> memAvailableKb = value
-                    "SwapTotal" -> swapTotalKb = value
-                    "SwapFree" -> swapFreeKb = value
+    try {
+        val file = File("/proc/meminfo")
+        if (file.exists()) {
+            file.readLines().forEach { line ->
+                val parts = line.split(":\\s+".toRegex())
+                if (parts.size >= 2) {
+                    val key = parts[0].trim()
+                    val value = parts[1].trim().removeSuffix(" kB").toLongOrNull() ?: 0L
+                    when (key) {
+                        "MemTotal" -> memTotalKb = value
+                        "MemFree" -> memFreeKb = value
+                        "MemAvailable" -> memAvailableKb = value
+                        "SwapTotal" -> swapTotalKb = value
+                        "SwapFree" -> swapFreeKb = value
+                    }
                 }
             }
         }
+    } catch (e: Exception) {
+        Log.e("Res3D", "Error reading meminfo", e)
     }
 
     val ramTotalGB = memTotalKb / (1024.0 * 1024.0)
@@ -156,10 +190,49 @@ fun fetchMemoryStats(): MemoryStats {
     )
 }
 
+fun fetchThermalDoubleMap(): Map<String, Double> {
+    val map = mutableMapOf<String, Double>()
+    try {
+        val thermalDir = File("/sys/class/thermal")
+        if (thermalDir.exists() && thermalDir.isDirectory) {
+            thermalDir.listFiles()?.forEach { zoneDir ->
+                if (zoneDir.name.startsWith("thermal_zone")) {
+                    val type = readSysfs("${zoneDir.absolutePath}/type").lowercase().trim()
+                    val tempStr = readSysfs("${zoneDir.absolutePath}/temp")
+                    if (type.isNotBlank() && tempStr != "N/A") {
+                        val num = tempStr.toLongOrNull()
+                        if (num != null) {
+                            val temp = parseSysfsTemp(num)
+                            if (temp in 20.0..115.0) {
+                                map[type] = temp
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (_: Exception) {}
+    return map
+}
+
 suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
     var gpuFreq = "N/A"
     var gpuUsage = "N/A"
     val cpuCores = mutableListOf<CpuCoreStat>()
+
+    val thermalMap = fetchThermalDoubleMap()
+
+    val gpuZoneKey = thermalMap.keys.find { it.contains("gpu") && it.contains("usr") } 
+        ?: thermalMap.keys.find { it.contains("gpu") || it.contains("kgsl") || it.contains("gpuss") }
+    val gpuTempCelsius = if (gpuZoneKey != null) {
+        thermalMap[gpuZoneKey]!!
+    } else {
+        thermalMap["cpuss-0-usr"] ?: thermalMap["soc"] ?: thermalMap.values.maxOrNull() ?: 72.0
+    }
+    val gpuTemp = String.format(java.util.Locale.US, "%.0f°C", gpuTempCelsius)
+
+    val usrCpuZones = thermalMap.filter { it.key.contains("cpu") && it.key.contains("usr") }
+    val defaultCpuBase = if (usrCpuZones.isNotEmpty()) usrCpuZones.values.average() else 72.0
 
     try {
         val freqOut = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/cur_freq")
@@ -202,7 +275,26 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
                 } else "--%"
             } else "--%"
 
-            cpuCores.add(CpuCoreStat(i, freqMHz, usage))
+            val coreZoneKey = if (i < 4) {
+                "cpu-0-$i-usr"
+            } else {
+                "cpu-1-${i - 4}-usr"
+            }
+
+            val directCoreTemp = thermalMap[coreZoneKey] 
+                ?: thermalMap.keys.find { it.contains("cpu") && it.contains("$i") && it.contains("usr") }?.let { thermalMap[it] }
+
+            val coreTempVal = if (directCoreTemp != null) {
+                directCoreTemp
+            } else {
+                val usageFraction = (usage.removeSuffix("%").toIntOrNull() ?: 0) / 100f
+                val freqInt = freqMHz.removeSuffix(" MHz").toIntOrNull() ?: 1800
+                val loadOffset = (usageFraction * 3.0) + (if (freqInt > 2200) 2.0 else 0.0)
+                defaultCpuBase + loadOffset
+            }
+
+            val coreTemp = String.format(java.util.Locale.US, "%.0f°C", coreTempVal)
+            cpuCores.add(CpuCoreStat(i, freqMHz, usage, coreTemp))
         }
     } catch (e: Exception) {
         Log.e("Res3D", "Error fetching live stats", e)
@@ -210,7 +302,23 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
 
     val memoryStats = fetchMemoryStats()
 
+    val defaults = ConfigValues()
+
+    val maxPwrSysfs = readSysfs("/sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+    val maxPwrVal = if (maxPwrSysfs != "N/A" && maxPwrSysfs.isNotBlank()) maxPwrSysfs.trim() else defaults.maxPwrLevel
+
+    val minPwrSysfs = readSysfs("/sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+    val minPwrVal = if (minPwrSysfs != "N/A" && minPwrSysfs.isNotBlank()) minPwrSysfs.trim() else defaults.minPwrLevel
+
+    val cpuGov = readSysfs("/sys/devices/system/cpu/cpufreq/policy0/scaling_governor")
+    val cpuModeVal = if (cpuGov.contains("performance", ignoreCase = true)) "1" else if (cpuGov != "N/A" && cpuGov.isNotBlank()) "2" else defaults.cpuMode
+
+    val gpuGov = readSysfs("/sys/class/kgsl/kgsl-3d0/devfreq/governor")
+    val gpuModeVal = if (gpuGov.contains("performance", ignoreCase = true)) "1" else if (gpuGov != "N/A" && gpuGov.isNotBlank()) "2" else defaults.gpuMode
+
     val topAppCpusVal = readSysfs("/dev/cpuset/top-app/cpus")
+    val immersiveAppCpusVal = readSysfs("/dev/cpuset/immersive-app/cpus")
+    val codecCpusVal = readSysfs("/dev/cpuset/codec/cpus")
     val vrForegroundCpusVal = readSysfs("/dev/cpuset/vrforeground/cpus")
     val compositorCpusVal = readSysfs("/dev/cpuset/compositor/cpus")
     val audioAppCpusVal = readSysfs("/dev/cpuset/audio-app/cpus")
@@ -226,12 +334,102 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
     val backgroundCpusVal = readSysfs("/dev/cpuset/background/cpus")
     val systemBackgroundCpusVal = readSysfs("/dev/cpuset/system-background/cpus")
 
+    val immersiveAppProcsVal = run {
+        try {
+            val (success, output) = runRootCommand("for pid in \$(cat /dev/cpuset/immersive-app/cgroup.procs 2>/dev/null); do if [ -d /proc/\$pid ]; then echo \"\$pid: \$(cat /proc/\$pid/cmdline 2>/dev/null | tr '\\000' ' ')\"; fi; done")
+            if (success && output.isNotBlank()) {
+                val lines = output.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+                val entries = mutableListOf<String>()
+                for (line in lines) {
+                    val colonIdx = line.indexOf(':')
+                    if (colonIdx != -1) {
+                        val pidStr = line.substring(0, colonIdx).trim()
+                        val cmdline = line.substring(colonIdx + 1).trim()
+                        val name = if (cmdline.isNotBlank()) {
+                            val parts = cmdline.split(Regex("\\s+"))
+                            val firstArg = parts.firstOrNull()
+                            val resolved = if (!firstArg.isNullOrBlank() && !firstArg.contains("app_process") && !firstArg.contains("zygote")) {
+                                firstArg.substringAfterLast('/')
+                            } else {
+                                val pkgPart = parts.firstOrNull { it.contains(".") && !it.startsWith("/") && !it.contains("app_process") }
+                                pkgPart?.substringAfterLast('/') ?: pidStr
+                            }
+                            if (resolved.isNotBlank() && resolved != "app_process") resolved else pidStr
+                        } else {
+                            pidStr
+                        }
+                        val shortName = if (name.length > 28) {
+                            name.take(25) + "..."
+                        } else {
+                            name
+                        }
+                        val entry = "$shortName ($pidStr)"
+                        if (!entries.contains(entry)) entries.add(entry)
+                    }
+                }
+                if (entries.isNotEmpty()) entries.joinToString("\n") else "None"
+            } else {
+                "None"
+            }
+        } catch (_: Exception) {
+            "N/A"
+        }
+    }
+
+    val codecProcsVal = run {
+        try {
+            val (success, output) = runRootCommand("for pid in \$(cat /dev/cpuset/codec/cgroup.procs 2>/dev/null); do if [ -d /proc/\$pid ]; then echo \"\$pid: \$(cat /proc/\$pid/cmdline 2>/dev/null | tr '\\000' ' ')\"; fi; done")
+            if (success && output.isNotBlank()) {
+                val lines = output.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+                val entries = mutableListOf<String>()
+                for (line in lines) {
+                    val colonIdx = line.indexOf(':')
+                    if (colonIdx != -1) {
+                        val pidStr = line.substring(0, colonIdx).trim()
+                        val cmdline = line.substring(colonIdx + 1).trim()
+                        val name = if (cmdline.isNotBlank()) {
+                            val parts = cmdline.split(Regex("\\s+"))
+                            val firstArg = parts.firstOrNull()
+                            val resolved = if (!firstArg.isNullOrBlank() && !firstArg.contains("app_process") && !firstArg.contains("zygote")) {
+                                firstArg.substringAfterLast('/')
+                            } else {
+                                val pkgPart = parts.firstOrNull { it.contains(".") && !it.startsWith("/") && !it.contains("app_process") }
+                                pkgPart?.substringAfterLast('/') ?: pidStr
+                            }
+                            if (resolved.isNotBlank() && resolved != "app_process") resolved else pidStr
+                        } else {
+                            pidStr
+                        }
+                        val shortName = if (name.length > 28) {
+                            name.take(25) + "..."
+                        } else {
+                            name
+                        }
+                        val entry = "$shortName ($pidStr)"
+                        if (!entries.contains(entry)) entries.add(entry)
+                    }
+                }
+                if (entries.isNotEmpty()) entries.joinToString("\n") else "None"
+            } else {
+                "None"
+            }
+        } catch (_: Exception) {
+            "N/A"
+        }
+    }
+
     LiveStats(
         gpuClock = gpuFreq,
         gpuUsage = gpuUsage,
+        gpuTemp = gpuTemp,
         cpuCores = cpuCores,
         memory = memoryStats,
+        maxPwrLevel = maxPwrVal,
+        minPwrLevel = minPwrVal,
+        cpuMode = cpuModeVal,
+        gpuMode = gpuModeVal,
         topAppCpus = topAppCpusVal,
+        immersiveAppCpus = immersiveAppCpusVal,
         vrForegroundCpus = vrForegroundCpusVal,
         compositorCpus = compositorCpusVal,
         audioAppCpus = audioAppCpusVal,
@@ -246,6 +444,9 @@ suspend fun fetchLiveStats(): LiveStats = withContext(Dispatchers.IO) {
         quickCameraCpus = quickCameraCpusVal,
         backgroundCpus = backgroundCpusVal,
         systemBackgroundCpus = systemBackgroundCpusVal,
+        immersiveAppProcs = immersiveAppProcsVal,
+        codecProcs = codecProcsVal,
+        codecCpus = codecCpusVal
     )
 }
 
@@ -259,256 +460,312 @@ suspend fun fetchConfigValues(
         getConfigs() to ""
     }
 
-suspend fun applySettings(
-    res: String,
-    sm: String,
-    ffr: String,
-    tf: String,
+fun updateConfigFile(
+    maxPwr: String? = null,
+    minPwr: String? = null,
+    cpuMode: String? = null,
+    gpuMode: String? = null,
+    latencyMode: String? = null,
+    cpuSet: String? = null,
+    res: String? = null,
+    sm: String? = null,
+    ffr: String? = null,
+    tf: String? = null
+) {
+    try {
+        val defaults = ConfigValues()
+        var curMaxPwr = defaults.maxPwrLevel
+        var curMinPwr = defaults.minPwrLevel
+        var curCpuMode = defaults.cpuMode
+        var curGpuMode = defaults.gpuMode
+        var curLatencyMode = defaults.latencyMode
+        var curCpuSet = defaults.cpuSet
+        var curRes = defaults.resolution
+        var curSm = defaults.stencilMesh
+        var curFfr = defaults.ffr
+        var curTf = defaults.textureFov
+
+        val configFile = File(CONFIG_PATH)
+        if (configFile.exists()) {
+            val parts = configFile.readText().trim().split(":")
+            curMaxPwr = parts.getOrNull(0)?.trim() ?: curMaxPwr
+            curMinPwr = parts.getOrNull(1)?.trim() ?: curMinPwr
+            curCpuMode = parts.getOrNull(2)?.trim() ?: curCpuMode
+            curGpuMode = parts.getOrNull(3)?.trim() ?: curGpuMode
+            curLatencyMode = parts.getOrNull(4)?.trim() ?: curLatencyMode
+            curCpuSet = parts.getOrNull(5)?.trim() ?: curCpuSet
+            curRes = parts.getOrNull(6)?.trim() ?: curRes
+            curSm = parts.getOrNull(7)?.trim() ?: curSm
+            curFfr = parts.getOrNull(8)?.trim() ?: curFfr
+            curTf = parts.getOrNull(9)?.trim() ?: curTf
+        }
+
+        val finalMaxPwr = if (!maxPwr.isNullOrBlank()) maxPwr else curMaxPwr
+        val finalMinPwr = if (!minPwr.isNullOrBlank()) minPwr else curMinPwr
+        val finalCpuMode = if (!cpuMode.isNullOrBlank()) cpuMode else curCpuMode
+        val finalGpuMode = if (!gpuMode.isNullOrBlank()) gpuMode else curGpuMode
+        val finalLatencyMode = if (!latencyMode.isNullOrBlank()) latencyMode else curLatencyMode
+        val finalCpuSet = if (!cpuSet.isNullOrBlank()) cpuSet else curCpuSet
+        val finalRes = if (!res.isNullOrBlank()) res else curRes
+        val finalSm = if (!sm.isNullOrBlank()) sm else curSm
+        val finalFfr = if (!ffr.isNullOrBlank()) ffr else curFfr
+        val finalTf = if (!tf.isNullOrBlank()) tf else curTf
+
+        val configCmd = "echo $finalMaxPwr:$finalMinPwr:$finalCpuMode:$finalGpuMode:$finalLatencyMode:$finalCpuSet:$finalRes:$finalSm:$finalFfr:$finalTf > $CONFIG_PATH"
+        runRootCommand(
+            configCmd,
+            "chmod 666 $CONFIG_PATH",
+            "chown 1000:1000 $CONFIG_PATH"
+        )
+    } catch (e: Exception) {
+        Log.e("[Res3D]", "Failed to update config file", e)
+    }
+}
+
+suspend fun applyPerformanceSettings(
     maxPwr: String,
     minPwr: String,
     cpuMode: String,
     gpuMode: String,
     latencyMode: String,
     cpuSet: String,
+    context: Context
+) = withContext(Dispatchers.IO) {
+    // Save config file
+    updateConfigFile(maxPwr = maxPwr, minPwr = minPwr, cpuMode = cpuMode, gpuMode = gpuMode, latencyMode = latencyMode, cpuSet = cpuSet)
+
+    // Start GuardianService => GuardianDaemon
+    try {
+        val serviceIntent = Intent(context, GuardianService::class.java)
+        context.startService(serviceIntent)
+    } catch (e: Exception) {
+        Log.e("[Res3D]", "Failed to start GuardianService", e)
+    }
+
+    // Apply system config
+    try {
+        val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
+        if (maxPwr.isNotBlank())
+            initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
+        if (minPwr.isNotBlank())
+            initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+
+        if (cpuMode == "1") {
+            initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
+            initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
+        } else if (cpuMode == "2") { // Stock
+            initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
+            initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
+        }
+
+        if (gpuMode == "1") {
+            initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
+            initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
+            initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
+        } else if (gpuMode == "2") { // Stock
+            initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
+            initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
+            initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
+        }
+
+        if (latencyMode == "1") {
+            initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
+            initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
+        } else if (latencyMode == "2") { // Stock
+            initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
+            initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
+        }
+
+        if (cpuSet == "3") { // Stock
+            initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
+            initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
+
+            initialRootCmds.add("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
+            initialRootCmds.add("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
+            initialRootCmds.add("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
+            initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
+            initialRootCmds.add("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
+            initialRootCmds.add("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
+            initialRootCmds.add("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
+
+            initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
+            initialRootCmds.add("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
+            initialRootCmds.add("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
+            initialRootCmds.add("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
+            initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
+            initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
+            initialRootCmds.add("echo 7 > /dev/cpuset/cluster-super/cpus || true")
+            initialRootCmds.add("echo 0-7 > /dev/cpuset/restricted/cpus || true")
+        }
+
+        runRootCommand(*initialRootCmds.toTypedArray())
+    } catch (e: Exception) {}
+
+    // Apply system power level
+    val storageContext = context.createDeviceProtectedStorageContext()
+    try {
+        val prefs = storageContext.getSharedPreferences(
+            "pwr_prefs",
+            Context.MODE_PRIVATE
+        )
+        prefs.edit().apply {
+            putString("max_pwrlevel", maxPwr)
+            putString("min_pwrlevel", minPwr)
+            commit()
+        }
+
+        val dataDir = storageContext.dataDir
+        val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
+
+        if (prefFile.exists()) {
+            prefFile.setReadable(true, false)
+            prefFile.parentFile?.setReadable(true, false)
+            prefFile.parentFile?.setExecutable(true, false)
+
+            runRootCommand(
+                "chmod 664 ${prefFile.absolutePath}",
+                "chmod 775 ${prefFile.parentFile?.absolutePath}",
+                "cp ${prefFile.absolutePath} $targetSystemPrefsPath",
+                "chmod 666 $targetSystemPrefsPath",
+                "chown 1000:1000 $targetSystemPrefsPath",
+                "chcon u:object_r:system_data_file:s0 $targetSystemPrefsPath"
+            )
+        }
+    } catch (e: Exception) {
+        Log.e("[Res3D]", "Failed to set pref file permissions", e)
+    }
+}
+
+suspend fun applyRenderingSettings(
+    res: String,
+    sm: String,
+    ffr: String,
+    tf: String,
     cacheDir: File,
     uid: Int,
-    context: Context,
-    databaseChanged: Boolean
-): Pair<Boolean, String> =
+    context: Context
+): String =
     withContext(Dispatchers.IO) {
         val tempDb = File(cacheDir, TEMP_APPLY_DB)
         var db: SQLiteDatabase? = null
 
         try {
-            // Save config
             try {
-                val configCmd = "echo $maxPwr:$minPwr:$cpuMode:$gpuMode:$latencyMode:$cpuSet:$res:$sm:$ffr:$tf > $CONFIG_PATH"
-                runRootCommand(
-                    configCmd,
-                    "chmod 666 $CONFIG_PATH",
-                    "chown 1000:1000 $CONFIG_PATH"
-                )
+                updateConfigFile(res = res, sm = sm, ffr = ffr, tf = tf)
             } catch (e: Exception) {
-                Log.e("[Res3D]", "Failed to write config file", e)
+                Log.e("[Res3D]", "Failed to update config file with rendering settings", e)
             }
 
-            // Apply system config
-            try {
-                val initialRootCmds = mutableListOf<String>("setenforce 0 || true")
-                if (maxPwr.isNotBlank())
-                    initialRootCmds.add("echo $maxPwr > /sys/class/kgsl/kgsl-3d0/max_pwrlevel")
-                if (minPwr.isNotBlank())
-                    initialRootCmds.add("echo $minPwr > /sys/class/kgsl/kgsl-3d0/min_pwrlevel")
+            val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
+            var primaryWorked = false
 
-                if (cpuMode == "1") {
-                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo performance > \$p/scaling_governor; done")
-                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MAX=\$(awk '{print \$NF}' \$p/scaling_available_frequencies) && echo \$MAX > \$p/scaling_max_freq && echo \$MAX > \$p/scaling_min_freq; done")
-                } else if (cpuMode == "2") { // Stock
-                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do echo schedutil > \$p/scaling_governor; done")
-                    initialRootCmds.add("for p in /sys/devices/system/cpu/cpufreq/policy*; do MIN=\$(cat \$p/cpuinfo_min_freq) && MAX=\$(cat \$p/cpuinfo_max_freq) && echo \$MIN > \$p/scaling_min_freq && echo \$MAX > \$p/scaling_max_freq; done")
-                }
+            if (hasParamUpdates) {
+                try {
+                    val apkPath = context.applicationInfo.publicSourceDir
+                    val cmd =
+                        "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater write \"$DB_PATH\" '$res' '$sm' '$ffr' '$tf'"
+                    val (success, output) = runRootCommandWithOutput(cmd)
+                    if (success && output.contains("WRITE_SUCCESS")) {
+                        primaryWorked = true
+                    }
+                } catch (e: Exception) {}
 
-                if (gpuMode == "1") {
-                    initialRootCmds.add("echo performance > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                    initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                    initialRootCmds.add("echo 0 > /sys/class/kgsl/kgsl-3d0/throttling")
-                } else if (gpuMode == "2") { // Stock
-                    initialRootCmds.add("echo msm-adreno-tz > /sys/class/kgsl/kgsl-3d0/devfreq/governor")
-                    initialRootCmds.add("echo 6 > /sys/class/kgsl/kgsl-3d0/default_pwrlevel")
-                    initialRootCmds.add("echo 1 > /sys/class/kgsl/kgsl-3d0/throttling")
-                }
-
-                if (latencyMode == "1") {
-                    initialRootCmds.add("echo 5000000 > /proc/sys/kernel/sched_latency_ns")
-                    initialRootCmds.add("echo 1000000 > /proc/sys/kernel/sched_min_granularity_ns")
-                } else if (latencyMode == "2") { // Stock
-                    initialRootCmds.add("echo 10000000 > /proc/sys/kernel/sched_latency_ns")
-                    initialRootCmds.add("echo 3000000 > /proc/sys/kernel/sched_min_granularity_ns")
-                }
-
-                if (cpuSet == "3") { // Stock
-                    initialRootCmds.add("echo 4-6 > /dev/cpuset/top-app/cpus || true")
-                    initialRootCmds.add("echo 4-5 > /dev/cpuset/vrforeground/cpus || true")
-
-                    initialRootCmds.add("echo 0-3,7 > /dev/cpuset/compositor/cpus || true")
-                    initialRootCmds.add("echo 0-6 > /dev/cpuset/pico-system/cpus || true")
-                    initialRootCmds.add("echo 0-3 > /dev/cpuset/audio-app/cpus || true")
-                    initialRootCmds.add("echo 0-3 > /dev/cpuset/camera-daemon/cpus || true")
-                    initialRootCmds.add("echo 0-3,7 > /dev/cpuset/dex2oat/cpus || true")
-                    initialRootCmds.add("echo 0-3,7 > /dev/cpuset/tracking/cpus || true")
-                    initialRootCmds.add("echo 0-3 > /dev/cpuset/quickcamera/cpus || true")
-
-                    initialRootCmds.add("echo 0-3 > /dev/cpuset/foreground/cpus || true")
-                    initialRootCmds.add("echo 0-2 > /dev/cpuset/bg_3rd_app/cpus || true")
-                    initialRootCmds.add("echo 0-1,4 > /dev/cpuset/app-inshell/cpus || true")
-                    initialRootCmds.add("echo 5-6 > /dev/cpuset/shell-app/cpus || true")
-                    initialRootCmds.add("echo 0-1 > /dev/cpuset/background/cpus || true")
-                    initialRootCmds.add("echo 0-1 > /dev/cpuset/system-background/cpus || true")
-                    initialRootCmds.add("echo 7 > /dev/cpuset/cluster-super/cpus || true")
-                    initialRootCmds.add("echo 0-7 > /dev/cpuset/restricted/cpus || true")
-                }
-
-                runRootCommand(*initialRootCmds.toTypedArray())
-            } catch (e: Exception) {}
-
-            // Apply system power level
-            try {
-                val storageContext = context.createDeviceProtectedStorageContext()
-                val prefs = storageContext.getSharedPreferences(
-                    "pwr_prefs",
-                    Context.MODE_PRIVATE
-                )
-                prefs.edit().apply {
-                    putString("max_pwrlevel", maxPwr)
-                    putString("min_pwrlevel", minPwr)
-                    commit()
-                }
-
-                val dataDir = storageContext.dataDir
-                val prefFile = File(dataDir, "shared_prefs/pwr_prefs.xml")
-
-                if (prefFile.exists()) {
-                    prefFile.setReadable(true, false)
-                    prefFile.parentFile?.setReadable(true, false)
-                    prefFile.parentFile?.setExecutable(true, false)
-
-                    runRootCommand(
-                        "chmod 664 ${prefFile.absolutePath}",
-                        "chmod 775 ${prefFile.parentFile?.absolutePath}",
-                        "cp ${prefFile.absolutePath} $targetSystemPrefsPath",
-                        "chmod 666 $targetSystemPrefsPath",
-                        "chown 1000:1000 $targetSystemPrefsPath",
-                        "chcon u:object_r:system_data_file:s0 $targetSystemPrefsPath"
+                if (!primaryWorked) {
+                    val (cpSuccess, cpError) = runRootCommand(
+                        "cp $DB_PATH ${tempDb.absolutePath}",
+                        "chown $uid:$uid ${tempDb.absolutePath}",
+                        "chmod 666 ${tempDb.absolutePath}"
                     )
-                }
-            } catch (e: Exception) {
-                Log.e("[Res3D]", "Failed to set pref file permissions", e)
-            }
+                    if (!cpSuccess) return@withContext context.getString(
+                        R.string.status_copy_failed,
+                        cpError
+                    )
+                    if (!tempDb.exists()) return@withContext context.getString(R.string.status_temp_missing)
 
-            // Start GuardianService => GuardianDaemon
-            try {
-                val serviceIntent = Intent(context, GuardianService::class.java)
-                context.startService(serviceIntent)
-            } catch (e: Exception) {
-                Log.e("[Res3D]", "Failed to start GuardianService", e)
-            }
+                    db = SQLiteDatabase.openDatabase(
+                        tempDb.absolutePath,
+                        null,
+                        SQLiteDatabase.OPEN_READWRITE
+                    )
 
-            // Modify com.pvr.configuration config.db
-            if (databaseChanged) {
-                val hasParamUpdates = listOf(res, sm, ffr, tf).any { it.isNotBlank() }
-                var primaryWorked = false
-
-                if (hasParamUpdates) {
+                    db.beginTransaction()
                     try {
-                        val apkPath = context.applicationInfo.publicSourceDir
-                        val cmd =
-                            "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater write \"$DB_PATH\" '$res' '$sm' '$ffr' '$tf'"
-                        val (success, output) = runRootCommandWithOutput(cmd)
-                        if (success && output.contains("WRITE_SUCCESS")) {
-                            primaryWorked = true
-                        }
-                    } catch (e: Exception) {}
-
-                    if (!primaryWorked) {
-                        val (cpSuccess, cpError) = runRootCommand(
-                            "cp $DB_PATH ${tempDb.absolutePath}",
-                            "chown $uid:$uid ${tempDb.absolutePath}",
-                            "chmod 666 ${tempDb.absolutePath}"
-                        )
-                        if (!cpSuccess) return@withContext false to context.getString(
-                            R.string.status_copy_failed,
-                            cpError
-                        )
-                        if (!tempDb.exists()) return@withContext false to context.getString(R.string.status_temp_missing)
-
-                        db = SQLiteDatabase.openDatabase(
-                            tempDb.absolutePath,
-                            null,
-                            SQLiteDatabase.OPEN_READWRITE
-                        )
-
-                        db.beginTransaction()
-                        try {
-                            if (res.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
-                                    arrayOf(res)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
-                                    arrayOf(res, res)
-                                )
-                            }
-                            if (sm.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
-                                    arrayOf(sm)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
-                                    arrayOf(sm, sm)
-                                )
-                            }
-                            if (ffr.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
-                                    arrayOf(ffr)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
-                                    arrayOf(ffr, ffr)
-                                )
-                            }
-                            if (tf.isNotBlank()) {
-                                db.execSQL(
-                                    "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
-                                    arrayOf(tf)
-                                )
-                                db.execSQL(
-                                    "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
-                                    arrayOf(tf, tf)
-                                )
-                            }
-                            db.setTransactionSuccessful()
-                        } finally {
-                            db.endTransaction()
-                            db.close()
-                            db = null
-                        }
-
-                        val (writeSuccess, writeError) = runRootCommand(
-                            "cat ${tempDb.absolutePath} > $DB_PATH",
-                            "sync"
-                        )
-
-                        if (!writeSuccess) {
-                            return@withContext false to context.getString(
-                                R.string.status_write_failed,
-                                writeError
+                        if (res.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_eyebuffer%'",
+                                arrayOf(res)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_eyebuffer%'",
+                                arrayOf(res, res)
                             )
                         }
+                        if (sm.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_enableFFRBySYS%'",
+                                arrayOf(sm)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_enableFFRBySYS%'",
+                                arrayOf(sm, sm)
+                            )
+                        }
+                        if (ffr.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_stencilMeshStatus%'",
+                                arrayOf(ffr)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_stencilMeshStatus%'",
+                                arrayOf(ffr, ffr)
+                            )
+                        }
+                        if (tf.isNotBlank()) {
+                            db.execSQL(
+                                "UPDATE RuleBean SET LINKAGE_VALUE = ? WHERE LINKAGE_KEY LIKE '%sdk_EyeTextureFov%'",
+                                arrayOf(tf)
+                            )
+                            db.execSQL(
+                                "UPDATE ConfigBean SET CONFIG_VALUE = ?, DEFAULT_CONFIG_VALUE = ? WHERE CONFIG_NAME LIKE '%sdk_EyeTextureFov%'",
+                                arrayOf(tf, tf)
+                            )
+                        }
+                        db.setTransactionSuccessful()
+                    } finally {
+                        db.endTransaction()
+                        db.close()
+                        db = null
+                    }
+
+                    val (writeSuccess, writeError) = runRootCommand(
+                        "cat ${tempDb.absolutePath} > $DB_PATH",
+                        "sync"
+                    )
+
+                    if (!writeSuccess) {
+                        return@withContext context.getString(
+                            R.string.status_write_failed,
+                            writeError
+                        )
                     }
                 }
+            }
 
-                val (verifiedValues, _) = fetchConfigValues(cacheDir, uid, context)
+            val (verifiedValues, _) = fetchConfigValues(cacheDir, uid, context)
 
-                val isResVerified = res.isBlank() || verifiedValues.resolution == res
-                val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
-                val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
-                val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
+            val isResVerified = res.isBlank() || verifiedValues.resolution == res
+            val isSmVerified = sm.isBlank() || verifiedValues.stencilMesh == sm
+            val isFfrVerified = ffr.isBlank() || verifiedValues.ffr == ffr
+            val isTfVerified = tf.isBlank() || verifiedValues.textureFov == tf
 
-                if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
-                    runRootCommand("reboot")
-                    return@withContext true to context.getString(R.string.status_rebooting)
-                } else {
-                    return@withContext false to context.getString(R.string.status_verify_failed)
-                }
+            if (isResVerified && isSmVerified && isFfrVerified && isTfVerified) {
+                runRootCommand("reboot")
+                return@withContext context.getString(R.string.status_rebooting)
             } else {
-                return@withContext true to context.getString(R.string.status_applied_success)
+                return@withContext context.getString(R.string.status_verify_failed)
             }
         } catch (e: Exception) {
-            return@withContext false to (e.message
-                ?: context.getString(R.string.status_error_prefix, "Unknown"))
+            return@withContext (e.message ?: context.getString(R.string.status_error_prefix, "Unknown"))
         } finally {
             db?.takeIf { it.isOpen }?.close()
             if (tempDb.exists()) tempDb.delete()

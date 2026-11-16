@@ -72,6 +72,7 @@
     <string name="label_free">Vapaana</string>
     <string name="label_total">Yhteensä</string>
     <string name="top_app_cores">Pääsovelluksen ytimet</string>
+    <string name="immersive_app_cores">Immersiivisen sovelluksen ytimet</string>
     <string name="foreground_cores">Etualan ytimet</string>
     <string name="bg3rdApp_cores">Taustan ytimet</string>
     <string name="pico_system_cores">Pico-järjestelmän ytimet</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Pikakameran ytimet</string>
     <string name="background_cores">Taustan ytimet</string>
     <string name="system_background_cores">Järjestelmän taustan ytimet</string>
+    <string name="developer_mode">Kehittäjätila</string>
+    <string name="developer_mode_desc">Simuloi, että VR-lasit ovat päässä ja telakka on piilotettu</string>
+    <string name="immersive_app">Mukaansatempaava sovellus</string>
+    <string name="codec_app">Koodekkisovellus</string>
+    <string name="codec_app_cores">Koodekkiytimet</string>
     <string name="close">Sulje</string>
 </resources>

@@ -72,6 +72,7 @@
     <string name="label_free">Ελεύθερη</string>
     <string name="label_total">Σύνολο</string>
     <string name="top_app_cores">Πυρήνες κορυφαίας εφαρμογής</string>
+    <string name="immersive_app_cores">Πυρήνες καθηλωτικής εφαρμογής</string>
     <string name="foreground_cores">Πυρήνες προσκηνίου</string>
     <string name="bg3rdApp_cores">Πυρήνες παρασκηνίου</string>
     <string name="pico_system_cores">Πυρήνες συστήματος Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Πυρήνες γρήγορης κάμερας</string>
     <string name="background_cores">Πυρήνες παρασκηνίου</string>
     <string name="system_background_cores">Πυρήνες παρασκηνίου συστήματος</string>
+    <string name="developer_mode">Λειτουργία προγραμματιστή</string>
+    <string name="developer_mode_desc">Προσομοίωση ότι το headset φοριέται και το dock είναι κρυφό</string>
+    <string name="immersive_app">Εφαρμογή εμβύθισης</string>
+    <string name="codec_app">Εφαρμογή codec</string>
+    <string name="codec_app_cores">Πυρήνες codec</string>
     <string name="close">Κλείσιμο</string>
 </resources>

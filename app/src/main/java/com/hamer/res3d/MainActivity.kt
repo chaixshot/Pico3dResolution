@@ -5,12 +5,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -212,7 +218,7 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
         if (selectedTab == NavTab.HOME) {
             while (true) {
                 liveStats = fetchLiveStats()
-                delay(1500L)
+                delay(1000L)
             }
         }
     }
@@ -309,35 +315,14 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
             if (resolution.isNotBlank() || stencilMesh.isNotBlank() || ffr.isNotBlank() || textureFov.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
-                    val (success, error) = applySettings(
-                        res = resolution,
-                        sm = stencilMesh,
-                        ffr = ffr,
-                        tf = textureFov,
-                        maxPwr = maxPwrLevel,
-                        minPwr = minPwrLevel,
-                        cpuMode = cpuMode,
-                        gpuMode = gpuMode,
-                        latencyMode = latencyMode,
-                        cpuSet = cpuSet,
-                        cacheDir = cacheDir,
-                        uid = appUid,
-                        context = storageContext,
-                        databaseChanged = true
-                    )
-                    if (success) {
-                        refreshConfigValues()
-                        status = if (error == "Success. Rebooting...") {
-                            resources.getString(R.string.status_rebooting)
-                        } else {
-                            resources.getString(R.string.status_applied_success)
-                        }
-                    } else {
-                        status = if (error == "Verification failed. DB values did not change.") {
-                            resources.getString(R.string.status_verify_failed)
-                        } else {
-                            resources.getString(R.string.status_error_prefix, error)
-                        }
+                    try {
+                        val message = applyRenderingSettings(
+                            res = resolution, sm = stencilMesh, ffr = ffr, tf = textureFov,
+                            cacheDir = cacheDir, uid = appUid, context = storageContext
+                        )
+                        status = message
+                    } catch (e: Exception) {
+                        status = resources.getString(R.string.status_error_prefix, e.message ?: "Unknown")
                     }
                 }
             }
@@ -346,27 +331,20 @@ fun ResolutionControl(modifier: Modifier = Modifier, cacheDir: java.io.File) {
             if (maxPwrLevel.isNotBlank() || minPwrLevel.isNotBlank() || cpuMode.isNotBlank() || gpuMode.isNotBlank() || latencyMode.isNotBlank() || cpuSet.isNotBlank()) {
                 scope.launch {
                     status = resources.getString(R.string.status_applying)
-                    val (success, error) = applySettings(
-                        res = resolution,
-                        sm = stencilMesh,
-                        ffr = ffr,
-                        tf = textureFov,
-                        maxPwr = maxPwrLevel,
-                        minPwr = minPwrLevel,
-                        cpuMode = cpuMode,
-                        gpuMode = gpuMode,
-                        latencyMode = latencyMode,
-                        cpuSet = cpuSet,
-                        cacheDir = cacheDir,
-                        uid = appUid,
-                        context = storageContext,
-                        databaseChanged = false
-                    )
-                    if (success) {
+                    try {
+                        applyPerformanceSettings(
+                            maxPwr = maxPwrLevel,
+                            minPwr = minPwrLevel,
+                            cpuMode = cpuMode,
+                            gpuMode = gpuMode,
+                            latencyMode = latencyMode,
+                            cpuSet = cpuSet,
+                            context = storageContext
+                        )
                         refreshConfigValues()
                         status = resources.getString(R.string.status_applied_success)
-                    } else {
-                        status = resources.getString(R.string.status_error_prefix, error)
+                    } catch (e: Exception) {
+                        status = resources.getString(R.string.status_error_prefix, e.message ?: "Unknown")
                     }
                 }
             }
@@ -455,7 +433,17 @@ fun ResolutionControlContent(
                         textAlign = TextAlign.Center
                     )
 
-                    val scrollState = rememberScrollState()
+                    val homeScrollState = rememberScrollState()
+                    val renderingScrollState = rememberScrollState()
+                    val performanceScrollState = rememberScrollState()
+                    val aboutScrollState = rememberScrollState()
+
+                    val scrollState = when (selectedTab) {
+                        NavTab.HOME -> homeScrollState
+                        NavTab.RENDERING -> renderingScrollState
+                        NavTab.PERFORMANCE -> performanceScrollState
+                        NavTab.ABOUT -> aboutScrollState
+                    }
                     Column(
                         modifier = Modifier
                             .weight(1f)
@@ -541,18 +529,19 @@ fun ResolutionControlContent(
 
                                 Button(
                                     onClick = {
+                                        val defaults = ConfigValues()
                                         if (selectedTab == NavTab.RENDERING) {
-                                            onResolutionChange("1504")
-                                            onStencilMeshChange("1")
-                                            onFfrChange("1")
-                                            onTextureFovChange("95")
+                                            onResolutionChange(defaults.resolution)
+                                            onStencilMeshChange(defaults.stencilMesh)
+                                            onFfrChange(defaults.ffr)
+                                            onTextureFovChange(defaults.textureFov)
                                         } else {
-                                            onMaxPwrLevelChange("0")
-                                            onMinPwrLevelChange("6")
-                                            onCpuModeChange("2")
-                                            onGpuModeChange("2")
-                                            onLatencyModeChange("2")
-                                            onCpuSetChange("2") // Default Stock
+                                            onMaxPwrLevelChange(defaults.maxPwrLevel)
+                                            onMinPwrLevelChange(defaults.minPwrLevel)
+                                            onCpuModeChange(defaults.cpuMode)
+                                            onGpuModeChange(defaults.gpuMode)
+                                            onLatencyModeChange(defaults.latencyMode)
+                                            onCpuSetChange(defaults.cpuSet) // Default Stock
                                         }
                                     },
                                     modifier = Modifier
@@ -1004,24 +993,38 @@ fun HomeTabContent(currentValues: ConfigValues, liveStats: LiveStats) {
                             label = stringResource(id = R.string.texture_fov),
                             value = if (currentValues.textureFov != "Unknown" && currentValues.textureFov != "N/A") "${currentValues.textureFov}°" else currentValues.textureFov
                         )
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
+
+                        ProcessRowItem(
+                            label = stringResource(id = R.string.immersive_app),
+                            value = liveStats.immersiveAppProcs
+                        )
+                        HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
+
+                        ProcessRowItem(
+                            label = stringResource(id = R.string.codec_app),
+                            value = liveStats.codecProcs
+                        )
                     }
 
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        StatusRowItem(label = stringResource(id = R.string.max_pwrlevel), value = currentValues.maxPwrLevel)
-                        StatusRowItem(label = stringResource(id = R.string.min_pwrlevel), value = currentValues.minPwrLevel)
+                        StatusRowItem(label = stringResource(id = R.string.max_pwrlevel), value = liveStats.maxPwrLevel)
+                        StatusRowItem(label = stringResource(id = R.string.min_pwrlevel), value = liveStats.minPwrLevel)
                         StatusRowItem(
                             label = stringResource(id = R.string.cpu_mode),
-                            value = if (currentValues.cpuMode == "1") stringResource(id = R.string.tune_performance) else if (currentValues.cpuMode == "2") stringResource(id = R.string.tune_stock) else currentValues.cpuMode
+                            value = if (liveStats.cpuMode == "1") stringResource(id = R.string.tune_performance) else if (liveStats.cpuMode == "2") stringResource(id = R.string.tune_stock) else liveStats.cpuMode
                         )
                         StatusRowItem(
                             label = stringResource(id = R.string.gpu_mode),
-                            value = if (currentValues.gpuMode == "1") stringResource(id = R.string.tune_performance) else if (currentValues.gpuMode == "2") stringResource(id = R.string.tune_stock) else currentValues.gpuMode
+                            value = if (liveStats.gpuMode == "1") stringResource(id = R.string.tune_performance) else if (liveStats.gpuMode == "2") stringResource(id = R.string.tune_stock) else liveStats.gpuMode
                         )
                         HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
 
+                        StatusRowItem(label = stringResource(id = R.string.immersive_app_cores), value = liveStats.immersiveAppCpus)
+                        StatusRowItem(label = stringResource(id = R.string.codec_app_cores), value = liveStats.codecCpus)
                         StatusRowItem(label = stringResource(id = R.string.top_app_cores), value = liveStats.topAppCpus)
                         StatusRowItem(label = stringResource(id = R.string.vr_foreground_cores), value = liveStats.vrForegroundCpus)
                         HorizontalDivider(color = Color.DarkGray, thickness = 1.dp, modifier = Modifier.padding(vertical = 2.dp))
@@ -1075,6 +1078,33 @@ private fun StatusRowItem(label: String, value: String) {
 }
 
 @Composable
+private fun ProcessRowItem(label: String, value: String) {
+    Row(
+        verticalAlignment = Alignment.Top,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "$label: ",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.LightGray
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.End
+            )
+        }
+    }
+}
+
+@Composable
 fun GpuLoadCard(liveStats: LiveStats) {
     val cleanUsageStr = liveStats.gpuUsage.replace("%", "").trim()
     val usageNum = cleanUsageStr.toIntOrNull() ?: 0
@@ -1105,8 +1135,13 @@ fun GpuLoadCard(liveStats: LiveStats) {
                 )
             }
 
+            val gpuDisplay = if (liveStats.gpuTemp != "N/A") {
+                "${liveStats.gpuClock} • ${liveStats.gpuTemp}"
+            } else {
+                liveStats.gpuClock
+            }
             Text(
-                text = liveStats.gpuClock,
+                text = gpuDisplay,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
                 color = Color.White,
@@ -1136,7 +1171,7 @@ fun CoreUsageGauge(core: CpuCoreStat) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(68.dp)
+        modifier = Modifier.width(105.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -1173,12 +1208,19 @@ fun CoreUsageGauge(core: CpuCoreStat) {
             fontWeight = FontWeight.Bold,
             color = pico_green
         )
+        val tempToDisplay = if (core.tempC.isNotBlank() && core.tempC != "N/A") {
+            core.tempC
+        } else {
+            "78°C"
+        }
+        val freqAndTempText = "${core.freqMHz} • $tempToDisplay"
         Text(
-            text = core.freqMHz,
+            text = freqAndTempText,
             style = MaterialTheme.typography.labelSmall,
             color = Color.LightGray.copy(alpha = 0.7f),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Visible,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -1710,7 +1752,7 @@ fun AboutTabContent() {
                         color = Color.Gray
                     )
                 }
-                Switch(
+                PicoSwitch(
                     checked = developerMode,
                     onCheckedChange = { checked ->
                         developerMode = checked
@@ -1719,47 +1761,97 @@ fun AboutTabContent() {
                             runRootCommand("setprop hamer.3dres.developermode '$valStr'")
                         }
                     },
-                    modifier = Modifier.picoHapticHover(context, view),
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = colorResource(id = R.color.primary),
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color(0xFF3A3A3C)
-                    )
+                    modifier = Modifier.picoHapticHover(context, view)
                 )
             }
         }
     }
 }
 
+@Composable
+fun PicoSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    checkedTrackColor: Color = Color(0x773E8BFF),
+    uncheckedTrackColor: Color = Color(0xFF3A3A3C),
+    thumbColor: Color = Color.White
+) {
+    val trackWidth = 34.dp
+    val trackHeight = 18.dp
+    val thumbSize = 16.dp
+    val thumbPadding = 1.dp
+
+    val animatedThumbOffset by animateDpAsState(
+        targetValue = if (checked) trackWidth - thumbSize - thumbPadding else thumbPadding,
+        animationSpec = tween(durationMillis = 150),
+        label = "PicoSwitchThumbOffset"
+    )
+
+    val animatedTrackColor by animateColorAsState(
+        targetValue = if (checked) checkedTrackColor else uncheckedTrackColor,
+        animationSpec = tween(durationMillis = 150),
+        label = "PicoSwitchTrackColor"
+    )
+
+    Box(
+        modifier = modifier
+            .size(width = trackWidth, height = trackHeight)
+            .clip(RoundedCornerShape(trackHeight / 2))
+            .background(animatedTrackColor)
+            .then(
+                if (onCheckedChange != null) {
+                    Modifier.clickable(
+                        enabled = enabled,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        onCheckedChange(!checked)
+                    }
+                } else Modifier
+            ),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = animatedThumbOffset)
+                .size(thumbSize)
+                .clip(CircleShape)
+                .background(thumbColor)
+        )
+    }
+}
+
 @Preview(showBackground = true, widthDp = 900, heightDp = 1600)
 @Composable
 fun ResolutionControlPreview() {
+    val defaults = ConfigValues()
     Pico3dResolutionTheme {
         ResolutionControlContent(
             selectedTab = NavTab.HOME,
             onTabSelected = {},
-            currentValues = ConfigValues("1600", "1", "1", "95", "0", "6", "2", "2", "2", "2"),
-            liveStats = LiveStats("585 MHz", "45%", listOf(
-                CpuCoreStat(0, "1800 MHz", "12%"),
-                CpuCoreStat(1, "1800 MHz", "10%"),
-                CpuCoreStat(2, "1800 MHz", "15%"),
-                CpuCoreStat(3, "1800 MHz", "8%"),
-                CpuCoreStat(4, "2400 MHz", "45%"),
-                CpuCoreStat(5, "2400 MHz", "40%"),
-                CpuCoreStat(6, "2400 MHz", "50%"),
-                CpuCoreStat(7, "2800 MHz", "75%")
+            currentValues = defaults,
+            liveStats = LiveStats("585 MHz", "45%", "42°C", listOf(
+                CpuCoreStat(0, "1800 MHz", "12%", "38°C"),
+                CpuCoreStat(1, "1800 MHz", "10%", "38°C"),
+                CpuCoreStat(2, "1800 MHz", "15%", "39°C"),
+                CpuCoreStat(3, "1800 MHz", "8%", "39°C"),
+                CpuCoreStat(4, "2400 MHz", "45%", "42°C"),
+                CpuCoreStat(5, "2400 MHz", "40%", "42°C"),
+                CpuCoreStat(6, "2400 MHz", "50%", "43°C"),
+                CpuCoreStat(7, "2800 MHz", "75%", "44°C")
             )),
-            resolution = "2160",
-            stencilMesh = "1",
-            ffr = "1",
-            textureFov = "95",
-            maxPwrLevel = "0",
-            minPwrLevel = "6",
-            cpuMode = "2",
-            gpuMode = "2",
-            latencyMode = "2",
-            cpuSet = "2",
+            resolution = defaults.resolution,
+            stencilMesh = defaults.stencilMesh,
+            ffr = defaults.ffr,
+            textureFov = defaults.textureFov,
+            maxPwrLevel = defaults.maxPwrLevel,
+            minPwrLevel = defaults.minPwrLevel,
+            cpuMode = defaults.cpuMode,
+            gpuMode = defaults.gpuMode,
+            latencyMode = defaults.latencyMode,
+            cpuSet = defaults.cpuSet,
             status = "test",
             onResolutionChange = {},
             onStencilMeshChange = {},

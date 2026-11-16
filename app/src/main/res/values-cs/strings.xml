@@ -72,6 +72,7 @@
     <string name="label_free">Volno</string>
     <string name="label_total">Celkem</string>
     <string name="top_app_cores">Jádra horní aplikace</string>
+    <string name="immersive_app_cores">Jádra imerzivní aplikace</string>
     <string name="foreground_cores">Jádra v popředí</string>
     <string name="bg3rdApp_cores">Jádra na pozadí</string>
     <string name="pico_system_cores">Systémová jádra Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Jádra rychlého fotoaparátu</string>
     <string name="background_cores">Jádra na pozadí</string>
     <string name="system_background_cores">Systémová jádra na pozadí</string>
+    <string name="developer_mode">Vývojářský režim</string>
+    <string name="developer_mode_desc">Simulovat, že je headset nasazen a dok je skryt</string>
+    <string name="immersive_app">Imersivní aplikace</string>
+    <string name="codec_app">Aplikace kodeku</string>
+    <string name="codec_app_cores">Jádra kodeku</string>
     <string name="close">Zavřít</string>
 </resources>

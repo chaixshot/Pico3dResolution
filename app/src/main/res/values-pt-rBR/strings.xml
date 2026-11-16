@@ -72,6 +72,7 @@
     <string name="label_free">Livre</string>
     <string name="label_total">Total</string>
     <string name="top_app_cores">Núcleos do aplicativo principal</string>
+    <string name="immersive_app_cores">Núcleos do aplicativo imersivo</string>
     <string name="foreground_cores">Núcleos em primeiro plano</string>
     <string name="bg3rdApp_cores">Núcleos em segundo plano</string>
     <string name="pico_system_cores">Núcleos do sistema Pico</string>
@@ -86,5 +87,10 @@
     <string name="quick_camera_cores">Núcleos de câmera rápida</string>
     <string name="background_cores">Núcleos em segundo plano</string>
     <string name="system_background_cores">Núcleos do sistema em segundo plano</string>
+    <string name="developer_mode">Modo de desenvolvedor</string>
+    <string name="developer_mode_desc">Simular que o headset está sendo usado e o dock está oculto</string>
+    <string name="immersive_app">Aplicativo imersivo</string>
+    <string name="codec_app">Aplicativo de codec</string>
+    <string name="codec_app_cores">Núcleos de codec</string>
     <string name="close">Fechar</string>
 </resources>
