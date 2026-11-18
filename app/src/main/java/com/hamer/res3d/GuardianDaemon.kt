@@ -9,6 +9,21 @@ class GuardianDaemon {
         const val CONFIG_PATH = "/data/local/tmp/config.cfg"
         const val TAG = "Res3Daemon"
 
+        private data class DaemonState(
+            var isWearing: Boolean? = null,
+            var vrPackage: String? = null,
+            var isPicoDockVisible: Boolean? = null,
+            var isKeyboardVisible: Boolean? = null,
+            var lastMovedVrPackage: String? = null,
+            var lastMovedCpuSet: String? = null
+        )
+
+        private val daemonState = DaemonState()
+        private val policyMaxFreqCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+        private val policyMinFreqCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+        private var lastSettingsGlobalModified = 0L
+        private var cachedPicoDockVisible = false
+
         private val systemPropertiesGetMethod: Method? by lazy {
             try {
                 val clazz = Class.forName("android.os.SystemProperties")
@@ -31,10 +46,13 @@ class GuardianDaemon {
 
             val psensor = getSystemProperty("sys.pxr.psensor.status")
             val wearing = psensor == "0"
-            if (wearing) {
-                Log.i(TAG, "Proximity Sensor: WEARING")
-            } else {
-                Log.i(TAG, "Proximity Sensor: REMOVED")
+            if (wearing != daemonState.isWearing) {
+                daemonState.isWearing = wearing
+                if (wearing) {
+                    Log.i(TAG, "Proximity Sensor: WEARING")
+                } else {
+                    Log.i(TAG, "Proximity Sensor: REMOVED")
+                }
             }
             return wearing
         }
@@ -52,13 +70,17 @@ class GuardianDaemon {
                 getSystemProperty("sys.pxr.mrservice.user")
             }
 
-            if (mrUser.isNotBlank() && !isSystemPackage(mrUser)) {
-                Log.i(TAG, "VR Detection: $mrUser")
-                return mrUser
+            val vrPkg = if (mrUser.isNotBlank() && !isSystemPackage(mrUser)) mrUser else ""
+            if (vrPkg != daemonState.vrPackage) {
+                daemonState.vrPackage = vrPkg
+                if (vrPkg.isNotBlank()) {
+                    Log.i(TAG, "VR Detection: $vrPkg")
+                } else {
+                    Log.i(TAG, "VR Detection: none")
+                }
             }
 
-            Log.i(TAG, "VR Detection: none")
-            return ""
+            return vrPkg
         }
 
         private fun isPicoDockVisible(): Boolean {
@@ -67,23 +89,25 @@ class GuardianDaemon {
             }
 
             return try {
-                // Check official global setting updated by com.pvr.shortcut (pvr_shortcut_status: 1 = visible/shown, 0 = hidden)
-                val process = Runtime.getRuntime().exec(arrayOf("settings", "get", "global", "pvr_shortcut_status"))
-                val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
-                process.waitFor()
-
-                val status = output.toIntOrNull() ?: -1
-                val isVisible = status == 1
-
-                if (isVisible) {
-                    Log.i(TAG, "Pico Dock: VISIBLE")
-                } else {
-                    Log.i(TAG, "Pico Dock: NOT VISIBLE")
-                }
-
-                isVisible
-            } catch (e: Exception) {
-                Log.e(TAG, "isPicoDockVisible error: ${e.message}")
+                val file = File("/data/system/users/0/settings_global.xml")
+                if (file.exists()) {
+                    val modTime = file.lastModified()
+                    if (modTime != lastSettingsGlobalModified) {
+                        lastSettingsGlobalModified = modTime
+                        cachedPicoDockVisible = file.readText().contains("name=\"pvr_shortcut_status\" value=\"1\"")
+                    }
+                    val isVisible = cachedPicoDockVisible
+                    if (isVisible != daemonState.isPicoDockVisible) {
+                        daemonState.isPicoDockVisible = isVisible
+                        if (isVisible) {
+                            Log.i(TAG, "Pico Dock: VISIBLE")
+                        } else {
+                            Log.i(TAG, "Pico Dock: NOT VISIBLE")
+                        }
+                    }
+                    isVisible
+                } else false
+            } catch (_: Exception) {
                 false
             }
         }
@@ -93,10 +117,13 @@ class GuardianDaemon {
                 val status = getSystemProperty("hamer.3dres.keyboard_status")
                 val isVisible = status == "1"
 
-                if (isVisible) {
-                    Log.i(TAG, "Keyboard: VISIBLE")
-                } else {
-                    Log.i(TAG, "Keyboard: NOT VISIBLE")
+                if (isVisible != daemonState.isKeyboardVisible) {
+                    daemonState.isKeyboardVisible = isVisible
+                    if (isVisible) {
+                        Log.i(TAG, "Keyboard: VISIBLE")
+                    } else {
+                        Log.i(TAG, "Keyboard: NOT VISIBLE")
+                    }
                 }
 
                 isVisible
@@ -128,7 +155,6 @@ class GuardianDaemon {
 
         private fun movePackageToImmersiveAppSet(pkgName: String, toImmersive: Boolean = true) {
             if (pkgName.isNotBlank()) {
-                val pidsToMove = getAllPidsForPackage(pkgName)
                 val (sourceFile, targetFile, targetName) = if (toImmersive) {
                     Triple(
                         File("/dev/cpuset/top-app/cgroup.procs"),
@@ -145,18 +171,21 @@ class GuardianDaemon {
 
                 val sourcePids = try {
                     if (sourceFile.exists()) {
-                        sourceFile.readLines().mapNotNull { it.trim().toIntOrNull() }.toSet()
-                    } else emptySet()
-                } catch (_: Exception) { emptySet() }
+                        sourceFile.readLines().mapNotNull { it.trim().toIntOrNull() }
+                    } else emptyList()
+                } catch (_: Exception) { emptyList() }
 
-                for (pid in pidsToMove) {
-                    if (sourcePids.contains(pid)) {
+                for (pid in sourcePids) {
+                    val cmdlineFile = File("/proc/$pid/cmdline")
+                    if (cmdlineFile.exists()) {
                         try {
-                            targetFile.writeText(pid.toString())
-                            Log.i(TAG, "Move \"$pkgName\" to $targetName (PID: $pid)")
-                        } catch (_: Exception) {
-                            Log.e(TAG, "Failed to move \"$pkgName\" to $targetName (PID: $pid)")
-                        }
+                            val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
+                            val mainCmd = cmdline.split(Regex("\\s+")).firstOrNull() ?: cmdline
+                            if (mainCmd == pkgName || mainCmd.startsWith("$pkgName:")) {
+                                targetFile.writeText(pid.toString())
+                                Log.i(TAG, "Move \"$pkgName\" to $targetName (PID: $pid)")
+                            }
+                        } catch (_: Exception) {}
                     }
                 }
             }
@@ -164,7 +193,6 @@ class GuardianDaemon {
 
         private fun movePackageToCodecAppSet(pkgName: String, toCodec: Boolean = true) {
             if (pkgName.isNotBlank()) {
-                val pid = getSinglePidForPackage(pkgName) ?: return
                 val (sourceFile, targetFile, targetName) = if (toCodec) {
                     Triple(
                         File("/dev/cpuset/foreground/cgroup.procs"),
@@ -181,74 +209,24 @@ class GuardianDaemon {
 
                 val sourcePids = try {
                     if (sourceFile.exists()) {
-                        sourceFile.readLines().mapNotNull { it.trim().toIntOrNull() }.toSet()
-                    } else emptySet()
+                        sourceFile.readLines().mapNotNull { it.trim().toIntOrNull() }
+                    } else emptyList()
                 } catch (_: Exception) { emptySet() }
 
-                if (sourcePids.contains(pid)) {
-                    try {
-                        targetFile.writeText(pid.toString())
-                        Log.i(TAG, "Move \"$pkgName\" to $targetName (PID: $pid)")
-                    } catch (_: Exception) {
-                        Log.e(TAG, "Failed to move \"$pkgName\" to $targetName (PID: $pid)")
-                    }
-                }
-            }
-        }
-
-        private fun getSinglePidForPackage(pkgName: String): Int? {
-            if (pkgName.isBlank()) return null
-            try {
-                val procDir = File("/proc")
-                val names = procDir.list() ?: return null
-                for (name in names) {
-                    if (name.isNotEmpty() && name[0].isDigit()) {
-                        val p = name.toIntOrNull() ?: continue
-                        val cmdlineFile = File("/proc/$p/cmdline")
-                        if (cmdlineFile.exists()) {
-                            try {
-                                val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
-                                val mainCmd = cmdline.split(Regex("\\s+")).firstOrNull() ?: cmdline
-                                if (mainCmd == pkgName || mainCmd.startsWith("$pkgName:")) {
-                                    return p // Fast early exit
-                                }
-                            } catch (_: Exception) {}
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "getSinglePidForPackage error: ${e.message}")
-            }
-            return null
-        }
-
-
-        private fun getAllPidsForPackage(pkgName: String): List<Int> {
-            val pids = mutableListOf<Int>()
-            if (pkgName.isBlank()) return pids
-            try {
-                val procDir = File("/proc")
-                procDir.listFiles()?.forEach { file ->
-                    if (file.isDirectory) {
-                        val p = file.name.toIntOrNull()
-                        if (p != null && p > 0) {
-                            val cmdlineFile = File(file, "cmdline")
-                            if (cmdlineFile.exists()) {
-                                try {
-                                    val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
-                                    val mainCmd = cmdline.split(Regex("\\s+")).firstOrNull() ?: cmdline
-                                    if (mainCmd == pkgName || mainCmd.startsWith("$pkgName:")) {
-                                        pids.add(p)
-                                    }
-                                } catch (_: Exception) {}
+                for (pid in sourcePids) {
+                    val cmdlineFile = File("/proc/$pid/cmdline")
+                    if (cmdlineFile.exists()) {
+                        try {
+                            val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
+                            val mainCmd = cmdline.split(Regex("\\s+")).firstOrNull() ?: cmdline
+                            if (mainCmd == pkgName || mainCmd.startsWith("$pkgName:")) {
+                                targetFile.writeText(pid.toString())
+                                Log.i(TAG, "Move \"$pkgName\" to $targetName (PID: $pid)")
                             }
-                        }
+                        } catch (_: Exception) {}
                     }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "getAllPidsForPackage error: ${e.message}")
             }
-            return pids
         }
 
         private fun setupImmersiveAppCpuset() {
@@ -285,6 +263,18 @@ class GuardianDaemon {
             }
         }
 
+        private fun setupGuardianDaemonCpuset(myPid: Int){
+            try {
+                val bgCgroup = File("/dev/cpuset/background/cgroup.procs")
+                if (bgCgroup.exists()) {
+                    bgCgroup.writeText(myPid.toString())
+                    Log.i(TAG, "Assigned GuardianDaemon to /dev/cpuset/background (PID $myPid)")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to assign to background cpuset: ${e.message}")
+            }
+        }
+
         @JvmStatic
         fun main(args: Array<String>) {
             var afterWearing = true
@@ -297,6 +287,7 @@ class GuardianDaemon {
             execCmd("for p in \$(pgrep -f 'com.hamer.res3d.GuardianDaemon'); do if [ \"\$p\" != \"$myPid\" ]; then kill -9 \$p; fi; done || true")
             setupImmersiveAppCpuset()
             setupCodecCpuset()
+            setupGuardianDaemonCpuset(myPid)
 
             if(configs.cpuSet == "3") { // Stock
                 movePackageToImmersiveAppSet( getVrAppPackage(), false)
@@ -345,20 +336,32 @@ class GuardianDaemon {
                                 val policyPath = policy.absolutePath
                                 if (configs.cpuMode == "1" && isWearing) { // Performance
                                     setValueIfNeeded("$policyPath/scaling_governor", "performance")
-                                    val availFreqFile = File(policy, "scaling_available_frequencies")
-                                    if (availFreqFile.exists()) {
-                                        val maxFreq = availFreqFile.readText().trim().split(Regex("\\s+")).lastOrNull()
-                                        if (!maxFreq.isNullOrBlank()) {
-                                            setValueIfNeeded("$policyPath/scaling_max_freq", maxFreq)
-                                            setValueIfNeeded("$policyPath/scaling_min_freq", maxFreq)
+                                    var maxFreq = policyMaxFreqCache[policyPath]
+                                    if (maxFreq == null) {
+                                        val availFreqFile = File(policy, "scaling_available_frequencies")
+                                        if (availFreqFile.exists()) {
+                                            maxFreq = availFreqFile.readText().trim().split(Regex("\\s+")).lastOrNull() ?: ""
+                                            if (maxFreq.isNotBlank()) policyMaxFreqCache[policyPath] = maxFreq
                                         }
+                                    }
+                                    if (!maxFreq.isNullOrBlank()) {
+                                        setValueIfNeeded("$policyPath/scaling_max_freq", maxFreq)
+                                        setValueIfNeeded("$policyPath/scaling_min_freq", maxFreq)
                                     }
                                 } else { // Stock
                                     setValueIfNeeded("$policyPath/scaling_governor", "schedutil")
-                                    val minFreqFile = File(policy, "cpuinfo_min_freq")
-                                    val maxFreqFile = File(policy, "cpuinfo_max_freq")
-                                    val minFreq = if (minFreqFile.exists()) minFreqFile.readText().trim() else ""
-                                    val maxFreq = if (maxFreqFile.exists()) maxFreqFile.readText().trim() else ""
+                                    var minFreq = policyMinFreqCache[policyPath]
+                                    if (minFreq == null) {
+                                        val minFreqFile = File(policy, "cpuinfo_min_freq")
+                                        minFreq = if (minFreqFile.exists()) minFreqFile.readText().trim() else ""
+                                        if (minFreq.isNotBlank()) policyMinFreqCache[policyPath] = minFreq
+                                    }
+                                    var maxFreq = policyMaxFreqCache[policyPath]
+                                    if (maxFreq == null) {
+                                        val maxFreqFile = File(policy, "cpuinfo_max_freq")
+                                        maxFreq = if (maxFreqFile.exists()) maxFreqFile.readText().trim() else ""
+                                        if (maxFreq.isNotBlank()) policyMaxFreqCache[policyPath] = maxFreq
+                                    }
                                     if (minFreq.isNotBlank()) {
                                         setValueIfNeeded("$policyPath/scaling_min_freq", minFreq)
                                     }
@@ -392,13 +395,10 @@ class GuardianDaemon {
                         }
 
                         // Apply CPU Set
-                        when (configs.cpuSet)
-                        {
-                            in listOf("1", "2") -> {
-                                movePackageToImmersiveAppSet(vrPkg, true)
-                                movePackageToCodecAppSet("media.codec", true)
-                                movePackageToCodecAppSet("media.swcodec", true)
-                            }
+                        if (configs.cpuSet in listOf("1", "2")) {
+                            movePackageToImmersiveAppSet(vrPkg, true)
+                            movePackageToCodecAppSet("media.codec", true)
+                            movePackageToCodecAppSet("media.swcodec", true)
                         }
 
                         when (configs.cpuSet) {
@@ -518,7 +518,9 @@ class GuardianDaemon {
                         afterWearing = isWearing
 
                         /* Test command
-                            pids=$(tr '\n' ',' < /dev/cpuset/immersive-app/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
+                            top -b -d 3.0 -p $(pgrep -f com.hamer.res3d.GuardianDaemon)
+
+                            pids=$(tr '\n' ',' < /dev/cpuset/codec/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
 
                             PIDS=$(pidof app_process | tr ' ' ',')
                             [ -n "$PIDS" ] && top -b -H -n 1 -p "$PIDS" -o CPU,%CPU | awk '
@@ -534,7 +536,6 @@ class GuardianDaemon {
                     Log.e(TAG, "GuardianDaemon loop error: ${e.message}")
                 }
 
-                Log.i(TAG, "-----")
                 Thread.sleep(2000)
             }
         }
