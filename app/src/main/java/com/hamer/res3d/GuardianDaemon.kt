@@ -1,6 +1,8 @@
 package com.hamer.res3d
 
 import android.util.Log
+import android.os.FileObserver
+import android.os.Looper
 import java.io.File
 import java.lang.reflect.Method
 
@@ -15,14 +17,14 @@ class GuardianDaemon {
             var isPicoDockVisible: Boolean? = null,
             var isKeyboardVisible: Boolean? = null,
             var lastMovedVrPackage: String? = null,
-            var lastMovedCpuSet: String? = null
+            var lastMovedCpuSet: String? = null,
+            var lastAppliedWearing: Boolean? = null,
+            var lastAppliedVrPackage: String? = null,
         )
 
         private val daemonState = DaemonState()
         private val policyMaxFreqCache = java.util.concurrent.ConcurrentHashMap<String, String>()
         private val policyMinFreqCache = java.util.concurrent.ConcurrentHashMap<String, String>()
-        private var lastSettingsGlobalModified = 0L
-        private var cachedPicoDockVisible = false
 
         private val systemPropertiesGetMethod: Method? by lazy {
             try {
@@ -58,18 +60,14 @@ class GuardianDaemon {
         }
 
         private fun getVrAppPackage(): String {
-            val systemPrefixes = listOf(
-                "com.pvr.vrshell",
-            )
-
             fun isSystemPackage(pkg: String): Boolean {
+                val systemPrefixes = listOf(
+                    "com.pvr.vrshell",
+                )
                 return pkg.startsWith("/") || systemPrefixes.any { pkg.startsWith(it) }
             }
 
-            val mrUser = getSystemProperty("sys.pxr.mrserivce.user").ifBlank {
-                getSystemProperty("sys.pxr.mrservice.user")
-            }
-
+            val mrUser = getSystemProperty("sys.pxr.mrserivce.user")
             val vrPkg = if (mrUser.isNotBlank() && !isSystemPackage(mrUser)) mrUser else ""
             if (vrPkg != daemonState.vrPackage) {
                 daemonState.vrPackage = vrPkg
@@ -83,33 +81,55 @@ class GuardianDaemon {
             return vrPkg
         }
 
-        private fun isPicoDockVisible(): Boolean {
-            if (getSystemProperty("hamer.3dres.developermode", "0") == "1") {
-                return false
-            }
-
-            return try {
+        private fun initSettingsObserver() {
+            try {
+                // Initial read on startup so daemonState.isPicoDockVisible is not null
                 val file = File("/data/system/users/0/settings_global.xml")
                 if (file.exists()) {
-                    val modTime = file.lastModified()
-                    if (modTime != lastSettingsGlobalModified) {
-                        lastSettingsGlobalModified = modTime
-                        cachedPicoDockVisible = file.readText().contains("name=\"pvr_shortcut_status\" value=\"1\"")
-                    }
-                    val isVisible = cachedPicoDockVisible
-                    if (isVisible != daemonState.isPicoDockVisible) {
-                        daemonState.isPicoDockVisible = isVisible
-                        if (isVisible) {
-                            Log.i(TAG, "Pico Dock: VISIBLE")
-                        } else {
-                            Log.i(TAG, "Pico Dock: NOT VISIBLE")
+                    val isVisible = file.readText().contains("name=\"pvr_shortcut_status\" value=\"1\"")
+                    daemonState.isPicoDockVisible = isVisible
+                    Log.i(TAG, "Initial Pico Dock: ${if (isVisible) "VISIBLE" else "NOT VISIBLE"}")
+                } else {
+                    daemonState.isPicoDockVisible = false
+                }
+
+                val thread = Thread({
+                    Looper.prepare()
+                    val observer = object : FileObserver(File("/data/system/users/0"), CLOSE_WRITE or MOVED_TO or MODIFY) {
+                        override fun onEvent(event: Int, path: String?) {
+                            if (path == "settings_global.xml") {
+                                try {
+                                    val f = File("/data/system/users/0/settings_global.xml")
+                                    if (f.exists()) {
+                                        val isVisible = f.readText().contains("name=\"pvr_shortcut_status\" value=\"1\"")
+                                        if (isVisible != daemonState.isPicoDockVisible) {
+                                            daemonState.isPicoDockVisible = isVisible
+                                            if (isVisible) {
+                                                Log.i(TAG, "Pico Dock: VISIBLE")
+                                            } else {
+                                                Log.i(TAG, "Pico Dock: NOT VISIBLE")
+                                            }
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Failed to read settings_global.xml on event: ${e.message}")
+                                }
+                            }
                         }
                     }
-                    isVisible
-                } else false
-            } catch (_: Exception) {
-                false
+                    observer.startWatching()
+                    Looper.loop()
+                }, "SettingsObserverThread")
+                thread.isDaemon = true
+                thread.start()
+                Log.i(TAG, "Successfully initialized FileObserver for settings_global.xml")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize FileObserver: ${e.message}")
             }
+        }
+
+        private fun isPicoDockVisible(): Boolean {
+            return getSystemProperty("hamer.3dres.developermode", "0") != "1" && daemonState.isPicoDockVisible ?: false
         }
 
         private fun isKeyboardVisible(): Boolean {
@@ -169,25 +189,29 @@ class GuardianDaemon {
                     )
                 }
 
-                val sourcePids = try {
-                    if (sourceFile.exists()) {
-                        sourceFile.readLines().mapNotNull { it.trim().toIntOrNull() }
-                    } else emptyList()
-                } catch (_: Exception) { emptyList() }
+                Thread {
+                    Thread.sleep(2000) // Wait for subprocesses spawned
 
-                for (pid in sourcePids) {
-                    val cmdlineFile = File("/proc/$pid/cmdline")
-                    if (cmdlineFile.exists()) {
-                        try {
-                            val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
-                            val mainCmd = cmdline.split(Regex("\\s+")).firstOrNull() ?: cmdline
-                            if (mainCmd == pkgName || mainCmd.startsWith("$pkgName:")) {
-                                targetFile.writeText(pid.toString())
-                                Log.i(TAG, "Move \"$pkgName\" to $targetName (PID: $pid)")
-                            }
-                        } catch (_: Exception) {}
+                    val sourcePids = try {
+                        if (sourceFile.exists()) {
+                            sourceFile.readLines().mapNotNull { it.trim().toIntOrNull() }
+                        } else emptyList()
+                    } catch (_: Exception) { emptyList() }
+
+                    for (pid in sourcePids) {
+                        val cmdlineFile = File("/proc/$pid/cmdline")
+                        if (cmdlineFile.exists()) {
+                            try {
+                                val cmdline = cmdlineFile.readText().replace('\u0000', ' ').trim()
+                                val mainCmd = cmdline.split(Regex("\\s+")).firstOrNull() ?: cmdline
+                                if (mainCmd == pkgName || mainCmd.startsWith("$pkgName:")) {
+                                    targetFile.writeText(pid.toString())
+                                    Log.i(TAG, "Move \"$pkgName\" to $targetName (PID: $pid)")
+                                }
+                            } catch (_: Exception) {}
+                        }
                     }
-                }
+                }.start()
             }
         }
 
@@ -288,6 +312,7 @@ class GuardianDaemon {
             setupImmersiveAppCpuset()
             setupCodecCpuset()
             setupGuardianDaemonCpuset(myPid)
+            initSettingsObserver()
 
             if(configs.cpuSet == "3") { // Stock
                 movePackageToImmersiveAppSet( getVrAppPackage(), false)
@@ -318,89 +343,94 @@ class GuardianDaemon {
                             "app.rincast.vr",
                         )
 
-                        if (isWearing) {
-                            if (configs.maxPwrLevel.isNotBlank())
-                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/max_pwrlevel", configs.maxPwrLevel)
-                            if (configs.minPwrLevel.isNotBlank())
-                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/min_pwrlevel", configs.minPwrLevel)
-                        } else { // Stock
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/max_pwrlevel", "0")
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/min_pwrlevel", "6")
-                        }
+                        if (isWearing != daemonState.lastAppliedWearing || vrPkg != daemonState.lastAppliedVrPackage) {
+                            daemonState.lastAppliedWearing = isWearing
+                            daemonState.lastAppliedVrPackage = vrPkg
+                            // Apply Power Level
+                            if (isWearing) {
+                                if (configs.maxPwrLevel.isNotBlank())
+                                    setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/max_pwrlevel", configs.maxPwrLevel)
+                                if (configs.minPwrLevel.isNotBlank())
+                                    setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/min_pwrlevel", configs.minPwrLevel)
+                            } else { // Stock
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/max_pwrlevel", "0")
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/min_pwrlevel", "6")
+                            }
 
-                        // Apply CPU Mode
-                        try {
-                            val cpufreqDir = File("/sys/devices/system/cpu/cpufreq")
-                            val policies = cpufreqDir.listFiles()?.filter { it.isDirectory && it.name.startsWith("policy") } ?: emptyList()
-                            for (policy in policies) {
-                                val policyPath = policy.absolutePath
-                                if (configs.cpuMode == "1" && isWearing) { // Performance
-                                    setValueIfNeeded("$policyPath/scaling_governor", "performance")
-                                    var maxFreq = policyMaxFreqCache[policyPath]
-                                    if (maxFreq == null) {
-                                        val availFreqFile = File(policy, "scaling_available_frequencies")
-                                        if (availFreqFile.exists()) {
-                                            maxFreq = availFreqFile.readText().trim().split(Regex("\\s+")).lastOrNull() ?: ""
+                            // Apply CPU Mode
+                            try {
+                                val cpufreqDir = File("/sys/devices/system/cpu/cpufreq")
+                                val policies = cpufreqDir.listFiles()?.filter { it.isDirectory && it.name.startsWith("policy") } ?: emptyList()
+                                for (policy in policies) {
+                                    val policyPath = policy.absolutePath
+                                    if (configs.cpuMode == "1" && isWearing) { // Performance
+                                        setValueIfNeeded("$policyPath/scaling_governor", "performance")
+                                        var maxFreq = policyMaxFreqCache[policyPath]
+                                        if (maxFreq == null) {
+                                            val availFreqFile = File(policy, "scaling_available_frequencies")
+                                            if (availFreqFile.exists()) {
+                                                maxFreq = availFreqFile.readText().trim().split(Regex("\\s+")).lastOrNull() ?: ""
+                                                if (maxFreq.isNotBlank()) policyMaxFreqCache[policyPath] = maxFreq
+                                            }
+                                        }
+                                        if (!maxFreq.isNullOrBlank()) {
+                                            setValueIfNeeded("$policyPath/scaling_max_freq", maxFreq)
+                                            setValueIfNeeded("$policyPath/scaling_min_freq", maxFreq)
+                                        }
+                                    } else { // Stock
+                                        setValueIfNeeded("$policyPath/scaling_governor", "schedutil")
+                                        var minFreq = policyMinFreqCache[policyPath]
+                                        if (minFreq == null) {
+                                            val minFreqFile = File(policy, "cpuinfo_min_freq")
+                                            minFreq = if (minFreqFile.exists()) minFreqFile.readText().trim() else ""
+                                            if (minFreq.isNotBlank()) policyMinFreqCache[policyPath] = minFreq
+                                        }
+                                        var maxFreq = policyMaxFreqCache[policyPath]
+                                        if (maxFreq == null) {
+                                            val maxFreqFile = File(policy, "cpuinfo_max_freq")
+                                            maxFreq = if (maxFreqFile.exists()) maxFreqFile.readText().trim() else ""
                                             if (maxFreq.isNotBlank()) policyMaxFreqCache[policyPath] = maxFreq
                                         }
-                                    }
-                                    if (!maxFreq.isNullOrBlank()) {
-                                        setValueIfNeeded("$policyPath/scaling_max_freq", maxFreq)
-                                        setValueIfNeeded("$policyPath/scaling_min_freq", maxFreq)
-                                    }
-                                } else { // Stock
-                                    setValueIfNeeded("$policyPath/scaling_governor", "schedutil")
-                                    var minFreq = policyMinFreqCache[policyPath]
-                                    if (minFreq == null) {
-                                        val minFreqFile = File(policy, "cpuinfo_min_freq")
-                                        minFreq = if (minFreqFile.exists()) minFreqFile.readText().trim() else ""
-                                        if (minFreq.isNotBlank()) policyMinFreqCache[policyPath] = minFreq
-                                    }
-                                    var maxFreq = policyMaxFreqCache[policyPath]
-                                    if (maxFreq == null) {
-                                        val maxFreqFile = File(policy, "cpuinfo_max_freq")
-                                        maxFreq = if (maxFreqFile.exists()) maxFreqFile.readText().trim() else ""
-                                        if (maxFreq.isNotBlank()) policyMaxFreqCache[policyPath] = maxFreq
-                                    }
-                                    if (minFreq.isNotBlank()) {
-                                        setValueIfNeeded("$policyPath/scaling_min_freq", minFreq)
-                                    }
-                                    if (maxFreq.isNotBlank()) {
-                                        setValueIfNeeded("$policyPath/scaling_max_freq", maxFreq)
+                                        if (minFreq.isNotBlank()) {
+                                            setValueIfNeeded("$policyPath/scaling_min_freq", minFreq)
+                                        }
+                                        if (maxFreq.isNotBlank()) {
+                                            setValueIfNeeded("$policyPath/scaling_max_freq", maxFreq)
+                                        }
                                     }
                                 }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to apply CPU mode: ${e.message}")
                             }
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Failed to apply CPU mode: ${e.message}")
-                        }
 
-                        // Apply GPU Mode
-                        if (configs.gpuMode == "1" && isWearing) { // Performance
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/devfreq/governor", "performance")
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/default_pwrlevel", "0")
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/throttling", "0")
-                        } else { // Stock
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/devfreq/governor", "msm-adreno-tz")
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/default_pwrlevel", "6")
-                            setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/throttling", "1")
-                        }
+                            // Apply GPU Mode
+                            if (configs.gpuMode == "1" && isWearing) { // Performance
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/devfreq/governor", "performance")
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/default_pwrlevel", "0")
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/throttling", "0")
+                            } else { // Stock
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/devfreq/governor", "msm-adreno-tz")
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/default_pwrlevel", "6")
+                                setValueIfNeeded("/sys/class/kgsl/kgsl-3d0/throttling", "1")
+                            }
 
-                        // Apply Latency Mode
-                        if (configs.latencyMode == "1" && isWearing) { // Performance
-                            setValueIfNeeded("/proc/sys/kernel/sched_latency_ns", "5000000")
-                            setValueIfNeeded("/proc/sys/kernel/sched_min_granularity_ns", "1000000")
-                        } else { // Stock
-                            setValueIfNeeded("/proc/sys/kernel/sched_latency_ns", "10000000")
-                            setValueIfNeeded("/proc/sys/kernel/sched_min_granularity_ns", "3000000")
+                            // Apply Latency Mode
+                            if (configs.latencyMode == "1" && isWearing) { // Performance
+                                setValueIfNeeded("/proc/sys/kernel/sched_latency_ns", "5000000")
+                                setValueIfNeeded("/proc/sys/kernel/sched_min_granularity_ns", "1000000")
+                            } else { // Stock
+                                setValueIfNeeded("/proc/sys/kernel/sched_latency_ns", "10000000")
+                                setValueIfNeeded("/proc/sys/kernel/sched_min_granularity_ns", "3000000")
+                            }
+
+                            if (configs.cpuSet in listOf("1", "2")) {
+                                movePackageToImmersiveAppSet(vrPkg, true)
+                                movePackageToCodecAppSet("media.codec", true)
+                                movePackageToCodecAppSet("media.swcodec", true)
+                            }
                         }
 
                         // Apply CPU Set
-                        if (configs.cpuSet in listOf("1", "2")) {
-                            movePackageToImmersiveAppSet(vrPkg, true)
-                            movePackageToCodecAppSet("media.codec", true)
-                            movePackageToCodecAppSet("media.swcodec", true)
-                        }
-
                         when (configs.cpuSet) {
                             "1" if (isWearing && !isStreamingApp) -> { // Performance
                                 if (isVrMode) { // Full VR immersive
@@ -520,7 +550,7 @@ class GuardianDaemon {
                         /* Test command
                             top -b -d 3.0 -p $(pgrep -f com.hamer.res3d.GuardianDaemon)
 
-                            pids=$(tr '\n' ',' < /dev/cpuset/codec/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
+                            pids=$(tr '\n' ',' < /dev/cpuset/immersive-app/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
 
                             PIDS=$(pidof app_process | tr ' ' ',')
                             [ -n "$PIDS" ] && top -b -H -n 1 -p "$PIDS" -o CPU,%CPU | awk '
