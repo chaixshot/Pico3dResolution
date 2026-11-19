@@ -64,7 +64,7 @@
             android:value="3dof" />
 
         <receiver
-            android:name=".GuardianReceiver"
+            android:name=".Guardian.GuardianReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -73,12 +73,12 @@
         </receiver>
 
         <service
-            android:name=".GuardianService"
+            android:name=".Guardian.GuardianService"
             android:enabled="true"
             android:exported="true" />
 
         <provider
-            android:name=".GuardianProvider"
+            android:name=".Guardian.GuardianProvider"
             android:authorities="com.hamer.res3d.guardian"
             android:enabled="true"
             android:exported="true" />

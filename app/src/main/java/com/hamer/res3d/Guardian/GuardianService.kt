@@ -1,8 +1,9 @@
-package com.hamer.res3d
+package com.hamer.res3d.Guardian
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.os.Process
 import android.util.Log
 import java.io.DataOutputStream
 
@@ -31,7 +32,7 @@ class GuardianService : Service() {
     private fun protectFromSystemKill() {
         startRootDaemon()
         try {
-            val pid = android.os.Process.myPid()
+            val pid = Process.myPid()
             val process = Runtime.getRuntime().exec("su")
             DataOutputStream(process.outputStream).use { os ->
                 os.writeBytes("echo -1000 > /proc/$pid/oom_score_adj || true\n")
@@ -53,7 +54,7 @@ class GuardianService : Service() {
         try {
             val apkPath = applicationInfo.publicSourceDir
             // Terminate any stale GuardianDaemon instances and launch the fresh root daemon process
-            val cmd = "pkill -f 'com.hamer.res3d.GuardianDaemon' 2>/dev/null || true; sleep 0.3; export CLASSPATH=\"$apkPath\" && exec app_process /system/bin com.hamer.res3d.GuardianDaemon &"
+            val cmd = "pkill -f 'com.hamer.res3d.Guardian.GuardianDaemon' 2>/dev/null || true; sleep 0.3; export CLASSPATH=\"$apkPath\" && exec app_process /system/bin com.hamer.res3d.Guardian.GuardianDaemon &"
 
             val process = Runtime.getRuntime().exec("su")
             DataOutputStream(process.outputStream).use { os ->

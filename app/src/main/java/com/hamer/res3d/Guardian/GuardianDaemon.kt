@@ -1,47 +1,34 @@
-package com.hamer.res3d
+package com.hamer.res3d.Guardian
 
 import android.util.Log
 import android.os.FileObserver
 import android.os.Looper
+import android.os.Process
+import com.hamer.res3d.*
 import java.io.File
-import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 
 class GuardianDaemon {
     companion object {
-        const val CONFIG_PATH = "/data/local/tmp/config.cfg"
-        const val TAG = "Res3Daemon"
+        const val TAG = "Res3dDaemon"
 
         private data class DaemonState(
             var isWearing: Boolean? = null,
             var vrPackage: String? = null,
             var isPicoDockVisible: Boolean? = null,
             var isKeyboardVisible: Boolean? = null,
-            var lastMovedVrPackage: String? = null,
-            var lastMovedCpuSet: String? = null,
-            var lastAppliedWearing: Boolean? = null,
-            var lastAppliedVrPackage: String? = null,
+        )
+
+        private data class Applied(
+            var isVrMode: Boolean? = null,
+            var isStreamingApp: Boolean? = null,
+            var isWearing: Boolean? = null,
+            var vrPackage: String? = null,
         )
 
         private val daemonState = DaemonState()
-        private val policyMaxFreqCache = java.util.concurrent.ConcurrentHashMap<String, String>()
-        private val policyMinFreqCache = java.util.concurrent.ConcurrentHashMap<String, String>()
-
-        private val systemPropertiesGetMethod: Method? by lazy {
-            try {
-                val clazz = Class.forName("android.os.SystemProperties")
-                clazz.getMethod("get", String::class.java, String::class.java)
-            } catch (_: Exception) {
-                null
-            }
-        }
-
-        fun getSystemProperty(key: String, default: String = "0"): String {
-            return try {
-                (systemPropertiesGetMethod?.invoke(null, key, default) as? String) ?: default
-            } catch (_: Exception) {
-                default
-            }
-        }
+        private val policyMaxFreqCache = ConcurrentHashMap<String, String>()
+        private val policyMinFreqCache = ConcurrentHashMap<String, String>()
 
         private fun isWearing(): Boolean {
             if (getSystemProperty("hamer.3dres.developermode", "0") == "1") return true
@@ -151,13 +138,6 @@ class GuardianDaemon {
                 Log.e(TAG, "isKeyboardVisible error: ${e.message}")
                 false
             }
-        }
-
-        private fun execCmd(command: String) {
-            try {
-                val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
-                process.waitFor()
-            } catch (_: Exception) {}
         }
 
         private fun setValueIfNeeded(path: String, value: String) {
@@ -302,22 +282,34 @@ class GuardianDaemon {
         @JvmStatic
         fun main(args: Array<String>) {
             var afterWearing = true
-            val myPid = android.os.Process.myPid()
+            val myPid = Process.myPid()
             val configs = getConfigs()
+            val appliedPowers = Applied()
+            val appliedCpus = Applied()
 
             Log.i(TAG, "Guardian Root Daemon starting (PID $myPid)...")
 
             // Kill any stale instances running from older executions
-            execCmd("for p in \$(pgrep -f 'com.hamer.res3d.GuardianDaemon'); do if [ \"\$p\" != \"$myPid\" ]; then kill -9 \$p; fi; done || true")
+            execCmd("for p in \$(pgrep -f 'com.hamer.res3d.Guardian.GuardianDaemon'); do if [ \"\$p\" != \"$myPid\" ]; then kill -9 \$p; fi; done || true")
             setupImmersiveAppCpuset()
             setupCodecCpuset()
             setupGuardianDaemonCpuset(myPid)
             initSettingsObserver()
 
-            if(configs.cpuSet == "3") { // Stock
+            if (configs.cpuSet == "3") { // Stock
                 movePackageToImmersiveAppSet( getVrAppPackage(), false)
                 movePackageToCodecAppSet("media.codec", false)
                 movePackageToCodecAppSet("media.swcodec", false)
+            }
+
+            val configDefaults = ConfigValues()
+            if (configs.maxPwrLevel == configDefaults.maxPwrLevel &&
+                configs.minPwrLevel == configDefaults.minPwrLevel &&
+                configs.cpuMode == configDefaults.cpuMode &&
+                configs.gpuMode == configDefaults.gpuMode &&
+                configs.latencyMode == configDefaults.latencyMode &&
+                configs.cpuSet == configDefaults.cpuSet) {
+                return
             }
 
             while (true) {
@@ -343,9 +335,10 @@ class GuardianDaemon {
                             "app.rincast.vr",
                         )
 
-                        if (isWearing != daemonState.lastAppliedWearing || vrPkg != daemonState.lastAppliedVrPackage) {
-                            daemonState.lastAppliedWearing = isWearing
-                            daemonState.lastAppliedVrPackage = vrPkg
+                        if (isWearing != appliedPowers.isWearing || vrPkg != appliedPowers.vrPackage) {
+                            appliedPowers.isWearing = isWearing
+                            appliedPowers.vrPackage = vrPkg
+
                             // Apply Power Level
                             if (isWearing) {
                                 if (configs.maxPwrLevel.isNotBlank())
@@ -423,134 +416,148 @@ class GuardianDaemon {
                                 setValueIfNeeded("/proc/sys/kernel/sched_min_granularity_ns", "3000000")
                             }
 
-                            if (configs.cpuSet in listOf("1", "2")) {
-                                movePackageToImmersiveAppSet(vrPkg, true)
+                            if (configs.cpuSet != "3") {
+                                movePackageToImmersiveAppSet(getVrAppPackage(), true)
                                 movePackageToCodecAppSet("media.codec", true)
                                 movePackageToCodecAppSet("media.swcodec", true)
                             }
                         }
 
-                        // Apply CPU Set
-                        when (configs.cpuSet) {
-                            "1" if (isWearing && !isStreamingApp) -> { // Performance
-                                if (isVrMode) { // Full VR immersive
-                                    setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "4-7") // VR immersive app
-                                    setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-1") // surfaceflinger, system_server, drm
+                        if (isVrMode != appliedCpus.isVrMode || isStreamingApp != appliedCpus.isStreamingApp || isWearing != appliedCpus.isWearing) {
+                            appliedCpus.isVrMode = isVrMode
+                            appliedCpus.isStreamingApp = isStreamingApp
+                            appliedCpus.isWearing = isWearing
 
-                                    setValueIfNeeded("/dev/cpuset/top-app/cpus", "0-3") // Focused App, hwservicemanager, servicemanager
-                                    setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-7")  // Mixed Reality (pxrseethroughservice, pxrmrsystemservice)
+                            // Apply CPU Set
+                            when (configs.cpuSet) {
+                                "1" if (isWearing && !isStreamingApp) -> { // Performance
+                                    if (isVrMode) { // Full VR immersive
+                                        setValueIfNeeded("/dev/cpuset/codec/cpus", "4-5")
+                                        setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "4-7") // VR immersive app
 
-                                    setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-1") // Standard foreground tasks running in background state
-                                } else { // 2D visible
-                                    setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "7")
-                                    setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
+                                        setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-1") // surfaceflinger, system_server, drm
 
-                                    setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-7")
-                                    setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4")
+                                        setValueIfNeeded("/dev/cpuset/top-app/cpus", "0-3") // Focused App, hwservicemanager, servicemanager
+                                        setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-7")  // Mixed Reality (pxrseethroughservice, pxrmrsystemservice)
 
-                                    setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-4")
+                                        setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-1") // Standard foreground tasks running in background state
+                                    } else { // 2D visible
+                                        setValueIfNeeded("/dev/cpuset/codec/cpus", "7")
+                                        setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "7")
+
+                                        setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
+
+                                        setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-7")
+                                        setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4")
+
+                                        setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-4")
+                                    }
+
+                                    // Head and controller tracking (needs dedicated responsive cores)
+                                    setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-3") // pvrtrackingservice
+
+                                    // Restrict to efficiency cores
+                                    setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3") // com.pico.xr.openxr_runtime
+                                    setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-2") // Audio playback/recording threads
+
+                                    // Confine low-priority background daemons strictly
+                                    setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0") // Camera start speed
+
+                                    // Starve general background tasks, confining them strictly
+                                    setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-1") // Background third-party apps, killed all by OS
+                                    setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-1") // Apps running inside shell environments, empty by default OS
                                 }
+                                "2" if (isWearing && !isStreamingApp) -> { // Balance
+                                    if (isVrMode) {
+                                        setValueIfNeeded("/dev/cpuset/codec/cpus", "4-5")
+                                        setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "4-6")
+                                        setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-1")
 
-                                // Head and controller tracking (needs dedicated responsive cores)
-                                setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-3") // pvrtrackingservice
+                                        setValueIfNeeded("/dev/cpuset/top-app/cpus", "0-3")
+                                        setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-6")
 
-                                // Restrict to efficiency cores
-                                setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3") // com.pico.xr.openxr_runtime
-                                setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-2") // Audio playback/recording threads
+                                        setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-1")
+                                    } else {
+                                        setValueIfNeeded("/dev/cpuset/codec/cpus", "6")
+                                        setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "6")
+                                        setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
 
-                                // Confine low-priority background daemons strictly
-                                setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0") // Camera start speed
+                                        setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-6")
+                                        setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4")
 
-                                // Starve general background tasks, confining them strictly
-                                setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-1") // Background third-party apps, killed all by OS
-                                setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-1") // Apps running inside shell environments, empty by default OS
-                            }
-                            "2" if (isWearing && !isStreamingApp) -> { // Balance
-                                if (isVrMode) {
-                                    setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "4-6")
-                                    setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-1")
+                                        setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-3")
+                                    }
 
-                                    setValueIfNeeded("/dev/cpuset/top-app/cpus", "0-3")
-                                    setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-6")
+                                    setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-3,7")
 
-                                    setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-1")
-                                } else {
+                                    setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3,7")
+                                    setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-2")
+
+                                    setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0-2")
+
+                                    setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-2")
+                                    setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-2")
+                                }
+                                in listOf("1", "2") if isStreamingApp -> { // Streaming PCVR (Power Saving)
+                                    if (isVrMode) {
+                                        setValueIfNeeded("/dev/cpuset/codec/cpus", "4-5")
+                                        setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "6-7")
+
+                                        setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-1")
+
+                                        setValueIfNeeded("/dev/cpuset/top-app/cpus", "0-2")
+                                        setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-5")
+
+                                        setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-1")
+                                    } else {
+                                        setValueIfNeeded("/dev/cpuset/codec/cpus", "7")
+                                        setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "7")
+
+                                        setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
+
+                                        setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-6")
+                                        setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4")
+
+                                        setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-3")
+                                    }
+
+                                    setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-5")
+
+                                    setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3")
+                                    setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-2")
+
+                                    setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0")
+
+                                    setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-1")
+                                    setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-1")
+                                }
+                                else -> { // Stock
+                                    setValueIfNeeded("/dev/cpuset/codec/cpus", "0")
                                     setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "6")
-                                    setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
-
                                     setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-6")
-                                    setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4")
-
-                                    setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-3")
-                                }
-
-                                setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-3,7")
-
-                                setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3,7")
-                                setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-2")
-
-                                setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0-2")
-
-                                setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-2")
-                                setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-2")
-                            }
-                            in listOf("1", "2") if isStreamingApp -> { // Streaming PCVR (Power Saving)
-                                if (isVrMode) {
-                                    setValueIfNeeded("/dev/cpuset/codec/cpus", "4-5")
-                                    setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "6-7")
-
-                                    setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-1")
-
-                                    setValueIfNeeded("/dev/cpuset/top-app/cpus", "0-2")
                                     setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-5")
-
-                                    setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-1")
-                                } else {
-                                    setValueIfNeeded("/dev/cpuset/codec/cpus", "7")
-                                    setValueIfNeeded("/dev/cpuset/immersive-app/cpus", "7")
-
+                                    setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3,7")
                                     setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
-
-                                    setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-6")
-                                    setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4")
-
+                                    setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-3")
+                                    setValueIfNeeded("/dev/cpuset/camera-daemon/cpus", "0-3")
+                                    setValueIfNeeded("/dev/cpuset/dex2oat/cpus", "0-3,7")
+                                    setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-3,7")
+                                    setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0-3")
                                     setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-3")
+                                    setValueIfNeeded("/dev/cpuset/background/cpus", "0-1")
+                                    setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-2")
+                                    setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-1,4")
+                                    setValueIfNeeded("/dev/cpuset/shell-app/cpus", "5-6")
                                 }
-
-                                setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-5")
-
-                                setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3")
-                                setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-2")
-
-                                setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0")
-
-                                setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-1")
-                                setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-1")
-                            }
-                            else -> { // Stock
-                                setValueIfNeeded("/dev/cpuset/top-app/cpus", "4-6")
-                                setValueIfNeeded("/dev/cpuset/vrforeground/cpus", "4-5")
-                                setValueIfNeeded("/dev/cpuset/compositor/cpus", "0-3,7")
-                                setValueIfNeeded("/dev/cpuset/pico-system/cpus", "0-6")
-                                setValueIfNeeded("/dev/cpuset/audio-app/cpus", "0-3")
-                                setValueIfNeeded("/dev/cpuset/camera-daemon/cpus", "0-3")
-                                setValueIfNeeded("/dev/cpuset/dex2oat/cpus", "0-3,7")
-                                setValueIfNeeded("/dev/cpuset/tracking/cpus", "0-3,7")
-                                setValueIfNeeded("/dev/cpuset/quickcamera/cpus", "0-3")
-                                setValueIfNeeded("/dev/cpuset/foreground/cpus", "0-3")
-                                setValueIfNeeded("/dev/cpuset/background/cpus", "0-1")
-                                setValueIfNeeded("/dev/cpuset/bg_3rd_app/cpus", "0-2")
-                                setValueIfNeeded("/dev/cpuset/app-inshell/cpus", "0-1,4")
-                                setValueIfNeeded("/dev/cpuset/shell-app/cpus", "5-6")
                             }
                         }
 
                         afterWearing = isWearing
 
                         /* Test command
-                            top -b -d 3.0 -p $(pgrep -f com.hamer.res3d.GuardianDaemon)
+                            top -b -d 3.0 -p $(pgrep -f com.hamer.res3d.Guardian.GuardianDaemon)
 
-                            pids=$(tr '\n' ',' < /dev/cpuset/immersive-app/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
+                            pids=$(tr '\n' ',' < /dev/cpuset/codec/tasks | sed 's/,$//'); [ -n "$pids" ] && top -n 1 -p "$pids" || echo "No active processes in this cpuset."
 
                             PIDS=$(pidof app_process | tr ' ' ',')
                             [ -n "$PIDS" ] && top -b -H -n 1 -p "$PIDS" -o CPU,%CPU | awk '
@@ -566,7 +573,7 @@ class GuardianDaemon {
                     Log.e(TAG, "GuardianDaemon loop error: ${e.message}")
                 }
 
-                Thread.sleep(2000)
+                Thread.sleep(500)
             }
         }
     }

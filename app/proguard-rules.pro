@@ -13,6 +13,19 @@
     public static void main(java.lang.String[]);
 }
 
+# Root daemon execution via app_process uses GuardianDaemon by name string.
+-keep class com.hamer.res3d.Guardian.GuardianDaemon {
+    public static void main(java.lang.String[]);
+    *;
+}
+
+# Keep all Guardian classes and members
+-keep class com.hamer.res3d.Guardian.** { *; }
+
+# Xposed entry point loaded via reflection from assets/xposed_init
+-keep class com.hamer.res3d.XposedInit { *; }
+-keep class com.hamer.res3d.Hook.** { *; }
+
 # Keep Compose internal classes that might be accessed via reflection or are otherwise needed
 -keepclassmembers class ** {
     @androidx.compose.runtime.Composable *;

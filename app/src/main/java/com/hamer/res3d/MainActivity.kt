@@ -1729,7 +1729,7 @@ fun AboutTabContent() {
             modifier = Modifier.fillMaxWidth()
         ) {
             var developerMode by remember {
-                mutableStateOf(GuardianDaemon.getSystemProperty("hamer.3dres.developermode", "0") == "1")
+                mutableStateOf(getSystemProperty("hamer.3dres.developermode", "0") == "1")
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,

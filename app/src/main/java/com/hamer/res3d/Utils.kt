@@ -9,6 +9,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import com.hamer.res3d.Guardian.GuardianService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -16,6 +17,7 @@ import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.File
 import java.io.InputStreamReader
+import java.lang.reflect.Method
 
 const val targetSystemPrefsPath = "/data/system/res3d_pwr_prefs.xml"
 const val CONFIG_PATH = "/data/local/tmp/config.cfg"
@@ -664,7 +666,7 @@ suspend fun applyRenderingSettings(
                     val apkPath = context.applicationInfo.publicSourceDir
                     val cmd =
                         "export CLASSPATH=\"$apkPath\" && app_process /system/bin com.hamer.res3d.DbUpdater write \"$DB_PATH\" '$res' '$sm' '$ffr' '$tf'"
-                    val (success, output) = runRootCommandWithOutput(cmd)
+                    val (success, output) = runRootCommand(cmd)
                     if (success && output.contains("WRITE_SUCCESS")) {
                         primaryWorked = true
                     }
@@ -820,7 +822,7 @@ fun Modifier.picoHapticHover(context: Context, view: View): Modifier = this.poin
 fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
     var process: Process? = null
     var os: DataOutputStream? = null
-    var errorReader: BufferedReader? = null
+    var reader: BufferedReader? = null
     try {
         process = Runtime.getRuntime().exec("su")
         os = DataOutputStream(process.outputStream)
@@ -829,59 +831,24 @@ fun runRootCommand(vararg commands: String): Pair<Boolean, String> {
         }
         os.writeBytes("exit\n")
         os.flush()
-        val errors = StringBuilder()
-        errorReader = BufferedReader(InputStreamReader(process.errorStream))
+        val sb = StringBuilder()
+        reader = BufferedReader(InputStreamReader(process.inputStream))
         var line: String?
-        while (errorReader.readLine().also { line = it } != null) {
-            errors.append(line).append(" ")
+        while (reader.readLine().also { line = it } != null) {
+            sb.append(line).append("\n")
         }
         val exitValue = process.waitFor()
-        return (exitValue == 0) to errors.toString().trim()
+        return (exitValue == 0) to sb.toString().trim()
     } catch (e: Exception) {
         return false to (e.message ?: "su execution failed")
     } finally {
         try {
             os?.close()
-        } catch (ignore: Exception) {
+        } catch (_: Exception) {
         }
         try {
-            errorReader?.close()
-        } catch (ignore: Exception) {
-        }
-        process?.destroy()
-    }
-}
-
-fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, String> {
-    var process: Process? = null
-    var os: DataOutputStream? = null
-    var inputReader: BufferedReader? = null
-    try {
-        process = Runtime.getRuntime().exec("su")
-        os = DataOutputStream(process.outputStream)
-        for (cmd in commands) {
-            os.writeBytes("$cmd\n")
-        }
-        os.writeBytes("exit\n")
-        os.flush()
-        val output = StringBuilder()
-        inputReader = BufferedReader(InputStreamReader(process.inputStream))
-        var line: String?
-        while (inputReader.readLine().also { line = it } != null) {
-            output.append(line).append("\n")
-        }
-        val exitValue = process.waitFor()
-        return (exitValue == 0) to output.toString().trim()
-    } catch (e: Exception) {
-        return false to (e.message ?: "su execution failed")
-    } finally {
-        try {
-            os?.close()
-        } catch (ignore: Exception) {
-        }
-        try {
-            inputReader?.close()
-        } catch (ignore: Exception) {
+            reader?.close()
+        } catch (_: Exception) {
         }
         process?.destroy()
     }
@@ -889,7 +856,7 @@ fun runRootCommandWithOutput(vararg commands: String): Pair<Boolean, String> {
 
 suspend fun checkAndEnableXposedScope(packageName: String) = withContext(Dispatchers.IO) {
     val checkCmd = "/data/adb/lspd/cli scope ls $packageName || /data/adb/modules/zygisk_vector/cli scope ls $packageName"
-    val (_, output) = runRootCommandWithOutput(checkCmd)
+    val (_, output) = runRootCommand(checkCmd)
 
     if (!output.contains("system_server")) {
         val enableCmd = "/data/adb/lspd/cli modules enable $packageName || /data/adb/modules/zygisk_vector/cli modules enable $packageName"
@@ -926,4 +893,62 @@ fun getConfigs(): ConfigValues {
     }
 
     return defaults
+}
+
+fun execCmd(command: String) {
+    try {
+        val process = Runtime.getRuntime().exec(arrayOf("sh", "-c", command))
+        process.waitFor()
+    } catch (_: Exception) {}
+}
+
+private val systemPropertiesGetMethod: Method? by lazy {
+    try {
+        val clazz = Class.forName("android.os.SystemProperties")
+        clazz.getMethod("get", String::class.java, String::class.java)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private val systemPropertiesSetMethod: Method? by lazy {
+    try {
+        val clazz = Class.forName("android.os.SystemProperties")
+        clazz.getMethod("set", String::class.java, String::class.java)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+fun setSystemProperty(key: String, value: String) {
+    try {
+        val method = systemPropertiesSetMethod
+        if (method != null) {
+            method.invoke(null, key, value)
+        } else {
+            val clazz = Class.forName("android.os.SystemProperties")
+            val fallbackMethod = clazz.getMethod("set", String::class.java, String::class.java)
+            fallbackMethod.invoke(null, key, value)
+        }
+    } catch (e: Exception) {
+        try {
+            execCmd("setprop $key '$value'")
+        } catch (_: Exception) {
+        }
+    }
+}
+
+fun getSystemProperty(key: String, default: String = ""): String {
+    return try {
+        val method = systemPropertiesGetMethod
+        if (method != null) {
+            (method.invoke(null, key, default) as? String) ?: default
+        } else {
+            val clazz = Class.forName("android.os.SystemProperties")
+            val fallbackMethod = clazz.getMethod("get", String::class.java, String::class.java)
+            (fallbackMethod.invoke(null, key, default) as? String) ?: default
+        }
+    } catch (_: Exception) {
+        default
+    }
 }
