@@ -13,8 +13,8 @@ android {
         applicationId = "com.hamer.res3d"
         minSdk = 29
         targetSdk = 37
-        versionCode = 131
-        versionName = "1.3.1"
+        versionCode = 14
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
